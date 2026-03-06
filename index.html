@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="coral">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,6 +32,56 @@
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     --radius: 20px;
     --radius-sm: 12px;
+  }
+
+  [data-theme="slate"] {
+    --bg: #eef1f3;
+    --bg-warm: #e2e6ea;
+    --bg-card: #f8fafb;
+    --border: #cbd2d9;
+    --border-hover: #a8b2bc;
+    --text-primary: #161b22;
+    --text-secondary: #4d5c6b;
+    --text-muted: #8895a3;
+    --accent: #1a8a7d;
+    --accent-soft: #1a8a7d12;
+    --accent-mid: #1a8a7d30;
+    --pop: #d4614e;
+    --pop-soft: #d4614e12;
+    --cream: #f5f8f9;
+  }
+
+  [data-theme="slate"] .work-image-placeholder.warm { background: linear-gradient(135deg, #e8f4f2 0%, #d0ebe7 100%); }
+  [data-theme="slate"] .work-image-placeholder.cool { background: linear-gradient(135deg, #eef1f6 0%, #dce2ec 100%); }
+  [data-theme="slate"] .work-image-placeholder.fresh { background: linear-gradient(135deg, #e6f3f1 0%, #ccebe6 100%); }
+  [data-theme="slate"] .btn:hover { box-shadow: 0 4px 16px #1a8a7d20; }
+  [data-theme="slate"] .btn.primary:hover { background: #157a6e; box-shadow: 0 8px 30px #1a8a7d40; }
+
+  body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  }
+
+  .theme-switcher {
+    position: fixed;
+    top: 4.5rem;
+    right: 1.5rem;
+    z-index: 99;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 0.4rem 0.9rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--cream);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .theme-switcher:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   html { scroll-behavior: smooth; }
@@ -753,6 +803,9 @@
   </ul>
 </nav>
 
+<!-- THEME SWITCHER -->
+<button class="theme-switcher" id="themeSwitcher">Slate</button>
+
 <!-- HERO -->
 <section class="hero">
   <div class="doodle-circle doodle"></div>
@@ -1120,6 +1173,18 @@
   });
 
   overlay.addEventListener('click', closeActive);
+
+  // Theme switcher
+  const themeSwitcher = document.getElementById('themeSwitcher');
+  const themes = ['coral', 'slate'];
+  let currentIndex = 0;
+
+  themeSwitcher.addEventListener('click', () => {
+    currentIndex = (currentIndex + 1) % themes.length;
+    document.documentElement.setAttribute('data-theme', themes[currentIndex]);
+    const next = themes[(currentIndex + 1) % themes.length];
+    themeSwitcher.textContent = next.charAt(0).toUpperCase() + next.slice(1);
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeActive();
