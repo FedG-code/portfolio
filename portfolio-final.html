@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Federico Giovannini — Technical Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f0e8;
+    --bg-warm: #ebe5d9;
+    --bg-card: #ffffff;
+    --border: #d6cebf;
+    --border-hover: #b8ad99;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6459;
+    --text-muted: #a39e93;
+    --accent: #e85d26;
+    --accent-soft: #e85d2618;
+    --accent-mid: #e85d2640;
+    --pop: #2d5ce6;
+    --pop-soft: #2d5ce615;
+    --cream: #faf7f2;
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 clamp(1.5rem, 5vw, 3.5rem);
+  }
+
+  /* ========== NAV ========== */
+  nav {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.6rem 0.6rem 0.6rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 4px 20px #1a181408;
+    backdrop-filter: blur(16px);
+  }
+
+  .nav-logo {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 100px;
+    transition: all 0.25s;
+  }
+
+  .nav-links a:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* ========== HERO ========== */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 5rem;
+    position: relative;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.45rem 1rem;
+    border-radius: 100px;
+    width: fit-content;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-out) 0.2s forwards;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-out) 0.35s forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero h1 .serif-line {
+    display: block;
+  }
+
+  .hero-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: end;
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-out) 0.5s forwards;
+  }
+
+  .hero-desc {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    font-weight: 300;
+    max-width: 480px;
+  }
+
+  .hero-tidbits {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .tidbit {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    min-width: 140px;
+  }
+
+  .tidbit-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .tidbit-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  /* ========== SECTIONS ========== */
+  section { padding: 7rem 0; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .section-heading {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin-bottom: 3rem;
+    line-height: 1.15;
+  }
+
+  /* ========== WORK CARDS — EXPANDING + BLUR ========== */
+  .work-section {
+    position: relative;
+  }
+
+  /* Blur overlay that sits behind expanded card */
+  .blur-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: #1a181460;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease-out);
+  }
+
+  .blur-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .work-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .work-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.5s var(--ease-out);
+  }
+
+  .work-card.expanded {
+    position: fixed;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(90vw, 960px);
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 50;
+    border-color: var(--border-hover);
+    box-shadow: 0 40px 100px #1a181430;
+    border-radius: var(--radius);
+  }
+
+  .work-card-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 1.75rem 2rem;
+    gap: 2rem;
+    transition: padding 0.4s var(--ease-out);
+  }
+
+  .work-card.expanded .work-card-header {
+    padding: 2.25rem 2.5rem;
+  }
+
+  .work-card-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .work-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: transform 0.3s var(--ease-spring);
+  }
+
+  .work-card:hover .work-icon {
+    transform: scale(1.1) rotate(-3deg);
+  }
+
+  .work-icon.orange { background: var(--accent-soft); }
+  .work-icon.blue { background: var(--pop-soft); }
+  .work-icon.green { background: #22c55e18; }
+
+  .work-card-info h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.15rem;
+  }
+
+  .work-card-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .work-card-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .work-pills {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .work-pill {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .work-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: all 0.3s var(--ease-out);
+    background: transparent;
+    flex-shrink: 0;
+  }
+
+  .work-card:hover .work-toggle {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .work-card.expanded .work-toggle {
+    transform: rotate(45deg);
+  }
+
+  /* Expanded content */
+  .work-expand {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s var(--ease-out);
+  }
+
+  .work-card.expanded .work-expand {
+    max-height: 800px;
+  }
+
+  .work-expand-inner {
+    padding: 0 2.5rem 2.5rem;
+  }
+
+  .work-expand-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .work-image-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .work-image-placeholder.warm { background: linear-gradient(135deg, #fef0e7 0%, #fde1cb 100%); }
+  .work-image-placeholder.cool { background: linear-gradient(135deg, #edf2ff 0%, #dbe4ff 100%); }
+  .work-image-placeholder.fresh { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
+
+  .work-details h4 {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  .work-details p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 1.25rem;
+  }
+
+  .work-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .work-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .work-stat-num {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.35rem;
+    color: var(--accent);
+  }
+
+  .work-stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ========== ABOUT ========== */
+  .about-content {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 4rem;
+  }
+
+  .about-prose {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  .about-prose p + p { margin-top: 1.25rem; }
+
+  .about-prose strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .about-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .about-box {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+  }
+
+  .about-box-title {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .chip {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    transition: all 0.2s;
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .about-box-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  /* ========== APPROACH ========== */
+  .approach-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .approach-card {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+  }
+
+  .approach-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px #1a181410;
+  }
+
+  .approach-icon {
+    display: block;
+    margin-bottom: 1rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .approach-card h3 {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 400;
+    margin-bottom: 0.6rem;
+  }
+
+  .approach-card p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  /* ========== CONTACT ========== */
+  .contact {
+    text-align: center;
+    padding: 6rem 0 4rem;
+  }
+
+  .contact-heading {
+    font-family: var(--font-serif);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    line-height: 1.05;
+  }
+
+  .contact-heading em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .contact-sub {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+    margin-bottom: 2.5rem;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .contact-btns {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.85rem 2rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    background: var(--cream);
+    cursor: pointer;
+    transition: all 0.3s var(--ease-out);
+  }
+
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px #e85d2620;
+  }
+
+  .btn.primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .btn.primary:hover {
+    background: #d4511e;
+    box-shadow: 0 8px 30px #e85d2640;
+  }
+
+  /* ========== FOOTER ========== */
+  footer {
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  footer span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* ========== DOODLE DECORATION ========== */
+  .doodle {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.12;
+  }
+
+  .hero { position: relative; }
+
+  .doodle-circle {
+    width: 280px;
+    height: 280px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    position: absolute;
+    right: -40px;
+    top: 20%;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .doodle-squiggle {
+    position: absolute;
+    left: -60px;
+    bottom: 15%;
+    width: 120px;
+    height: 120px;
+    border: 2px solid var(--pop);
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    animation: float 6s ease-in-out infinite reverse;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+  }
+
+  /* ========== ANIMATIONS ========== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ========== 3D PLANE OVERLAY (reserved) ========== */
+  #plane-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+  }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 900px) {
+    .hero-body { grid-template-columns: 1fr; gap: 2rem; }
+    .hero-tidbits { justify-content: flex-start; }
+    .about-content { grid-template-columns: 1fr; gap: 2.5rem; }
+    .approach-cards { grid-template-columns: 1fr; }
+    .work-expand-grid { grid-template-columns: 1fr; }
+    .work-pills { display: none; }
+    .work-card.expanded {
+      width: 95vw;
+      top: 2.5%;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+    nav { padding: 0.6rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="plane-canvas"></div>
+
+<!-- BLUR OVERLAY -->
+<div class="blur-overlay" id="blurOverlay"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Federico</a>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#approach">How I Work</a></li>
+    <li><a href="#contact">Say Hi</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="doodle-circle doodle"></div>
+  <div class="doodle-squiggle doodle"></div>
+  <div class="container">
+    <div class="hero-badge">Open to opportunities</div>
+    <h1>
+      <span class="serif-line">I design things</span>
+      <span class="serif-line">I can <em>build.</em></span>
+    </h1>
+    <div class="hero-body">
+      <p class="hero-desc">
+        Design-minded engineer who's spent three years shipping products people
+        actually touch — games, web, interactive media. I care about how things
+        <strong>feel</strong>, not just how they work.
+      </p>
+      <div class="hero-tidbits">
+        <div class="tidbit">
+          <p class="tidbit-label">Based in</p>
+          <p class="tidbit-value">London, UK</p>
+        </div>
+        <div class="tidbit">
+          <p class="tidbit-label">Currently</p>
+          <p class="tidbit-value">Logifuture</p>
+        </div>
+        <div class="tidbit">
+          <p class="tidbit-label">Side thing</p>
+          <p class="tidbit-value">Coffin-Likker</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work" class="work-section">
+  <div class="container">
+    <p class="section-label reveal">01 — Selected Work</p>
+    <h2 class="section-heading reveal">Things I've shipped <br>& things I'm shipping.</h2>
+
+    <div class="work-grid">
+      <!-- Card 1 -->
+      <div class="work-card reveal" data-card="1">
+        <div class="work-card-header">
+          <div class="work-card-left">
+            <div class="work-icon orange">🎰</div>
+            <div class="work-card-info">
+              <h3>Mini Casino Games</h3>
+              <p>Logifuture — 2023–Present</p>
+            </div>
+          </div>
+          <div class="work-card-right">
+            <div class="work-pills">
+              <span class="work-pill">Game Design</span>
+              <span class="work-pill">UX</span>
+              <span class="work-pill">PixiJS</span>
+            </div>
+            <div class="work-toggle">+</div>
+          </div>
+        </div>
+        <div class="work-expand">
+          <div class="work-expand-inner">
+            <div class="work-expand-grid">
+              <div class="work-image-placeholder warm">Your screenshot here</div>
+              <div class="work-details">
+                <h4>A quick bet became a million-bet initiative</h4>
+                <p>
+                  Designed and pitched a mini casino game embedded in the sportsbook bet
+                  confirmation flow — a fast follow-on wager that felt natural, not intrusive.
+                  It delivered 170k bets in launch week and became the template for a wider
+                  mini-games initiative used in new-client pitches.
+                </p>
+                <p>
+                  Later pushed a UX improvement based on my own design vision that increased
+                  average daily bets from 10k to 60k — a 6x lift from a single interaction change.
+                </p>
+                <div class="work-stats">
+                  <div class="work-stat">
+                    <span class="work-stat-num">1M+</span>
+                    <span class="work-stat-label">Total bets</span>
+                  </div>
+                  <div class="work-stat">
+                    <span class="work-stat-num">6x</span>
+                    <span class="work-stat-label">Daily engagement</span>
+                  </div>
+                  <div class="work-stat">
+                    <span class="work-stat-num">170k</span>
+                    <span class="work-stat-label">Launch week</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="work-card reveal" data-card="2">
+        <div class="work-card-header">
+          <div class="work-card-left">
+            <div class="work-icon blue">⚔️</div>
+            <div class="work-card-info">
+              <h3>Coffin-Likker</h3>
+              <p>Personal Project — 2025–Present</p>
+            </div>
+          </div>
+          <div class="work-card-right">
+            <div class="work-pills">
+              <span class="work-pill">System Design</span>
+              <span class="work-pill">Unity</span>
+              <span class="work-pill">C#</span>
+            </div>
+            <div class="work-toggle">+</div>
+          </div>
+        </div>
+        <div class="work-expand">
+          <div class="work-expand-inner">
+            <div class="work-expand-grid">
+              <div class="work-image-placeholder cool">Your screenshot here</div>
+              <div class="work-details">
+                <h4>A stealth game built on clean systems</h4>
+                <p>
+                  Building a 2D top-down stealth game in Unity 6, personally owning system
+                  design, architecture decisions, and tradeoffs while using Claude to accelerate
+                  implementation.
+                </p>
+                <p>
+                  Built a modular gameplay architecture with clear system boundaries and narrow
+                  interfaces — combat, AI, and environment systems can evolve independently
+                  without ripple effects.
+                </p>
+                <div class="work-stats">
+                  <div class="work-stat">
+                    <span class="work-stat-num">Solo</span>
+                    <span class="work-stat-label">Founder</span>
+                  </div>
+                  <div class="work-stat">
+                    <span class="work-stat-num">Modular</span>
+                    <span class="work-stat-label">Architecture</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="work-card reveal" data-card="3">
+        <div class="work-card-header">
+          <div class="work-card-left">
+            <div class="work-icon green">🛰️</div>
+            <div class="work-card-info">
+              <h3>Lost Satellite Studios</h3>
+              <p>Technical Designer — 2024</p>
+            </div>
+          </div>
+          <div class="work-card-right">
+            <div class="work-pills">
+              <span class="work-pill">Mechanics</span>
+              <span class="work-pill">Godot</span>
+              <span class="work-pill">Prototyping</span>
+            </div>
+            <div class="work-toggle">+</div>
+          </div>
+        </div>
+        <div class="work-expand">
+          <div class="work-expand-inner">
+            <div class="work-expand-grid">
+              <div class="work-image-placeholder fresh">Your screenshot here</div>
+              <div class="work-details">
+                <h4>Narrative mechanics that serve the story</h4>
+                <p>
+                  Owned mechanics design and implementation, working under the Narrative
+                  Director to ensure gameplay supported narrative beats and pacing.
+                  Rapidly prototyped from rough ideas to playable implementations.
+                </p>
+                <p>
+                  Built mechanics as clean, modular systems from the outset — documented
+                  design intent and structured code to support continued development.
+                </p>
+                <div class="work-stats">
+                  <div class="work-stat">
+                    <span class="work-stat-num">Clean</span>
+                    <span class="work-stat-label">Modular systems</span>
+                  </div>
+                  <div class="work-stat">
+                    <span class="work-stat-num">Fast</span>
+                    <span class="work-stat-label">Iteration cycles</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <p class="section-label reveal">02 — About</p>
+    <h2 class="section-heading reveal">A bit about me.</h2>
+
+    <div class="about-content">
+      <div class="about-prose reveal">
+        <p>
+          I'm a <strong>design-minded software engineer</strong> who's spent three years
+          shipping products people actually interact with. I'm most at home at the
+          intersection of design thinking and technical execution.
+        </p>
+        <p>
+          What drives me is making complex things feel simple and intuitive.
+          Whether it's a casino game that needs to communicate its rules in seconds,
+          or a stealth AI that needs to feel fair and readable — I care deeply about
+          <strong>how things feel</strong>.
+        </p>
+        <p>
+          At Logifuture, I championed the transition to AI-driven development,
+          ran educational sessions for my team, and built a shared library of
+          Claude skills. I see AI as a tool that lets me stay focused on
+          architecture and the bigger picture.
+        </p>
+      </div>
+      <div class="about-sidebar reveal">
+        <div class="about-box">
+          <p class="about-box-title">Languages</p>
+          <div class="chip-grid">
+            <span class="chip">JavaScript</span>
+            <span class="chip">C#</span>
+            <span class="chip">C++</span>
+            <span class="chip">Python</span>
+            <span class="chip">GDScript</span>
+          </div>
+        </div>
+        <div class="about-box">
+          <p class="about-box-title">Tools & Frameworks</p>
+          <div class="chip-grid">
+            <span class="chip">Node.js</span>
+            <span class="chip">PixiJS</span>
+            <span class="chip">GSAP</span>
+            <span class="chip">Unity</span>
+            <span class="chip">Godot</span>
+            <span class="chip">Three.js</span>
+            <span class="chip">Figma</span>
+            <span class="chip">Miro</span>
+          </div>
+        </div>
+        <div class="about-box">
+          <p class="about-box-title">Education</p>
+          <p class="about-box-text">
+            BSc Physics & Astronomy — Queen Mary<br>
+            Game Programming — CG Spectrum
+          </p>
+        </div>
+        <div class="about-box">
+          <p class="about-box-title">Bonus Stats</p>
+          <p class="about-box-text">
+            Fluent in English & Italian. Conversational French.<br>
+            Sports climber. Stand-up comedian.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APPROACH -->
+<section id="approach">
+  <div class="container">
+    <p class="section-label reveal">03 — How I Work</p>
+    <h2 class="section-heading reveal">My approach to <em>making things.</em></h2>
+
+    <div class="approach-cards">
+      <div class="approach-card reveal">
+        <span class="approach-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><polygon points="14,2 26,14 14,26 2,14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></span>
+        <h3>Design with constraints</h3>
+        <p>
+          I design solutions I know can be built. Understanding technical
+          boundaries means fewer surprises and faster iteration.
+        </p>
+      </div>
+      <div class="approach-card reveal">
+        <span class="approach-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><polygon points="14,3 24,22 4,22" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></span>
+        <h3>Ship, then polish</h3>
+        <p>
+          Get the core experience in front of people. Validate with real data.
+          Then refine relentlessly. One proof-of-concept became a million bets.
+        </p>
+      </div>
+      <div class="approach-card reveal">
+        <span class="approach-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="14" cy="14" r="4" fill="currentColor" opacity="0.2"/></svg></span>
+        <h3>Systems over screens</h3>
+        <p>
+          I think in systems, not individual screens. Clean interfaces, modular
+          architecture, and documented intent.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact">
+  <div class="container">
+    <h2 class="contact-heading reveal">Let's build<br>something <em>together.</em></h2>
+    <p class="contact-sub reveal">
+      Currently open to technical design roles where I can bridge
+      design vision with engineering execution.
+    </p>
+    <div class="contact-btns reveal">
+      <a href="mailto:federico.giovannini28@gmail.com" class="btn primary">Email me</a>
+      <a href="https://github.com/FedG-code" target="_blank" class="btn">GitHub</a>
+      <a href="https://linkedin.com/in/federico-giovannini" target="_blank" class="btn">LinkedIn</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>Federico Giovannini © 2025 — Built with care & code</span>
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 60);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Expanding work cards + blur
+  const overlay = document.getElementById('blurOverlay');
+  const cards = document.querySelectorAll('.work-card');
+  let activeCard = null;
+
+  function closeActive() {
+    if (activeCard) {
+      activeCard.classList.remove('expanded');
+      overlay.classList.remove('active');
+      activeCard = null;
+    }
+  }
+
+  cards.forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (card === activeCard) {
+        closeActive();
+        return;
+      }
+      closeActive();
+      card.classList.add('expanded');
+      overlay.classList.add('active');
+      activeCard = card;
+    });
+  });
+
+  overlay.addEventListener('click', closeActive);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeActive();
+  });
+</script>
+
+</body>
+</html>
