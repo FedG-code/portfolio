@@ -288,13 +288,13 @@
   .blur-overlay {
     position: fixed;
     inset: 0;
-    z-index: 40;
+    z-index: 101;
     background: #1a181460;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s var(--ease-out);
+    transition: opacity 0.5s ease;
   }
 
   .blur-overlay.active {
@@ -313,23 +313,14 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    cursor: pointer;
     position: relative;
-    transition: all 0.5s var(--ease-out);
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
   }
 
   .work-card.expanded {
-    position: fixed;
-    top: 5%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(90vw, 960px);
-    max-height: 90vh;
-    overflow-y: auto;
-    z-index: 50;
+    z-index: 102;
     border-color: var(--border-hover);
     box-shadow: 0 40px 100px #1a181430;
-    border-radius: var(--radius);
   }
 
   .work-card-header {
@@ -338,7 +329,7 @@
     align-items: center;
     padding: 1.75rem 2rem;
     gap: 2rem;
-    transition: padding 0.4s var(--ease-out);
+    transition: padding 0.5s ease;
   }
 
   .work-card.expanded .work-card-header {
@@ -404,36 +395,12 @@
     color: var(--text-secondary);
   }
 
-  .work-toggle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    transition: all 0.3s var(--ease-out);
-    background: transparent;
-    flex-shrink: 0;
-  }
-
-  .work-card:hover .work-toggle {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--accent-soft);
-  }
-
-  .work-card.expanded .work-toggle {
-    transform: rotate(45deg);
-  }
 
   /* Expanded content */
   .work-expand {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.5s var(--ease-out);
+    transition: max-height 0.5s ease;
   }
 
   .work-card.expanded .work-expand {
@@ -468,6 +435,13 @@
   .work-image-placeholder.warm { background: linear-gradient(135deg, #fef0e7 0%, #fde1cb 100%); }
   .work-image-placeholder.cool { background: linear-gradient(135deg, #edf2ff 0%, #dbe4ff 100%); }
   .work-image-placeholder.fresh { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
+
+  .work-image {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+  }
 
   .work-details h4 {
     font-family: var(--font-serif);
@@ -820,7 +794,7 @@
       <p class="hero-desc">
         Design-minded engineer who's spent three years shipping products people
         actually touch — games, web, interactive media. I care about how things
-        <strong>feel</strong>, not just how they work.
+        feel, not just how they work.
       </p>
       <div class="hero-tidbits">
         <div class="tidbit">
@@ -863,7 +837,6 @@
               <span class="work-pill">UX</span>
               <span class="work-pill">PixiJS</span>
             </div>
-            <div class="work-toggle">+</div>
           </div>
         </div>
         <div class="work-expand">
@@ -918,7 +891,6 @@
               <span class="work-pill">Unity</span>
               <span class="work-pill">C#</span>
             </div>
-            <div class="work-toggle">+</div>
           </div>
         </div>
         <div class="work-expand">
@@ -969,13 +941,12 @@
               <span class="work-pill">Godot</span>
               <span class="work-pill">Prototyping</span>
             </div>
-            <div class="work-toggle">+</div>
           </div>
         </div>
         <div class="work-expand">
           <div class="work-expand-inner">
             <div class="work-expand-grid">
-              <div class="work-image-placeholder fresh">Your screenshot here</div>
+              <img src="Locandina 16,9.png" alt="Lost Satellite Studios" class="work-image" />
               <div class="work-details">
                 <h4>Narrative mechanics that serve the story</h4>
                 <p>
@@ -1160,19 +1131,19 @@
   }
 
   cards.forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (card === activeCard) {
-        closeActive();
-        return;
-      }
+    card.addEventListener('mouseenter', () => {
       closeActive();
       card.classList.add('expanded');
       overlay.classList.add('active');
       activeCard = card;
     });
-  });
 
-  overlay.addEventListener('click', closeActive);
+    card.addEventListener('mouseleave', () => {
+      if (card === activeCard) {
+        closeActive();
+      }
+    });
+  });
 
   // Theme switcher
   const themeSwitcher = document.getElementById('themeSwitcher');
@@ -1186,9 +1157,6 @@
     themeSwitcher.textContent = next.charAt(0).toUpperCase() + next.slice(1);
   });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeActive();
-  });
 </script>
 
 </body>
