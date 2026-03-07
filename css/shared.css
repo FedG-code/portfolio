@@ -401,7 +401,7 @@ section { padding: 7rem 0; }
 .work-expand {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.5s var(--ease-out);
+  transition: max-height 2s var(--ease-out);
 }
 
 .work-card.expanded .work-expand {
@@ -580,6 +580,11 @@ section { padding: 7rem 0; }
   margin-bottom: 1rem;
   color: var(--accent);
   line-height: 1;
+}
+
+.work-icon.orange img,
+.approach-icon img {
+  mix-blend-mode: multiply;
 }
 
 .approach-card h3 {

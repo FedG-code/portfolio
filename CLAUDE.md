@@ -29,20 +29,22 @@ npx http-server -p 8080 -c-1
 ```
 
 ## Verification
-After making visual changes, always screenshot the page with Playwright to verify the result:
-```js
-const { chromium } = require('playwright');
-const path = require('path');
-(async () => {
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await page.goto('file:///' + path.resolve('.', 'index.html').replace(/\\/g, '/'));
-  await page.waitForTimeout(1000);
-  await page.screenshot({ path: 'screenshot.png', fullPage: false });
-  await browser.close();
-})();
+After making visual changes, use `playwright-cli` to screenshot the page and verify the result.
+
+The local server must be running (`npx http-server -p 8080 -c-1`) before taking screenshots.
+
+```bash
+playwright-cli open http://localhost:8080/index.html
+playwright-cli screenshot --filename=screenshot.png
 ```
-If browsers aren't installed: `npx playwright install chromium`
+
+For project pages:
+```bash
+playwright-cli open http://localhost:8080/logifuture.html
+playwright-cli screenshot --filename=screenshot.png
+```
+
+If not installed: `npm install -g @playwright/cli@latest`
 
 ## Conventions
 - No build tools or bundler — static HTML/CSS/JS only
@@ -51,4 +53,4 @@ If browsers aren't installed: `npx playwright install chromium`
 - Theme-specific overrides go in `[data-theme="<name>"]` selector blocks
 - Every page must include the inline `<script>` in `<head>` for theme persistence (before CSS loads)
 - Nav links on project pages must be prefixed with `index.html#` (e.g., `index.html#work`)
-- Playwright is installed for screenshots/testing (`npx playwright install chromium` if browsers missing)
+- `@playwright/cli` is used for screenshots/testing (`npm install -g @playwright/cli@latest` if not installed)

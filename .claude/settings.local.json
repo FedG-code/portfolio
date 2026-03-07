@@ -5,9 +5,12 @@
       "Bash(npx serve:*)",
       "Bash(node:*)",
       "Bash(npm install:*)",
-      "Bash(npx playwright:*)",
       "Bash(rm:*)",
-      "Bash(npx http-server:*)"
+      "Bash(npx http-server:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(playwright-cli:*)",
+      "Bash(ls:*)",
+      "Bash(npx:*)"
     ]
   }
 }
