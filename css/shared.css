@@ -314,10 +314,6 @@ section { padding: 7rem 0; }
   color: var(--accent);
 }
 
-.work-card.expanded .work-card-header {
-  padding: 2rem 2.5rem;
-}
-
 .work-card-header {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -342,10 +338,6 @@ section { padding: 7rem 0; }
   font-size: 1.25rem;
   flex-shrink: 0;
   transition: transform 0.3s var(--ease-spring);
-}
-
-.work-card.expanded .work-icon {
-  transform: scale(1.1) rotate(-3deg);
 }
 
 .work-icon.orange { background: var(--accent-soft); }
