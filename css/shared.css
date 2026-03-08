@@ -71,6 +71,30 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
   color: var(--accent);
 }
 
+/* ========== PLANE TOGGLE ========== */
+.plane-toggle {
+  position: fixed;
+  top: 7rem;
+  right: 1.5rem;
+  z-index: 99;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 0.9rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.plane-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -727,7 +751,7 @@ footer span {
 #plane-canvas {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 103;
   pointer-events: none;
 }
 
@@ -741,6 +765,10 @@ footer span {
   .work-expand-grid { grid-template-columns: 1fr; }
   .work-card.expanded .work-card-header { padding: 1.5rem; }
   .work-expand-inner { padding: 0 1.5rem 1.5rem; }
+}
+
+@media (max-width: 768px) {
+  .plane-toggle { display: none; }
 }
 
 @media (max-width: 600px) {
