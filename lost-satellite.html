@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eve of Destruction — Federico Giovannini</title>
+<title>Eve of Destruction - Federico Giovannini</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -24,8 +24,7 @@
   <ul class="nav-links">
     <li><a href="index.html#work">Work</a></li>
     <li><a href="index.html#about">About</a></li>
-    <li><a href="index.html#approach">How I Work</a></li>
-    <li><a href="index.html#contact">Say Hi</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
   </ul>
 </nav>
 
@@ -43,10 +42,10 @@
     <div class="project-hero-badge"><svg width="16" height="16" viewBox="0 0 28 28" fill="none"><rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="8" y1="14" x2="3" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="25" y1="14" x2="20" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="8" x2="14" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="25" x2="14" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="12" x2="3" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="25" y1="12" x2="25" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Lost Satellite Studios</div>
     <h1 class="project-hero-title reveal">Eve of Destruction</h1>
     <p class="project-hero-desc reveal">
-      A 2D metroidvania with combo-based combat, a morality system that
-      unlocks divergent powers, and ability-gated exploration. As Technical
-      Designer on an 8-person team, I owned the combat system and full
-      movement/traversal suite from scratch in GDScript.
+      A 2D metroidvania with combo-based combat, a morality system that unlocks
+      divergent powers, and ability-gated exploration. As Technical Designer on
+      an 8-person team, I built the combat system and full movement suite from
+      scratch in GDScript.
       <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener" style="color: var(--accent)">Steam demo available</a>.
     </p>
     <div class="project-meta reveal">
@@ -72,7 +71,7 @@
     <div class="video-embed reveal">
       <iframe
         src="https://www.youtube-nocookie.com/embed/1mC3hQKUVtM"
-        title="Eve of Destruction — Gameplay Trailer"
+        title="Eve of Destruction - Gameplay Trailer"
         loading="lazy"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen>
@@ -84,7 +83,7 @@
 <!-- SECTION 01: COMBAT SYSTEM -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">01 &mdash; Combat System</p>
+    <p class="section-label reveal">01 - Combat System</p>
     <h2 class="section-heading reveal">Combat</h2>
     <div class="project-content reveal">
       <div>
@@ -92,28 +91,28 @@
       </div>
       <div class="project-text">
         <p>
-          Built the entire combat system around a finite state machine, where each
-          attack is a distinct state node chained into combo sequences. Hitbox
-          activation is driven by per-state timers rather than animation signals,
-          giving precise control over attack windows independent of animation timing.
+          The combat system runs on a finite state machine where each attack is a
+          distinct state node chained into combo sequences. Hitbox activation uses
+          per-state timers rather than animation signals, so attack windows can be
+          tuned independently from animation timing.
         </p>
         <p>
-          Input buffering uses a flag-based system &mdash; player inputs are captured
-          during any attack state, and the transition fires only when the combo timer
-          drops below a threshold while the buffer flag is set. This keeps combos
-          feeling responsive without allowing instant cancels.
+          Input buffering captures player inputs during any attack state. The
+          transition to the next hit only fires when the combo timer drops below
+          a threshold while the buffer flag is set. Combos feel responsive without
+          allowing instant cancels.
         </p>
         <p>
-          The second hit introduces directional branching: neutral input leads to the
-          standard finisher, up-input triggers a launcher that sends enemies airborne
-          for manual air-combo follow-ups, and horizontal input triggers a forward
-          lunge. This gives the player meaningful mid-combo choice without complex
-          input parsing.
+          The second hit introduces directional branching: neutral input leads to
+          the standard finisher, up-input triggers a launcher that sends enemies
+          airborne for air-combo follow-ups, and horizontal input triggers a
+          forward lunge. The player gets meaningful mid-combo choices without
+          complex input parsing.
         </p>
         <p>
-          Berserk mode activates a parallel combo chain with its own state sequence
-          and a heavy finisher, paired with a full character transformation that
-          swaps the moveset entirely.
+          Berserk mode activates a parallel combo chain with its own state
+          sequence and a heavy finisher, paired with a full character
+          transformation that swaps the moveset entirely.
         </p>
       </div>
     </div>
@@ -129,7 +128,7 @@
 <!-- SECTION 02: MOVEMENT & TRAVERSAL -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">02 &mdash; Movement &amp; Traversal</p>
+    <p class="section-label reveal">02 - Movement &amp; Traversal</p>
     <h2 class="section-heading reveal">Movement</h2>
     <div class="project-content reveal">
       <div>
@@ -137,14 +136,13 @@
       </div>
       <div class="project-text">
         <p>
-          Implemented the complete movement suite for a metroidvania that gates
-          exploration behind ability unlocks &mdash; run, jump, dash, wall jump,
-          double jump, and ground pound, each built from scratch in GDScript.
+          Built the complete movement suite for a metroidvania that gates exploration
+          behind ability unlocks: run, jump, dash, wall jump, double jump, and
+          ground pound, each from scratch in GDScript.
         </p>
         <p>
           Each ability is a modular addition to the player controller, designed to
-          slot in cleanly as the player progresses and new areas open up through
-          traversal tools.
+          slot in cleanly as the player progresses and new areas open up.
         </p>
       </div>
     </div>
@@ -153,7 +151,7 @@
 
 <footer>
   <div class="container">
-    <span>Federico Giovannini &copy; 2025 — Built with care &amp; code</span>
+    <span>Federico Giovannini &copy; 2025</span>
   </div>
 </footer>
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Personal Projects — Federico Giovannini</title>
+<title>Personal Projects - Federico Giovannini</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -24,8 +24,7 @@
   <ul class="nav-links">
     <li><a href="index.html#work">Work</a></li>
     <li><a href="index.html#about">About</a></li>
-    <li><a href="index.html#approach">How I Work</a></li>
-    <li><a href="index.html#contact">Say Hi</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
   </ul>
 </nav>
 
@@ -43,9 +42,9 @@
     <div class="project-hero-badge">&#x1F3AE; Personal Projects</div>
     <h1 class="project-hero-title reveal">Coffin-Likker</h1>
     <p class="project-hero-desc reveal">
-      A 2D top-down stealth game where darkness is the default and light is your only
-      window into the world. Everything outside the player's vision cone is invisible
-      &mdash; enforced at the shader level, not through UI tricks.
+      A 2D top-down stealth game where you can only see what your flashlight reveals.
+      Everything outside the beam is pitch black. Enemies exist whether you can see
+      them or not. The entire game is designed around that asymmetry and the fear it creates.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
@@ -67,7 +66,7 @@
 <!-- COFFIN-LIKKER -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">01 &mdash; Coffin-Likker <span class="wip-badge">In Development</span></p>
+    <p class="section-label reveal">01 - Coffin-Likker <span class="wip-badge">In Development</span></p>
     <h2 class="section-heading reveal">Light is your only window</h2>
 
     <!-- Vision & Visibility -->
@@ -78,22 +77,22 @@
       <div class="project-text">
         <h4>Vision &amp; Visibility</h4>
         <p>
-          The core mechanic inverts the typical stealth formula. Instead of hiding in
-          darkness, the player controls a flashlight-like vision cone that determines
-          what they can see. Custom HLSL shaders repurpose URP's Blend Style 3 as a
-          visibility mask &mdash; entities outside the light have zero alpha, making them
-          truly invisible rather than hidden behind fog or overlay.
+          The core mechanic flips the usual stealth formula. Instead of hiding in
+          darkness, the player carries a flashlight that determines what's visible.
+          Custom HLSL shaders repurpose URP's Blend Style 3 as a visibility mask.
+          Anything outside the light is truly invisible (zero alpha, not fog or overlay).
         </p>
         <p>
-          A dual-threshold trigger system creates a deliberate mismatch between visual
-          and gameplay boundaries. Shadows appear before you see the object, but you can
-          glimpse an enemy at the cone's edge without it reacting &mdash; a grace zone
-          that feels fair without breaking immersion.
+          There's a deliberate gap between what you can see and what can see you.
+          Shadows appear at the edge of your light before you can make out the
+          object casting them. You might spot an enemy at the far reach of your
+          beam, but it won't react until you get closer. This grace zone gives
+          the player a split second to decide without breaking the tension.
         </p>
         <p>
-          The art direction reinforces the mechanic: a monochrome palette of black, grey,
-          white, and red. When gameplay is about what you can and can't see, colour becomes
-          noise &mdash; red is reserved exclusively for danger.
+          The art direction supports this: black, grey, white, and red only. When
+          the game is about what you can and can't see, colour is noise. Red means
+          danger, nothing else.
         </p>
       </div>
     </div>
@@ -106,16 +105,17 @@
       <div class="project-text">
         <h4>Enemy AI System</h4>
         <p>
-          Four distinct enemy types built with Unity Behavior Graph and custom C# action
-          nodes. A standard patrol unit, a Weeping Angel that freezes when the player can
-          see it, an aquatic enemy that lurks underwater and surfaces to attack, and a
-          ranged variant that fires layer-filtered projectiles.
+          Four enemy types, each built with Unity Behavior Graph and custom C# action
+          nodes: a standard patrol unit, a Weeping Angel that freezes when lit, an
+          aquatic enemy that lurks underwater and surfaces to attack, and a ranged
+          variant with layer-filtered projectiles.
         </p>
         <p>
-          Detection is fully independent from player visibility &mdash; enemies can detect
-          the player even when the player can't see them. The EnemyManager polls an array
-          of modular AwarenessDetector components (vision cones, proximity, line-of-sight)
-          at a configurable interval, keeping the system extensible.
+          Enemy detection is independent from player visibility. An enemy can detect
+          the player even when the player can't see it. The EnemyManager checks an
+          array of modular detection components (vision cones, proximity, line-of-sight)
+          at a configurable interval, so new detection types slot in without touching
+          existing code.
         </p>
         <div class="work-stats">
           <div class="work-stat">
@@ -138,15 +138,15 @@
       <div class="project-text">
         <h4>Combat &amp; Sound Propagation</h4>
         <p>
-          Firing a weapon spawns a projectile and a sound ring. The ring uses
-          Physics2D.OverlapCircleAll to alert nearby enemies, bridging the combat and AI
-          systems. Every shot is a tactical decision &mdash; it reveals your position to
-          anything listening. Per-enemy sensory toggles (deaf, blind) let level design
-          create enemies that only respond to specific stimuli.
+          Firing a weapon spawns a projectile and a sound ring. The ring alerts
+          nearby enemies using Physics2D.OverlapCircleAll, so every shot is a
+          tactical decision that reveals your position. Per-enemy sensory toggles
+          (deaf, blind) let level design create enemies that only respond to
+          specific stimuli.
         </p>
         <p>
-          Water surface effects, procedural reed systems, and environmental interactions
-          are also in active development &mdash; building out the world layer by layer.
+          Water surface effects, procedural reed systems, and environmental
+          interactions are in active development.
         </p>
       </div>
     </div>
@@ -156,21 +156,21 @@
 <!-- TETRARCANA -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">02 &mdash; Game Jam</p>
+    <p class="section-label reveal">02 - Game Jam</p>
     <h2 class="section-heading reveal">Tetrarcana</h2>
     <div class="project-content reveal">
       <div>
-        <div class="work-image-placeholder cool">Tetrarcana gameplay screenshot</div>
+        <img class="work-image" src="assets/tetrarcana.gif" alt="Tetrarcana gameplay" loading="lazy">
       </div>
       <div class="project-text">
         <p>
           A 1v1 board game where two players compete to cover a shared grid with
-          tetris-shaped pieces. Territory control works like Splatoon &mdash; overlap your
-          opponent's pieces to claim their space. First to roughly 60% coverage wins.
+          tetris-shaped pieces. Overlap your opponent's territory to claim it.
+          First to roughly 60% coverage wins.
         </p>
         <p>
-          Designed the entire gameplay mechanic, coded it, and worked on the visual design
-          with an artist. Built in a two-week game jam using Unity 6.
+          Designed the gameplay mechanic, coded it, and collaborated with an
+          artist on visual design. Built in a two-week game jam using Godot.
         </p>
         <div class="work-stats">
           <div class="work-stat">
@@ -191,21 +191,21 @@
 <!-- CALM BEFORE THE STORM -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">03 &mdash; Game Jam</p>
+    <p class="section-label reveal">03 - Game Jam</p>
     <h2 class="section-heading reveal">Calm Before the Storm</h2>
     <div class="project-content reveal">
       <div>
-        <div class="work-image-placeholder cool">Calm Before the Storm screenshot</div>
+        <img class="work-image" src="assets/calm.gif" alt="Calm Before the Storm gameplay" loading="lazy">
       </div>
       <div class="project-text">
         <p>
-          A small game about grabbing enough fish and landing on a tiny island before a
-          storm rolls in. The storm arrives at a random time, the boat is purposefully
-          unwieldy, and the music builds with swelling tension &mdash; designed entirely
-          around the feeling of uncertain pressure.
+          A small game about catching fish and reaching an island before a storm
+          hits. The storm arrives at a random time, the boat handles poorly on
+          purpose, and the music builds tension as you play. The whole design is
+          built around that feeling of uncertain pressure.
         </p>
         <p>
-          Led visual design and built the game. One-week game jam using Unity 6.
+          Led visual design and built the game in a one-week jam using Godot.
         </p>
         <div class="work-stats">
           <div class="work-stat">
@@ -221,7 +221,7 @@
 
 <footer>
   <div class="container">
-    <span>Federico Giovannini &copy; 2025 — Built with care &amp; code</span>
+    <span>Federico Giovannini &copy; 2025</span>
   </div>
 </footer>
 
