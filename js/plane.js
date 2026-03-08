@@ -11,6 +11,8 @@
   var FRUSTUM_SIZE      = 10;
   var MIN_VIEWPORT      = 768;
   var LS_KEY            = 'portfolio-plane';
+  var IFRAME_BUFFER     = 50;
+  var IFRAME_BUFFER_TOP = 65;
 
   // --- Viewport gate ---
   if (window.innerWidth <= MIN_VIEWPORT) return;
@@ -36,6 +38,57 @@
   var currentRoll = 0;
   var targetRoll = 0;
   var targetPosition = null; // THREE.Vector3, created after scripts load
+  var lastMouseMoveTime = 0;
+  var MOUSE_STALE_MS = 100;
+
+  // --- Iframe avoidance ---
+  var cachedIframeRects = [];
+  var iframeRectsStale = true;
+
+  function refreshIframeRects() {
+    var iframes = document.querySelectorAll('iframe');
+    cachedIframeRects = [];
+    for (var i = 0; i < iframes.length; i++) {
+      cachedIframeRects.push(iframes[i].getBoundingClientRect());
+    }
+    iframeRectsStale = false;
+  }
+
+  function markIframeRectsStale() {
+    iframeRectsStale = true;
+  }
+
+  function getAvoidanceTarget(sx, sy) {
+    if (iframeRectsStale) refreshIframeRects();
+    for (var i = 0; i < cachedIframeRects.length; i++) {
+      var r = cachedIframeRects[i];
+      var bLeft = r.left - IFRAME_BUFFER;
+      var bRight = r.right + IFRAME_BUFFER;
+      var bTop = r.top - IFRAME_BUFFER_TOP;
+      var bBottom = r.bottom + IFRAME_BUFFER;
+      if (sx >= bLeft && sx <= bRight && sy >= bTop && sy <= bBottom) {
+        // cursor is inside buffered rect — find closest edge
+        var dLeft = sx - bLeft;
+        var dRight = bRight - sx;
+        var dTop = sy - bTop;
+        var dBottom = bBottom - sy;
+        var minD = Math.min(dLeft, dRight, dTop, dBottom);
+        var outX = sx;
+        var outY = sy;
+        if (minD === dLeft) {
+          outX = bLeft - 1;
+        } else if (minD === dRight) {
+          outX = bRight + 1;
+        } else if (minD === dTop) {
+          outY = bTop - 1;
+        } else {
+          outY = bBottom + 1;
+        }
+        return { x: outX, y: outY };
+      }
+    }
+    return null;
+  }
 
   var canvasContainer = document.getElementById('plane-canvas');
   var toggleBtn = null;
@@ -126,6 +179,7 @@
     mouseScreenX = e.clientX;
     mouseScreenY = e.clientY;
     mouseOnScreen = true;
+    lastMouseMoveTime = performance.now();
 
     if (!hasReceivedMouseMove && planeGroup) {
       hasReceivedMouseMove = true;
@@ -136,7 +190,23 @@
     }
   }
 
-  function onMouseLeave() {
+  function onMouseLeave(e) {
+    // When the cursor enters an iframe, the document fires mouseleave
+    // even though the cursor is still visually on the page. Detect this
+    // by checking if the leave coordinates fall inside an iframe.
+    if (iframeRectsStale) refreshIframeRects();
+    for (var i = 0; i < cachedIframeRects.length; i++) {
+      var r = cachedIframeRects[i];
+      if (e.clientX >= r.left && e.clientX <= r.right &&
+          e.clientY >= r.top && e.clientY <= r.bottom) {
+        // Cursor entered an iframe — keep mouseOnScreen true,
+        // snap coords to the iframe edge so avoidance works.
+        mouseScreenX = e.clientX;
+        mouseScreenY = e.clientY;
+        mouseOnScreen = true;
+        return;
+      }
+    }
     mouseOnScreen = false;
   }
 
@@ -145,6 +215,38 @@
     prevMouseScreenX = e.clientX;
     mouseScreenX = e.clientX;
     mouseScreenY = e.clientY;
+  }
+
+  // When mousemove stops but mouseOnScreen is still true, the cursor
+  // is likely trapped inside an iframe. Snap mouse coords to the nearest
+  // edge of the containing iframe so the avoidance logic stays accurate.
+  function snapMouseIfTrappedInIframe() {
+    if (!mouseOnScreen) return;
+    if (performance.now() - lastMouseMoveTime < MOUSE_STALE_MS) return;
+    if (iframeRectsStale) refreshIframeRects();
+    for (var i = 0; i < cachedIframeRects.length; i++) {
+      var r = cachedIframeRects[i];
+      // Use a small margin since the last known position may be just outside
+      var m = 5;
+      if (mouseScreenX >= r.left - m && mouseScreenX <= r.right + m &&
+          mouseScreenY >= r.top - m && mouseScreenY <= r.bottom + m) {
+        var dLeft = mouseScreenX - r.left;
+        var dRight = r.right - mouseScreenX;
+        var dTop = mouseScreenY - r.top;
+        var dBottom = r.bottom - mouseScreenY;
+        var minD = Math.min(dLeft, dRight, dTop, dBottom);
+        if (minD === dLeft) {
+          mouseScreenX = r.left;
+        } else if (minD === dRight) {
+          mouseScreenX = r.right;
+        } else if (minD === dTop) {
+          mouseScreenY = r.top;
+        } else {
+          mouseScreenY = r.bottom;
+        }
+        return;
+      }
+    }
   }
 
   // --- Animation Loop ---
@@ -159,10 +261,24 @@
       if (topPropeller) topPropeller.rotation.y -= PROPELLER_SPEED * delta;
 
       // Compute target position
+      snapMouseIfTrappedInIframe();
       if (mouseOnScreen) {
-        var world = screenToWorld(mouseScreenX, mouseScreenY);
-        targetPosition.x = world.x;
-        targetPosition.z = world.z + CURSOR_OFFSET_Z;
+        // The plane sits below the cursor by CURSOR_OFFSET_Z world units.
+        // Check the plane's effective screen position against iframe rects.
+        var offsetPx = CURSOR_OFFSET_Z / FRUSTUM_SIZE * window.innerHeight;
+        var planeScreenY = mouseScreenY + offsetPx;
+        var avoidPoint = getAvoidanceTarget(mouseScreenX, planeScreenY);
+        var world;
+        if (avoidPoint) {
+          // avoidPoint is where the plane should be on screen — no extra offset
+          world = screenToWorld(avoidPoint.x, avoidPoint.y);
+          targetPosition.x = world.x;
+          targetPosition.z = world.z;
+        } else {
+          world = screenToWorld(mouseScreenX, mouseScreenY);
+          targetPosition.x = world.x;
+          targetPosition.z = world.z + CURSOR_OFFSET_Z;
+        }
       } else {
         var halfWidth = FRUSTUM_SIZE * aspect / 2;
         if (planeGroup.position.x >= 0) {
@@ -273,6 +389,8 @@
       document.addEventListener('mouseleave', onMouseLeave);
       document.addEventListener('mouseenter', onMouseEnter);
       window.addEventListener('resize', onResize);
+      window.addEventListener('resize', markIframeRectsStale);
+      window.addEventListener('scroll', markIframeRectsStale, { passive: true });
 
       initialized = true;
       running = true;

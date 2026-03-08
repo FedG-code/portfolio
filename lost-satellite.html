@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lost Satellite Studios — Federico Giovannini</title>
+<title>Eve of Destruction — Federico Giovannini</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -41,10 +41,13 @@
 <section class="project-hero">
   <div class="container">
     <div class="project-hero-badge"><svg width="16" height="16" viewBox="0 0 28 28" fill="none"><rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="8" y1="14" x2="3" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="25" y1="14" x2="20" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="8" x2="14" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="25" x2="14" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="12" x2="3" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="25" y1="12" x2="25" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Lost Satellite Studios</div>
-    <h1 class="project-hero-title reveal">Narrative Mechanics</h1>
+    <h1 class="project-hero-title reveal">Eve of Destruction</h1>
     <p class="project-hero-desc reveal">
-      Owned mechanics design and implementation as Technical Designer,
-      ensuring gameplay supported narrative beats and pacing.
+      A 2D metroidvania with combo-based combat, a morality system that
+      unlocks divergent powers, and ability-gated exploration. As Technical
+      Designer on an 8-person team, I owned the combat system and full
+      movement/traversal suite from scratch in GDScript.
+      <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener" style="color: var(--accent)">Steam demo available</a>.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
@@ -63,44 +66,87 @@
   </div>
 </section>
 
-<!-- PROJECT SECTION -->
+<!-- TRAILER -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">01 &mdash; Mechanics Design</p>
-    <h2 class="section-heading reveal">Narrative mechanics that serve the story</h2>
+    <div class="video-embed reveal">
+      <iframe
+        src="https://www.youtube-nocookie.com/embed/1mC3hQKUVtM"
+        title="Eve of Destruction — Gameplay Trailer"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 01: COMBAT SYSTEM -->
+<section class="project-section">
+  <div class="container">
+    <p class="section-label reveal">01 &mdash; Combat System</p>
+    <h2 class="section-heading reveal">Combat</h2>
     <div class="project-content reveal">
       <div>
-        <img src="assets/Locandina 16,9.png" alt="Lost Satellite Studios" class="work-image" />
+        <div class="work-image-placeholder fresh">Launcher combo GIF</div>
       </div>
       <div class="project-text">
         <p>
-          Owned mechanics design and implementation, working under the Narrative
-          Director to ensure gameplay supported narrative beats and pacing.
-          Rapidly prototyped from rough ideas to playable implementations.
+          Built the entire combat system around a finite state machine, where each
+          attack is a distinct state node chained into combo sequences. Hitbox
+          activation is driven by per-state timers rather than animation signals,
+          giving precise control over attack windows independent of animation timing.
         </p>
         <p>
-          Built mechanics as clean, modular systems from the outset — documented
-          design intent and structured code to support continued development.
+          Input buffering uses a flag-based system &mdash; player inputs are captured
+          during any attack state, and the transition fires only when the combo timer
+          drops below a threshold while the buffer flag is set. This keeps combos
+          feeling responsive without allowing instant cancels.
         </p>
-        <div class="work-stats">
-          <div class="work-stat">
-            <span class="work-stat-num">Clean</span>
-            <span class="work-stat-label">Modular systems</span>
-          </div>
-          <div class="work-stat">
-            <span class="work-stat-num">Fast</span>
-            <span class="work-stat-label">Iteration cycles</span>
-          </div>
-        </div>
+        <p>
+          The second hit introduces directional branching: neutral input leads to the
+          standard finisher, up-input triggers a launcher that sends enemies airborne
+          for manual air-combo follow-ups, and horizontal input triggers a forward
+          lunge. This gives the player meaningful mid-combo choice without complex
+          input parsing.
+        </p>
+        <p>
+          Berserk mode activates a parallel combo chain with its own state sequence
+          and a heavy finisher, paired with a full character transformation that
+          swaps the moveset entirely.
+        </p>
       </div>
     </div>
 
-    <!-- Screenshot Gallery -->
-    <p class="section-label reveal" style="margin-top: 4rem;">Screenshots</p>
-    <div class="screenshot-gallery reveal">
-      <img src="assets/Locandina 16,9.png" alt="Lost Satellite Studios - Locandina" class="work-image" />
-      <div class="work-image-placeholder fresh">Screenshot placeholder</div>
-      <div class="work-image-placeholder fresh">Screenshot placeholder</div>
+    <!-- Additional combat media -->
+    <div class="screenshot-gallery reveal" style="margin-top: 3rem;">
+      <div class="work-image-placeholder fresh">Berserk / laser eye GIF</div>
+      <div class="work-image-placeholder fresh">Boss fight GIF</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 02: MOVEMENT & TRAVERSAL -->
+<section class="project-section">
+  <div class="container">
+    <p class="section-label reveal">02 &mdash; Movement &amp; Traversal</p>
+    <h2 class="section-heading reveal">Movement</h2>
+    <div class="project-content reveal">
+      <div>
+        <img class="work-image" src="assets/wall-jump.gif" alt="Wall jump gameplay" loading="lazy">
+      </div>
+      <div class="project-text">
+        <p>
+          Implemented the complete movement suite for a metroidvania that gates
+          exploration behind ability unlocks &mdash; run, jump, dash, wall jump,
+          double jump, and ground pound, each built from scratch in GDScript.
+        </p>
+        <p>
+          Each ability is a modular addition to the player controller, designed to
+          slot in cleanly as the player progresses and new areas open up through
+          traversal tools.
+        </p>
+      </div>
     </div>
   </div>
 </section>
