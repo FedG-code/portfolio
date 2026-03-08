@@ -182,6 +182,28 @@
   border-radius: var(--radius-sm);
 }
 
+/* ========== WIP BADGE ========== */
+.wip-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.25rem 0.6rem;
+  border-radius: 100px;
+  margin-left: 0.75rem;
+  vertical-align: middle;
+}
+
+/* ========== PROJECT LINK ========== */
+.project-link {
+  margin-top: 1.25rem;
+  display: inline-block;
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   .project-content { grid-template-columns: 1fr; }
