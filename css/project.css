@@ -214,6 +214,19 @@
   display: inline-block;
 }
 
+/* ========== PORTRAIT IMAGE DUO ========== */
+.project-images-duo {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.project-images-duo .work-image {
+  aspect-ratio: 9 / 16;
+  flex: 1;
+  min-width: 0;
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   .project-content { grid-template-columns: 1fr; }
