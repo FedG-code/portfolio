@@ -53,6 +53,12 @@ playwright-cli screenshot --filename=screenshot.png
 
 If not installed: `npm install -g @playwright/cli@latest`
 
+### Playwright Tips
+- **Scrolling to sections**: Use `npx playwright-cli eval "() => document.querySelector('#work').scrollIntoView()"` to scroll to a specific element before taking a screenshot.
+- **Expanding work cards**: Work cards use `.expanded` class toggled by JS. To expand a card for screenshots, use `npx playwright-cli eval "() => document.querySelector('.work-card').classList.add('expanded')"` then wait ~2s for the `max-height` transition before screenshotting. Use `.querySelectorAll('.work-card')[N]` to target a specific card by index.
+- **Running JS on page**: Use `npx playwright-cli eval "() => { ... }"` (arrow function string) for page-level JavaScript execution.
+- **Reload after CSS changes**: After editing CSS files, run `npx playwright-cli reload` before screenshotting, as the browser may cache old styles.
+
 ## Writing & Tone
 - **No em dashes**. Never use `—`, `&mdash;`, or long dashes anywhere. Use commas, periods, or restructure the sentence instead. Hyphens (`-`) are fine for separators in labels and metadata.
 - **Serious, direct tone**. No grandiose or marketing-style language. State what was built and how, not how impressive it is.
