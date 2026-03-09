@@ -1,0 +1,87 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "Federico" [ref=e3] [cursor=pointer]:
+      - /url: index.html
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - link "Work" [ref=e6] [cursor=pointer]:
+          - /url: index.html#work
+      - listitem [ref=e7]:
+        - link "About" [ref=e8] [cursor=pointer]:
+          - /url: index.html#about
+      - listitem [ref=e9]:
+        - link "Contact" [ref=e10] [cursor=pointer]:
+          - /url: index.html#contact
+  - button "Slate" [ref=e11] [cursor=pointer]
+  - link "← Back to all work" [ref=e13] [cursor=pointer]:
+    - /url: index.html#work
+  - generic [ref=e15]:
+    - generic [ref=e16]: 🎮 Personal Projects
+    - heading "Coffin-Likker" [level=1] [ref=e17]
+    - paragraph [ref=e18]: Building a game in preproduction to learn about game development, explore my ideas and learn about managment, shipping and pitching to publishers.
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: Role
+        - paragraph [ref=e22]: Solo Founder
+      - generic [ref=e23]:
+        - paragraph [ref=e24]: Timeline
+        - paragraph [ref=e25]: 2025 – Present
+      - generic [ref=e26]:
+        - paragraph [ref=e27]: Stack
+        - paragraph [ref=e28]: Unity 6, C#
+  - generic [ref=e30]:
+    - paragraph [ref=e31]:
+      - text: 01 - Coffin-Likker
+      - generic [ref=e32]: In Development
+    - heading "Muk (working title)" [level=2] [ref=e33]
+    - generic [ref=e34]:
+      - generic [ref=e36]: Vision system screenshot
+      - generic [ref=e37]:
+        - heading "Vision & Visibility" [level=4] [ref=e38]
+        - paragraph [ref=e39]: I felt like darkwood's mechanic of enemies and objects being invisible outside of the player vision cone was unexplored in the gaming space. Fog of war is present in many places but strangely not in single player experiences with a vision cone. I wanted to expand on this "fear of the dark" feeling and place it in a bayou. I am also going to lightly be "stealing" darkest dungeon's lovecraftian horror. I used custom HLSL shaders and reused blend styles to create a visibility mask.
+        - paragraph [ref=e40]: After going to a talk by Henry Hoffman (the creator of Hue) I started to really consider how much more I could connect the gameplay and the art direction. I decided to lean into black and white and I'm experimenting with using red to highlight combat.
+    - generic [ref=e41]:
+      - generic [ref=e43]: Combat screenshot
+      - generic [ref=e44]:
+        - heading "Combat & Sound Propagation" [level=4] [ref=e45]
+        - paragraph [ref=e46]: Firing a weapon spawns a projectile and a sound ring. The ring alerts nearby enemies using Physics2D.OverlapCircleAll, so every shot is a tactical decision that reveals your position. Per-enemy sensory toggles (deaf, blind) let level design create enemies that only respond to specific stimuli.
+        - paragraph [ref=e47]: Water surface effects, procedural reed systems, and environmental interactions are in active development.
+    - generic [ref=e48]:
+      - generic [ref=e50]: Enemy AI screenshot
+      - generic [ref=e51]:
+        - heading "Enemy AI System" [level=4] [ref=e52]
+        - paragraph [ref=e53]: "Four enemy types, each built with Unity Behavior Graph and custom C# action nodes: a standard patrol unit, a Weeping Angel that freezes when lit, an aquatic enemy that lurks underwater and surfaces to attack, and a ranged variant with layer-filtered projectiles."
+        - paragraph [ref=e54]: Enemy detection is independent from player visibility. An enemy can detect the player even when the player can't see it. The EnemyManager checks an array of modular detection components (vision cones, proximity, line-of-sight) at a configurable interval, so new detection types slot in without touching existing code.
+  - generic [ref=e56]:
+    - paragraph [ref=e57]: 02 - Game Jam
+    - heading "Tetrarcana" [level=2] [ref=e58]
+    - generic [ref=e59]:
+      - img "Tetrarcana gameplay" [ref=e61]
+      - generic [ref=e62]:
+        - paragraph [ref=e63]: A 1v1 board game where two players compete to cover a shared grid with tetris-shaped pieces. The brief was "light and dark" and also "alchemy". I thought of Splatoon style territory control for light and dark, and merging the tetris pieces together to create new shapes for alchemy. The point of combining is actually also to make "perfect play" harder, since tetris pieces are often easy to slot in. Overlap your opponent's territory claims it. First to roughly 70% coverage wins.
+        - paragraph [ref=e64]: Designed the gameplay mechanic, coded it, and collaborated with an artist on visual design and a sound designer on audio. Built in my free time using Godot.
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]: 2 Week
+            - generic [ref=e68]: Game Jam
+          - generic [ref=e69]:
+            - generic [ref=e70]: 1v1
+            - generic [ref=e71]: Board Game
+        - link "Play on itch.io →" [ref=e72] [cursor=pointer]:
+          - /url: https://wryq.itch.io/tetrarcana
+  - generic [ref=e74]:
+    - paragraph [ref=e75]: 03 - Game Jam
+    - heading "Calm Before the Storm" [level=2] [ref=e76]
+    - generic [ref=e77]:
+      - img "Calm Before the Storm gameplay" [ref=e79]
+      - generic [ref=e80]:
+        - paragraph [ref=e81]: A small game about catching fish and reaching an island before a storm hits.The brief was "calm before the storm", and I wanted to maximise the fear of the oncoming storm with small random elements, the fish spawning location and island spawn locations, the direction of the storm and there's a slight randomness in when the storm hits. The boat is also unwieldy to add pressure to the player.
+        - paragraph [ref=e82]: Built using Godot in my free time.
+        - generic [ref=e84]:
+          - generic [ref=e85]: 1 Week
+          - generic [ref=e86]: Game Jam
+        - link "Play on itch.io →" [ref=e87] [cursor=pointer]:
+          - /url: https://wryq.itch.io/calmbeforethestorm
+  - contentinfo [ref=e88]:
+    - generic [ref=e89]: Federico Giovannini © 2025
+  - button "Plane Off" [ref=e90] [cursor=pointer]

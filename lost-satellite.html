@@ -106,6 +106,9 @@
     </div>
 
     <div class="project-content project-content--reversed reveal" style="margin-top: 3rem;">
+      <div>
+        <img class="work-image" src="assets/knockup.gif" alt="Berserk mode and laser eye gameplay" loading="lazy">
+      </div>
       <div class="project-text">
         <p>
           The second hit introduces directional branching: neutral input leads to
@@ -120,17 +123,68 @@
           transformation that swaps the moveset entirely.
         </p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 02: ENEMIES -->
+<section class="project-section">
+  <div class="container">
+    <p class="section-label reveal">02 - Enemies</p>
+    <h2 class="section-heading reveal">Enemies</h2>
+    <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/knockup.gif" alt="Berserk mode and laser eye gameplay" loading="lazy">
+        <img class="work-image" src="assets/star.gif" alt="Crystal Eater and Star enemy gameplay" loading="lazy">
+      </div>
+      <div class="project-text">
+        <h4>Generic Enemies</h4>
+        <p>
+          The Crystal Eater and Star enemies share a finite state machine
+          architecture where each state is a child node injected with
+          references to its parent entity and animation players at
+          runtime. The Crystal Eater is the more complex of the two, with
+          ten states, three layered detection ranges, and a cooperative AI
+          system where nearby Crystal Eaters track each other's positions
+          to avoid crowding the player. Damage routing, health, and item
+          drops are handled through reusable components shared across all
+          enemy types, with balance values stored in external resource
+          files.
+        </p>
+      </div>
+    </div>
+
+    <div class="project-content project-content--reversed reveal" style="margin-top: 3rem;">
+      <div>
+        <img class="work-image" src="assets/knightboss.gif" alt="Sword-and-Shield Knight boss fight" loading="lazy">
+      </div>
+      <div class="project-text">
+        <h4>Boss: Sword-and-Shield Knight</h4>
+        <p>
+          The knight runs on thirteen states and uses weighted
+          randomization to select between thrust attacks, overhead
+          strikes, and a multi-hit combo chain that branches at each
+          stage. The landing after a physics-driven jump attack can lead
+          into a second hit, skip to a finisher, restart, or reset to
+          idle. An attack counter forces the knight into a vulnerable
+          recovery window after every three committed attacks, giving the
+          encounter a learnable rhythm without making it feel scripted.
+        </p>
+        <p>
+          The shield is resolved in the shared damage component by
+          comparing the knight's facing direction against the incoming
+          hit. Attacks on the shielded side emit a distinct signal that
+          triggers shield VFX instead of applying damage, keeping the
+          logic contained rather than spread across states.
+        </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SECTION 02: MOVEMENT & TRAVERSAL -->
+<!-- SECTION 03: MOVEMENT & TRAVERSAL -->
 <section class="project-section">
   <div class="container">
-    <p class="section-label reveal">02 - Movement &amp; Traversal</p>
+    <p class="section-label reveal">03 - Movement &amp; Traversal</p>
     <h2 class="section-heading reveal">Movement</h2>
     <div class="project-content reveal">
       <div>

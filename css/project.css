@@ -74,6 +74,9 @@
   grid-template-columns: 1fr 1.2fr;
 }
 
+.project-content--reversed > :first-child { order: 2; }
+.project-content--reversed > :last-child  { order: 1; }
+
 .project-text p {
   font-size: 0.9rem;
   color: var(--text-secondary);
@@ -212,5 +215,6 @@
 @media (max-width: 900px) {
   .project-content { grid-template-columns: 1fr; }
   .project-content--reversed { grid-template-columns: 1fr; }
+  .project-content--reversed > * { order: unset; }
   .project-meta { flex-wrap: wrap; }
 }
