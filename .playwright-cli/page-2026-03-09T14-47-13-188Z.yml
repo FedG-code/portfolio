@@ -1,0 +1,79 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "Federico" [ref=e3] [cursor=pointer]:
+      - /url: index.html
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - link "Work" [ref=e6] [cursor=pointer]:
+          - /url: index.html#work
+      - listitem [ref=e7]:
+        - link "About" [ref=e8] [cursor=pointer]:
+          - /url: index.html#about
+      - listitem [ref=e9]:
+        - link "Contact" [ref=e10] [cursor=pointer]:
+          - /url: index.html#contact
+  - button "Slate" [ref=e11] [cursor=pointer]
+  - link "← Back to all work" [ref=e13] [cursor=pointer]:
+    - /url: index.html#work
+  - generic [ref=e15]:
+    - generic [ref=e16]:
+      - img [ref=e17]
+      - text: Lost Satellite Studios
+    - heading "Eve of Destruction" [level=1] [ref=e19]
+    - paragraph [ref=e20]:
+      - text: A 2D metroidvania with combo-based combat, a morality system that unlocks divergent powers, and ability-gated exploration. As Technical Designer on an 8-person team, I built the combat system and full movement suite from scratch in GDScript.
+      - link "Steam demo available" [ref=e21] [cursor=pointer]:
+        - /url: https://store.steampowered.com/app/2839460/Eve_of_Destruction/
+      - text: .
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - paragraph [ref=e24]: Role
+        - paragraph [ref=e25]: Technical Designer
+      - generic [ref=e26]:
+        - paragraph [ref=e27]: Timeline
+        - paragraph [ref=e28]: "2024"
+      - generic [ref=e29]:
+        - paragraph [ref=e30]: Stack
+        - paragraph [ref=e31]: Godot, GDScript
+  - iframe [ref=e35]:
+    - generic "YouTube Video Player" [ref=f1e3]:
+      - generic [ref=f1e5]:
+        - link "Photo image of LOST SATELLITE STUDIO 🛰️" [ref=f1e8] [cursor=pointer]:
+          - /url: https://www.youtube.com/channel/UCiuZky9YMMkeN4p8Repzoxw?embeds_referring_euri=http%3A%2F%2Flocalhost%3A8080%2F
+        - link "EVE OF DESTRUCTION - TEASER" [ref=f1e11] [cursor=pointer]:
+          - /url: https://www.youtube.com/watch?v=1mC3hQKUVtM
+        - button "Copy link" [ref=f1e13] [cursor=pointer]:
+          - generic [ref=f1e14]:
+            - img
+          - generic [ref=f1e15]: Copy link
+      - button "Play" [ref=f1e18] [cursor=pointer]:
+        - img
+      - link "Watch on YouTube" [ref=f1e19] [cursor=pointer]:
+        - /url: https://www.youtube.com/watch?v=1mC3hQKUVtM&embeds_referring_euri=http%3A%2F%2Flocalhost%3A8080%2F
+        - generic [ref=f1e20]: Watch on
+        - generic [ref=f1e21]:
+          - img
+  - generic [ref=e37]:
+    - paragraph [ref=e38]: 01 - Combat System
+    - heading "Combat" [level=2] [ref=e39]
+    - generic [ref=e40]:
+      - img "Ultimate ability and boss fight gameplay" [ref=e42]
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: The combat system runs on a finite state machine where each attack is a distinct state node chained into combo sequences. Hitbox activation uses per-state timers rather than animation signals, so attack windows can be tuned independently from animation timing.
+        - paragraph [ref=e45]: Input buffering captures player inputs during any attack state. The transition to the next hit only fires when the combo timer drops below a threshold while the buffer flag is set. Combos feel responsive without allowing instant cancels.
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - paragraph [ref=e48]: "The second hit introduces directional branching: neutral input leads to the standard finisher, up-input triggers a launcher that sends enemies airborne for air-combo follow-ups, and horizontal input triggers a forward lunge. The player gets meaningful mid-combo choices without complex input parsing."
+        - paragraph [ref=e49]: Berserk mode activates a parallel combo chain with its own state sequence and a heavy finisher, paired with a full character transformation that swaps the moveset entirely.
+      - generic [ref=e51]: Berserk / laser eye GIF
+  - generic [ref=e53]:
+    - paragraph [ref=e54]: 02 - Movement & Traversal
+    - heading "Movement" [level=2] [ref=e55]
+    - generic [ref=e56]:
+      - img "Wall jump gameplay" [ref=e58]
+      - generic [ref=e59]:
+        - paragraph [ref=e60]: "Built the complete movement suite for a metroidvania that gates exploration behind ability unlocks: run, jump, dash, wall jump, double jump, and ground pound, each from scratch in GDScript."
+        - paragraph [ref=e61]: Each ability is a modular addition to the player controller, designed to slot in cleanly as the player progresses and new areas open up.
+  - contentinfo [ref=e62]:
+    - generic [ref=e63]: Federico Giovannini © 2025
+  - button "Plane Off" [ref=e64] [cursor=pointer]

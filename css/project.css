@@ -70,6 +70,10 @@
   margin-top: 2rem;
 }
 
+.project-content--reversed {
+  grid-template-columns: 1fr 1.2fr;
+}
+
 .project-text p {
   font-size: 0.9rem;
   color: var(--text-secondary);
@@ -207,5 +211,6 @@
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   .project-content { grid-template-columns: 1fr; }
+  .project-content--reversed { grid-template-columns: 1fr; }
   .project-meta { flex-wrap: wrap; }
 }
