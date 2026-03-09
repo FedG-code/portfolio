@@ -18,7 +18,7 @@
   if (window.innerWidth <= MIN_VIEWPORT) return;
 
   // --- State ---
-  var enabled = localStorage.getItem(LS_KEY) !== 'off'; // default: on
+  var enabled = localStorage.getItem(LS_KEY) === 'on'; // default: off
   var initialized = false;
   var running = false;
   var animationFrameId = null;
@@ -100,6 +100,18 @@
     updateButtonLabel();
     toggleBtn.addEventListener('click', toggle);
     document.body.appendChild(toggleBtn);
+
+    // Attractor glow — once per session
+    if (!sessionStorage.getItem('plane-attractor-seen')) {
+      setTimeout(function() {
+        toggleBtn.classList.add('attractor');
+      }, 1500);
+
+      toggleBtn.addEventListener('mouseenter', function() {
+        toggleBtn.classList.remove('attractor');
+        sessionStorage.setItem('plane-attractor-seen', '1');
+      }, { once: true });
+    }
   }
 
   function updateButtonLabel() {

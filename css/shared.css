@@ -15,6 +15,7 @@
   --pop: #2d5ce6;
   --pop-soft: #2d5ce615;
   --cream: #faf7f2;
+  --accent-glow: #e85d2635;
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-body: 'DM Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -39,6 +40,7 @@
   --pop: #d4614e;
   --pop-soft: #d4614e12;
   --cream: #f5f8f9;
+  --accent-glow: #1a8a7d30;
 }
 
 [data-theme="slate"] .btn:hover { box-shadow: 0 4px 16px #1a8a7d20; }
@@ -93,6 +95,24 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
 .plane-toggle:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+@keyframes plane-glow {
+  0%, 100% { box-shadow: 0 0 8px 2px var(--accent-mid); }
+  50% { box-shadow: 0 0 18px 6px var(--accent-mid); }
+}
+
+.plane-toggle.attractor {
+  animation: plane-glow 2s ease-in-out infinite;
+  background: var(--accent-glow);
+  border-color: var(--accent-mid);
+}
+
+.plane-toggle.attractor:hover {
+  animation: none;
+  box-shadow: none;
+  background: var(--cream);
+  border-color: var(--accent);
 }
 
 html { scroll-behavior: smooth; }

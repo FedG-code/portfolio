@@ -42,9 +42,8 @@
     <div class="project-hero-badge">&#x1F3AE; Personal Projects</div>
     <h1 class="project-hero-title reveal">Coffin-Likker</h1>
     <p class="project-hero-desc reveal">
-      A 2D top-down stealth game where you can only see what your flashlight reveals.
-      Everything outside the beam is pitch black. Enemies exist whether you can see
-      them or not. The entire game is designed around that asymmetry and the fear it creates.
+      Building a game in preproduction to learn about game development, explore my ideas
+      and learn about managment, shipping and pitching to publishers.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
@@ -67,7 +66,7 @@
 <section class="project-section">
   <div class="container">
     <p class="section-label reveal">01 - Coffin-Likker <span class="wip-badge">In Development</span></p>
-    <h2 class="section-heading reveal">Light is your only window</h2>
+    <h2 class="section-heading reveal">Muk (working title)</h2>
 
     <!-- Vision & Visibility -->
     <div class="project-content reveal">
@@ -77,22 +76,37 @@
       <div class="project-text">
         <h4>Vision &amp; Visibility</h4>
         <p>
-          The core mechanic flips the usual stealth formula. Instead of hiding in
-          darkness, the player carries a flashlight that determines what's visible.
-          Custom HLSL shaders repurpose URP's Blend Style 3 as a visibility mask.
-          Anything outside the light is truly invisible (zero alpha, not fog or overlay).
+          I felt like darkwood's mechanic of enemies and objects being invisible outside of the player
+          vision cone was unexplored in the gaming space. Fog of war is present in many places but strangely
+          not in single player experiences with a vision cone. I wanted to expand on this "fear of the dark"
+          feeling and place it in a bayou. I am also going to lightly be "stealing" darkest dungeon's lovecraftian
+          horror. I used custom HLSL shaders and reused blend styles to create a visibility mask. 
         </p>
         <p>
-          There's a deliberate gap between what you can see and what can see you.
-          Shadows appear at the edge of your light before you can make out the
-          object casting them. You might spot an enemy at the far reach of your
-          beam, but it won't react until you get closer. This grace zone gives
-          the player a split second to decide without breaking the tension.
+          After going to a talk by Henry Hoffman (the creator of Hue) I started to really consider how
+          much more I could connect the gameplay and the art direction. I decided to lean into black and white
+          and I'm experimenting with using red to highlight combat.
+        </p>
+      </div>
+    </div>
+
+    <!-- Combat & Sound -->
+    <div class="project-content reveal">
+      <div>
+        <div class="work-image-placeholder cool">Combat screenshot</div>
+      </div>
+      <div class="project-text">
+        <h4>Combat &amp; Sound Propagation</h4>
+        <p>
+          Firing a weapon spawns a projectile and a sound ring. The ring alerts
+          nearby enemies using Physics2D.OverlapCircleAll, so every shot is a
+          tactical decision that reveals your position. Per-enemy sensory toggles
+          (deaf, blind) let level design create enemies that only respond to
+          specific stimuli.
         </p>
         <p>
-          The art direction supports this: black, grey, white, and red only. When
-          the game is about what you can and can't see, colour is noise. Red means
-          danger, nothing else.
+          Water surface effects, procedural reed systems, and environmental
+          interactions are in active development.
         </p>
       </div>
     </div>
@@ -117,37 +131,6 @@
           at a configurable interval, so new detection types slot in without touching
           existing code.
         </p>
-        <div class="work-stats">
-          <div class="work-stat">
-            <span class="work-stat-num">4</span>
-            <span class="work-stat-label">Enemy Types</span>
-          </div>
-          <div class="work-stat">
-            <span class="work-stat-num">Modular</span>
-            <span class="work-stat-label">AI Components</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Combat & Sound -->
-    <div class="project-content reveal">
-      <div>
-        <div class="work-image-placeholder cool">Combat screenshot</div>
-      </div>
-      <div class="project-text">
-        <h4>Combat &amp; Sound Propagation</h4>
-        <p>
-          Firing a weapon spawns a projectile and a sound ring. The ring alerts
-          nearby enemies using Physics2D.OverlapCircleAll, so every shot is a
-          tactical decision that reveals your position. Per-enemy sensory toggles
-          (deaf, blind) let level design create enemies that only respond to
-          specific stimuli.
-        </p>
-        <p>
-          Water surface effects, procedural reed systems, and environmental
-          interactions are in active development.
-        </p>
       </div>
     </div>
   </div>
@@ -165,12 +148,15 @@
       <div class="project-text">
         <p>
           A 1v1 board game where two players compete to cover a shared grid with
-          tetris-shaped pieces. Overlap your opponent's territory to claim it.
-          First to roughly 60% coverage wins.
+          tetris-shaped pieces. The brief was "light and dark" and also "alchemy". I
+          thought of Splatoon style territory control for light and dark, and merging the
+          tetris pieces together to create new shapes for alchemy. The point of combining is
+          actually also to make "perfect play" harder, since tetris pieces are often easy to slot
+          in. Overlap your opponent's territory claims it. First to roughly 70% coverage wins.
         </p>
         <p>
           Designed the gameplay mechanic, coded it, and collaborated with an
-          artist on visual design. Built in a two-week game jam using Godot.
+          artist on visual design and a sound designer on audio. Built in my free time using Godot.
         </p>
         <div class="work-stats">
           <div class="work-stat">
@@ -200,12 +186,13 @@
       <div class="project-text">
         <p>
           A small game about catching fish and reaching an island before a storm
-          hits. The storm arrives at a random time, the boat handles poorly on
-          purpose, and the music builds tension as you play. The whole design is
-          built around that feeling of uncertain pressure.
+          hits.The brief was "calm before the storm", and I wanted to maximise the fear
+          of the oncoming storm with small random elements, the fish spawning location and island
+          spawn locations, the direction of the storm and there's a slight randomness in when the storm
+          hits. The boat is also unwieldy to add pressure to the player.
         </p>
         <p>
-          Led visual design and built the game in a one-week jam using Godot.
+          Built using Godot in my free time.
         </p>
         <div class="work-stats">
           <div class="work-stat">
