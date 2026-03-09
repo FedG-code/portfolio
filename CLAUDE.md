@@ -34,6 +34,8 @@ npx http-server -p 8080 -c-1
 ## Verification
 After making visual changes, start the local server yourself (`npx http-server -p 8080 -c-1` in background) and use `playwright-cli` to screenshot the page and verify the result. Do not prompt the user to start the server.
 
+Before starting the server, check if port 8080 is already in use (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080`). Skip starting if it's already running.
+
 The local server must be running before taking screenshots.
 
 The `.reveal` class sets `opacity: 0` and `translateY(24px)` - elements only become visible when the IntersectionObserver adds `.visible` on scroll. Playwright screenshots don't trigger scroll events, so `.reveal` elements below the fold appear invisible. **Fix**: temporarily override `.reveal` to `opacity: 1; transform: translateY(0)` in `shared.css` before screenshots, then revert after. Delete any screenshot files (e.g., `screenshot.png`) after verification is complete.

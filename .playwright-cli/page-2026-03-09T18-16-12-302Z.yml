@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "Federico" [ref=e3] [cursor=pointer]:
+      - /url: index.html
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - link "Work" [ref=e6] [cursor=pointer]:
+          - /url: index.html#work
+      - listitem [ref=e7]:
+        - link "About" [ref=e8] [cursor=pointer]:
+          - /url: index.html#about
+      - listitem [ref=e9]:
+        - link "Contact" [ref=e10] [cursor=pointer]:
+          - /url: index.html#contact
+  - button "Slate" [ref=e11] [cursor=pointer]
+  - generic [ref=e13]:
+    - link "← Back to main page" [ref=e14] [cursor=pointer]:
+      - /url: index.html
+    - link "Coffin-Likker →" [ref=e15] [cursor=pointer]:
+      - /url: coffin-likker.html
+  - generic [ref=e17]:
+    - generic [ref=e18]: 🎰 Logifuture
+    - heading "Mini Casino Games" [level=1] [ref=e19]
+    - paragraph [ref=e20]: Designed and shipped mini casino games embedded in the sportsbook experience. Fast, intuitive wagers that drove real engagement numbers.
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: Role
+        - paragraph [ref=e24]: Game Designer / UX
+      - generic [ref=e25]:
+        - paragraph [ref=e26]: Timeline
+        - paragraph [ref=e27]: 2023 – Present
+      - generic [ref=e28]:
+        - paragraph [ref=e29]: Stack
+        - paragraph [ref=e30]: PixiJS, Node.js
+  - generic [ref=e32]:
+    - paragraph [ref=e33]: 01 - The Original Mini Game
+    - heading "A quick bet became a million-bet initiative" [level=2] [ref=e34]
+    - generic [ref=e35]:
+      - generic [ref=e37]: Screenshot placeholder
+      - generic [ref=e38]:
+        - paragraph [ref=e39]: Designed and pitched a mini casino game embedded in the sportsbook bet confirmation flow. A fast follow-on wager that felt natural, not intrusive. It delivered 170k bets in launch week and became the template for a wider mini-games initiative used in new-client pitches.
+        - paragraph [ref=e40]: Later pushed a UX improvement that increased average daily bets from 10k to 60k. A 6x lift from a single interaction change.
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: 1M+
+            - generic [ref=e44]: Total bets
+          - generic [ref=e45]:
+            - generic [ref=e46]: 6x
+            - generic [ref=e47]: Daily engagement
+          - generic [ref=e48]:
+            - generic [ref=e49]: 170k
+            - generic [ref=e50]: Launch week
+  - generic [ref=e52]:
+    - paragraph [ref=e53]: 02 - UX & Engagement
+    - heading "Coming soon" [level=2] [ref=e54]
+    - generic [ref=e55]:
+      - generic [ref=e57]: Screenshot placeholder
+      - paragraph [ref=e59]: Details for this sub-project are being prepared.
+  - generic [ref=e61]:
+    - paragraph [ref=e62]: 03 - Mini-Games Framework
+    - heading "Coming soon" [level=2] [ref=e63]
+    - generic [ref=e64]:
+      - generic [ref=e66]: Screenshot placeholder
+      - paragraph [ref=e68]: Details for this sub-project are being prepared.
+  - contentinfo [ref=e69]:
+    - generic [ref=e70]: Federico Giovannini © 2025
+  - button "Plane Off" [ref=e71] [cursor=pointer]

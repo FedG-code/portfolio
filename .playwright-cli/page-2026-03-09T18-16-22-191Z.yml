@@ -1,0 +1,91 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "Federico" [ref=e3] [cursor=pointer]:
+      - /url: index.html
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - link "Work" [ref=e6] [cursor=pointer]:
+          - /url: index.html#work
+      - listitem [ref=e7]:
+        - link "About" [ref=e8] [cursor=pointer]:
+          - /url: index.html#about
+      - listitem [ref=e9]:
+        - link "Contact" [ref=e10] [cursor=pointer]:
+          - /url: index.html#contact
+  - button "Slate" [ref=e11] [cursor=pointer]
+  - generic [ref=e13]:
+    - link "← Logifuture" [ref=e14] [cursor=pointer]:
+      - /url: logifuture.html
+    - link "Lost Satellite Studios →" [ref=e15] [cursor=pointer]:
+      - /url: lost-satellite.html
+  - generic [ref=e17]:
+    - generic [ref=e18]: 🎮 Personal Projects
+    - heading "Coffin-Likker" [level=1] [ref=e19]
+    - paragraph [ref=e20]: Building a game in preproduction to learn about game development, explore my ideas and learn about managment, shipping and pitching to publishers.
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: Role
+        - paragraph [ref=e24]: Solo Founder
+      - generic [ref=e25]:
+        - paragraph [ref=e26]: Timeline
+        - paragraph [ref=e27]: 2025 – Present
+      - generic [ref=e28]:
+        - paragraph [ref=e29]: Stack
+        - paragraph [ref=e30]: Unity 6, C#
+  - generic [ref=e32]:
+    - paragraph [ref=e33]:
+      - text: 01 - Coffin-Likker
+      - generic [ref=e34]: In Development
+    - heading "Muk (working title)" [level=2] [ref=e35]
+    - generic [ref=e36]:
+      - img "Vision system gameplay" [ref=e38]
+      - generic [ref=e39]:
+        - heading "Vision & Visibility" [level=4] [ref=e40]
+        - paragraph [ref=e41]: I felt like darkwood's mechanic of enemies and objects being invisible outside of the player vision cone was unexplored in the gaming space. Fog of war is present in many places but strangely not in single player experiences with a vision cone. I wanted to expand on this "fear of the dark" feeling and place it in a bayou. I am also going to lightly be "stealing" darkest dungeon's lovecraftian horror. I used custom HLSL shaders and reused blend styles to create a visibility mask.
+        - paragraph [ref=e42]: After going to a talk by Henry Hoffman (the creator of Hue) I started to really consider how much more I could connect the gameplay and the art direction. I decided to lean into black and white and I'm experimenting with using red to highlight combat.
+    - generic [ref=e43]:
+      - img "Combat and sound propagation gameplay" [ref=e45]
+      - generic [ref=e46]:
+        - heading "Communicating Location" [level=4] [ref=e47]
+        - paragraph [ref=e48]: In a game where the player has so little information it's important to not make them feel completely lost. I'm experimenting with a push and pull system where certain enemies have a very large awarness range but make noise (which the player can see). And blind enemies who make little noise and the player is at risk of bumping into them. It was important to do this since darkwood usually weaponises the fact that they various rooms and faraway doors that get opened, to communicate this information.
+    - generic [ref=e49]:
+      - img "Enemy AI gameplay" [ref=e51]
+      - generic [ref=e52]:
+        - heading "Enemy and Shadows" [level=4] [ref=e53]
+        - paragraph [ref=e54]:
+          - text: Enemies are highly reactive to the player and call be alerted to the player's location by sound or by proximity. However, some enemies (like the angel enemy seen above) will react to being "seen". This was a useful opportunity for me to create an entire system which informs any object in the game when it's visible to the player. In turn, creating this system allowed me to
+          - strong [ref=e55]: vastly reduce
+          - text: the cost of casting shadows, as I could just limit shadow casting to only objects that are actually visible to the player, allowing me to have so many shadow casting objects in a single space in the first place.
+  - generic [ref=e57]:
+    - paragraph [ref=e58]: 02 - Game Jam
+    - heading "Tetrarcana" [level=2] [ref=e59]
+    - generic [ref=e60]:
+      - img "Tetrarcana gameplay" [ref=e62]
+      - generic [ref=e63]:
+        - paragraph [ref=e64]: A 1v1 board game where two players compete to cover a shared grid with tetris-shaped pieces. The brief was "light and dark" and also "alchemy". I thought of Splatoon style territory control for light and dark, and merging the tetris pieces together to create new shapes for alchemy. The point of combining is actually also to make "perfect play" harder, since tetris pieces are often easy to slot in. Overlap your opponent's territory claims it. First to roughly 70% coverage wins.
+        - paragraph [ref=e65]: Designed the gameplay mechanic, coded it, and collaborated with an artist on visual design and a sound designer on audio. Built in my free time using Godot.
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - generic [ref=e68]: 2 Week
+            - generic [ref=e69]: Game Jam
+          - generic [ref=e70]:
+            - generic [ref=e71]: 1v1
+            - generic [ref=e72]: Board Game
+        - link "Play on itch.io →" [ref=e73] [cursor=pointer]:
+          - /url: https://wryq.itch.io/tetrarcana
+  - generic [ref=e75]:
+    - paragraph [ref=e76]: 03 - Game Jam
+    - heading "Calm Before the Storm" [level=2] [ref=e77]
+    - generic [ref=e78]:
+      - img "Calm Before the Storm gameplay" [ref=e80]
+      - generic [ref=e81]:
+        - paragraph [ref=e82]: A small game about catching fish and reaching an island before a storm hits.The brief was "calm before the storm", and I wanted to maximise the fear of the oncoming storm with small random elements, the fish spawning location and island spawn locations, the direction of the storm and there's a slight randomness in when the storm hits. The boat is also unwieldy to add pressure to the player.
+        - paragraph [ref=e83]: Built using Godot in my free time.
+        - generic [ref=e85]:
+          - generic [ref=e86]: 1 Week
+          - generic [ref=e87]: Game Jam
+        - link "Play on itch.io →" [ref=e88] [cursor=pointer]:
+          - /url: https://wryq.itch.io/calmbeforethestorm
+  - contentinfo [ref=e89]:
+    - generic [ref=e90]: Federico Giovannini © 2025
+  - button "Plane Off" [ref=e91] [cursor=pointer]

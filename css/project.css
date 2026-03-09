@@ -1,17 +1,20 @@
-/* ========== BACK LINK ========== */
-.back-link {
-  display: inline-flex;
+/* ========== PROJECT NAV ========== */
+.project-nav {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  padding-top: 6rem;
+}
+
+.project-nav-link {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-muted);
-  padding-top: 6rem;
   transition: color 0.2s;
 }
 
-.back-link:hover {
+.project-nav-link:hover {
   color: var(--accent);
 }
 

@@ -31,9 +31,12 @@
 <!-- THEME SWITCHER -->
 <button class="theme-switcher" id="themeSwitcher">Slate</button>
 
-<!-- BACK LINK -->
+<!-- PROJECT NAV -->
 <div class="container">
-  <a href="index.html#work" class="back-link">&larr; Back to all work</a>
+  <div class="project-nav">
+    <a href="logifuture.html" class="project-nav-link">&larr; Logifuture</a>
+    <a href="lost-satellite.html" class="project-nav-link">Lost Satellite Studios &rarr;</a>
+  </div>
 </div>
 
 <!-- PROJECT HERO -->
@@ -71,7 +74,7 @@
     <!-- Vision & Visibility -->
     <div class="project-content reveal">
       <div>
-        <div class="work-image-placeholder cool">Vision system screenshot</div>
+        <img class="work-image" src="assets/visionsystem.gif" alt="Vision system gameplay" loading="lazy">
       </div>
       <div class="project-text">
         <h4>Vision &amp; Visibility</h4>
@@ -90,23 +93,20 @@
       </div>
     </div>
 
-    <!-- Combat & Sound -->
+    <!-- Communcating Location -->
     <div class="project-content project-content--reversed reveal">
       <div>
-        <div class="work-image-placeholder cool">Combat screenshot</div>
+        <img class="work-image" src="assets/soundring.gif" alt="Combat and sound propagation gameplay" loading="lazy">
       </div>
       <div class="project-text">
-        <h4>Combat &amp; Sound Propagation</h4>
+        <h4>Communicating Location</h4>
         <p>
-          Firing a weapon spawns a projectile and a sound ring. The ring alerts
-          nearby enemies using Physics2D.OverlapCircleAll, so every shot is a
-          tactical decision that reveals your position. Per-enemy sensory toggles
-          (deaf, blind) let level design create enemies that only respond to
-          specific stimuli.
-        </p>
-        <p>
-          Water surface effects, procedural reed systems, and environmental
-          interactions are in active development.
+          In a game where the player has so little information it's important to not make them
+          feel completely lost. I'm experimenting with a push and pull system where certain enemies
+          have a very large awarness range but make noise (which the player can see). And blind enemies
+          who make little noise and the player is at risk of bumping into them. It was important to do this
+          since darkwood usually weaponises the fact that they various rooms and faraway doors that get opened,
+          to communicate this information.
         </p>
       </div>
     </div>
@@ -114,22 +114,18 @@
     <!-- Enemy AI -->
     <div class="project-content reveal">
       <div>
-        <div class="work-image-placeholder cool">Enemy AI screenshot</div>
+        <img class="work-image" src="assets/enemy-ai.gif" alt="Enemy AI gameplay" loading="lazy">
       </div>
       <div class="project-text">
-        <h4>Enemy AI System</h4>
+        <h4>Enemy and Shadows</h4>
         <p>
-          Four enemy types, each built with Unity Behavior Graph and custom C# action
-          nodes: a standard patrol unit, a Weeping Angel that freezes when lit, an
-          aquatic enemy that lurks underwater and surfaces to attack, and a ranged
-          variant with layer-filtered projectiles.
-        </p>
-        <p>
-          Enemy detection is independent from player visibility. An enemy can detect
-          the player even when the player can't see it. The EnemyManager checks an
-          array of modular detection components (vision cones, proximity, line-of-sight)
-          at a configurable interval, so new detection types slot in without touching
-          existing code.
+          Enemies are highly reactive to the player and call be alerted to the player's location
+          by sound or by proximity. However, some enemies (like the angel enemy seen above) will react
+          to being "seen". This was a useful opportunity for me to create an entire system which informs
+          any object in the game when it's visible to the player. In turn, creating this system allowed me
+          to <strong>vastly reduce</strong> the cost of casting shadows, as I could just limit shadow casting to only objects
+          that are actually visible to the player, allowing me to have so many shadow casting objects in a single
+          space in the first place.
         </p>
       </div>
     </div>
