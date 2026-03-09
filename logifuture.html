@@ -81,14 +81,31 @@
       </div>
       <div class="project-text">
         <p>
-          Spin & Win+ is Logifuture's crowning game and the second most played game on the whole website. 
-          It was created as a Pixi version of the website's long time most popular game. On Spin & Win+ I was
-          trusted with the ownership of the zoom in, free spin and small win features. The zoom in is essential,
-          it serves to increase the tension of the game and make <strong>wins OR losses</strong> feel exciting. 
-          For the free spins I opted to have the background transition between all the colours already used on the wheel
-          and increased the rate and intesity of the background star blinking feature. As the name implies
-          players are getting another entire bet for free, so it was important to really let the user enjoy the moment.
+          Spin & Win+ is Logifuture's crowning game and the second most played game on the whole website. It
+          was created as a Pixi version of the website's long time most popular game. On Spin & Win+ I was
+          trusted with the ownership of the zoom in, free spin and small win features. The zoom in is
+          essential, it serves to increase the tension of the game and make <strong>wins OR losses</strong> feel exciting. It
+          kicks in when the wheel's speed drops below a threshold rather than on a fixed timer, so it always
+          feels tied to the momentum of the spin. The background darkens around the zoom window to create a
+          tunnel-vision effect that pulls the player's focus right to where the pin stops. 
         </p>
+         <p>
+          For the free spins I opted to have the background transition between all the colours already used on
+          the wheel and increased the rate and intensity of the background star blinking feature. The colour
+          transitions use CIELAB blending so every in-between shade stays as rich and vibrant. 
+          As the name implies players are getting another entire bet for free and they may or may not actually be able to
+          make money off it. By using such strong visuals, we can make the player <strong>feel like a winner</strong> no matter what the actual outcome.
+        </p>
+        <div class="work-stats">
+          <div class="work-stat">
+            <span class="work-stat-num">300k</span>
+            <span class="work-stat-label">Bets / Day</span>
+          </div>
+          <div class="work-stat">
+            <span class="work-stat-num">#1</span>
+            <span class="work-stat-label">Flagship Game</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -106,8 +123,26 @@
       </div>
       <div class="project-text">
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+          After the release of Spin & Win+ I realised there was an opportunity to get some cross product synergy
+          between casino and sportsbook off the tailend of Spin & Win+'s success. Working with a an artist
+          I changed the sizing of spin & win+, adjusted the UI and centered the bet button to make a smaller version of the game.
+          At which point I pitched it to my managers. Within 3 sprints we released it on live and got 170k bets on launch week. 
+          70% of the bets were from sportsbook users who had <strong>never played casino before.</strong>
         </p>
+        <p>
+          After the success of the first game, two more were built, with the current, most successful one, being Take the shot mini.
+          This game was chosen for the product synergy with sports betting. The struggle with this game was that it runs on PIXI3D real 3D models 
+          and lighting inside a 2D engine so resizing it wasn't as simple as scaling a few sprites. This game reach 220k bets on launch week.
+        <div class="work-stats">
+          <div class="work-stat">
+            <span class="work-stat-num">1M+</span>
+            <span class="work-stat-label">Total Bets</span>
+          </div>
+          <div class="work-stat">
+            <span class="work-stat-num">70%</span>
+            <span class="work-stat-label">New Casino Users</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -123,13 +158,28 @@
         <img class="work-image" src="assets/sweetsmash.gif" alt="Sweet Smash gameplay" loading="lazy">
       </div>
       <div class="project-text">
-        <h4>Sweet Smash</h4>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+          Sweet Smash is an obvious clone of Candy Crush. When the game released it was averaging 10k bets a day. 
+          I was tasked with speeding up the animations across the board and implement a skip functionality, to try and improve user engagement.
+          While I was working on it, I realised that the game wasn't accurately communicating to the player how much
+          they were winning (especially since larger blocks are bigger wins), nor was the game celebrating the player enough for winning when
+          they weren't getting several cascading block breaks.
         </p>
         <p>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.
+          To address this, I added a simple scaling multiplier that pops up in the middle of the breaking blocks. 
+          That solved all the issues as once. Combined with the other improvements, when we released the update
+          a sprint and a half later the game reached 60K bets a day, a 6x increase in user engagement.
         </p>
+        <div class="work-stats">
+          <div class="work-stat">
+            <span class="work-stat-num">6x</span>
+            <span class="work-stat-label">Engagement</span>
+          </div>
+          <div class="work-stat">
+            <span class="work-stat-num">1.5</span>
+            <span class="work-stat-label">Sprints</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -145,12 +195,12 @@
         <img class="work-image" src="assets/fruitslash.gif" alt="Fruit Slash gameplay" loading="lazy">
       </div>
       <div class="project-text">
-        <h4>Fruit Slash</h4>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-        </p>
-        <p>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.
+          Fruit slash was the first game I worked on at Logifuture. Since our user's devices are very low end and run on slow networks
+          lag is always a huge concern, especially since we're connecting it to real money transactions. Fruits have to hang
+          in the air when the network slows down, I added a little jiggle that stopped the game from feeling frozen. The win
+          container flying into the balance was my first time implementing a satisfying win animation using GSAP. I took that animation
+          all the way to Spin & Win+.
         </p>
       </div>
     </div>
@@ -159,7 +209,7 @@
 
 <footer>
   <div class="container">
-    <span>Federico Giovannini &copy; 2025</span>
+    <span>Federico Giovannini &copy; 2026</span>
   </div>
 </footer>
 

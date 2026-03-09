@@ -11,7 +11,8 @@
       "Bash(playwright-cli:*)",
       "Bash(ls:*)",
       "Bash(npx:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(curl:*)"
     ]
   }
 }
