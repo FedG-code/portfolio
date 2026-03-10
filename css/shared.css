@@ -732,7 +732,7 @@ section { padding: 7rem 0; }
 
 /* ========== FOOTER ========== */
 footer {
-  padding: 2rem 0;
+  padding: 2rem 0 calc(2rem + env(safe-area-inset-bottom)) 0;
   border-top: 1px solid var(--border);
   text-align: center;
 }
@@ -813,10 +813,11 @@ footer span {
   border-radius: 0;
   border: none;
   border-bottom: 1px solid var(--border);
-  background: #0a0a0c;
+  background: #0a0a0ccc;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 1.25rem 0;
+  padding-top: calc(1.25rem + env(safe-area-inset-top));
   box-shadow: none;
   width: 100%;
   max-width: none;
@@ -902,7 +903,7 @@ footer span {
 
 /* Theme switcher + plane toggle */
 [data-theme="neon"] .theme-switcher {
-  top: 4rem;
+  top: calc(4rem + env(safe-area-inset-top));
   border-radius: 4px;
   background: var(--bg-card);
   border-color: var(--border);
