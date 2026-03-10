@@ -16,6 +16,8 @@ if (overlay) {
   const cards = document.querySelectorAll('.work-card');
   let activeCard = null;
 
+  const isTouchLike = (type) => type === 'touch' || type === 'pen';
+
   function closeActive() {
     if (activeCard) {
       activeCard.classList.remove('expanded');
@@ -25,16 +27,38 @@ if (overlay) {
   }
 
   cards.forEach(card => {
-    card.addEventListener('mouseenter', () => {
+    // Desktop: hover to expand/collapse
+    card.addEventListener('pointerenter', (e) => {
+      if (isTouchLike(e.pointerType)) return;
       closeActive();
       card.classList.add('expanded');
       overlay.classList.add('active');
       activeCard = card;
     });
-    card.addEventListener('mouseleave', () => {
+    card.addEventListener('pointerleave', (e) => {
+      if (isTouchLike(e.pointerType)) return;
       if (card === activeCard) closeActive();
     });
+
+    // Track pointer type per interaction
+    card.addEventListener('pointerdown', (e) => {
+      card.lastPointerType = e.pointerType;
+    });
+
+    // Touch: first tap expands, second tap navigates
+    card.addEventListener('click', (e) => {
+      if (!isTouchLike(card.lastPointerType)) return;
+      if (card === activeCard) return; // already expanded, allow navigation
+      e.preventDefault();
+      closeActive();
+      card.classList.add('expanded');
+      overlay.classList.add('active');
+      activeCard = card;
+    });
   });
+
+  // Tap overlay to close expanded card
+  overlay.addEventListener('click', () => closeActive());
 }
 
 // Theme switcher
