@@ -47,7 +47,7 @@
     <p class="project-hero-desc reveal">
       A 2D metroidvania with combo-based combat, a morality system that unlocks
       divergent powers, and ability-gated exploration. As Technical Designer on
-      an 8-person team, I built the combat system and full movement suite from
+      a small, I built the combat, enemies and movement from
       scratch in GDScript.
       <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener" style="color: var(--accent)">Steam demo available</a>.
     </p>
@@ -94,16 +94,11 @@
       </div>
       <div class="project-text">
         <p>
-          The combat system runs on a finite state machine where each attack is a
-          distinct state node chained into combo sequences. Hitbox activation uses
-          per-state timers rather than animation signals, so attack windows can be
-          tuned independently from animation timing.
-        </p>
-        <p>
-          Input buffering captures player inputs during any attack state. The
-          transition to the next hit only fires when the combo timer drops below
-          a threshold while the buffer flag is set. Combos feel responsive without
-          allowing instant cancels.
+          I wanted combos to feel like the player was committing to attacks rather than
+          mashing through them. Each attack is a state in a finite state machine, and I
+          used input buffering so the next hit only fires when the current attack's
+          window closes. This helps lock players into combos, making spamming more punishing
+          and comitting to a string of attacks an important consideration.
         </p>
       </div>
     </div>
@@ -114,16 +109,17 @@
       </div>
       <div class="project-text">
         <p>
-          The second hit introduces directional branching: neutral input leads to
-          the standard finisher, up-input triggers a launcher that sends enemies
-          airborne for air-combo follow-ups, and horizontal input triggers a
-          forward lunge. The player gets meaningful mid-combo choices without
-          complex input parsing.
+          On the second hit the player can branch: neutral continues the standard
+          combo, up launches enemies airborne for air follow-ups, and horizontal
+          triggers a forward lunge. I wanted mid-combo decisions that felt
+          intuitive without needing complex inputs. Each branch is just a
+          direction hold during the buffer window.
         </p>
         <p>
-          Berserk mode activates a parallel combo chain with its own state
-          sequence and a heavy finisher, paired with a full character
-          transformation that swaps the moveset entirely.
+          Berserk mode swaps the moveset entirely, giving the player a parallel
+          combo chain with a heavy finisher. The player also deals damage while enetering and exiting beserk mode.
+          Given that the ultimate bar fills easily and triggers automatically, this helped players not feel punished
+          when it triggers mid fight.
         </p>
       </div>
     </div>
@@ -140,18 +136,18 @@
         <img class="work-image" src="assets/star.gif" alt="Crystal Eater and Star enemy gameplay" loading="lazy">
       </div>
       <div class="project-text">
-        <h4>Generic Enemies</h4>
+        <h4>Crystal Eaters &amp; Stars</h4>
         <p>
-          The Crystal Eater and Star enemies share a finite state machine
-          architecture where each state is a child node injected with
-          references to its parent entity and animation players at
-          runtime. The Crystal Eater is the more complex of the two, with
-          ten states, three layered detection ranges, and a cooperative AI
-          system where nearby Crystal Eaters track each other's positions
-          to avoid crowding the player. Damage routing, health, and item
-          drops are handled through reusable components shared across all
-          enemy types, with balance values stored in external resource
-          files.
+          Crystal Eaters are the game's main grunt, but I wanted them to
+          feel coordinated rather than mindless. They run on a ten-state
+          FSM with three layered detection ranges, and nearby Crystal
+          Eaters track each other's positions to avoid crowding the
+          player. In practice this means they fan out and approach from
+          different angles, which forces the player to reposition rather
+          than just standing and swinging. Stars are simpler but both
+          enemy types share the same component architecture for damage,
+          health, and drops, with balance values in external resource
+          files so the designer could tune them without touching code.
         </p>
       </div>
     </div>
@@ -163,21 +159,20 @@
       <div class="project-text">
         <h4>Boss: Sword-and-Shield Knight</h4>
         <p>
-          The knight runs on thirteen states and uses weighted
-          randomization to select between thrust attacks, overhead
-          strikes, and a multi-hit combo chain that branches at each
-          stage. The landing after a physics-driven jump attack can lead
-          into a second hit, skip to a finisher, restart, or reset to
-          idle. An attack counter forces the knight into a vulnerable
-          recovery window after every three committed attacks, giving the
-          encounter a learnable rhythm without making it feel scripted.
+          I wanted the knight to feel unpredictable on any given attack
+          but learnable over time. It picks between thrusts, overhead
+          strikes, and a branching multi-hit combo using weighted
+          randomization, so the player can't just memorize a fixed
+          pattern. After every three committed attacks it drops into a
+          recovery window, which gives the fight a rhythm the player can
+          exploit once they recognize it.
         </p>
         <p>
-          The shield is resolved in the shared damage component by
-          comparing the knight's facing direction against the incoming
-          hit. Attacks on the shielded side emit a distinct signal that
-          triggers shield VFX instead of applying damage, keeping the
-          logic contained rather than spread across states.
+          The shield added an interesting positional layer. It checks the
+          knight's facing direction against the incoming hit in the shared
+          damage component, so attacks on the shielded side bounce off
+          with distinct VFX instead of dealing damage. The player has to
+          work around it or wait for an opening.
         </p>
       </div>
     </div>
@@ -195,10 +190,11 @@
       </div>
       <div class="project-text">
         <p>
-          Built the complete movement system from the ground up when I first joined the project.
-          Focused on tight, satisfying controls. The dash was particularly interesting, since it would both
-          affect combat and traversal balance. From a combat perspective, it was also important to balance
-          speed and and endlag so as to not trivialise enemy attacks.
+          The dash was the trickiest part of the movement system to get right. It needed to
+          work as both a combat dodge and a traversal tool, and those two uses pull in
+          opposite directions. Too fast and enemies become trivial, too much endlag and
+          platforming feels sluggish. I tuned the speed and recovery frames separately for
+          grounded and airborne states so it could serve both roles.
         </p>
       </div>
     </div>
