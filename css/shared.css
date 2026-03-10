@@ -97,13 +97,7 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
   color: var(--accent);
 }
 
-@keyframes plane-glow {
-  0%, 100% { box-shadow: 0 0 14px 5px color-mix(in srgb, var(--accent) 50%, transparent); }
-  50% { box-shadow: 0 0 28px 10px color-mix(in srgb, var(--accent) 60%, transparent); }
-}
-
 .plane-toggle.attractor {
-  animation: plane-glow 2s ease-in-out infinite;
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;

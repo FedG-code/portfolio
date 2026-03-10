@@ -101,13 +101,27 @@
     toggleBtn.addEventListener('click', toggle);
     document.body.appendChild(toggleBtn);
 
-    // Attractor glow — once per session
+    // Attractor bounce — once per session
     if (!sessionStorage.getItem('plane-attractor-seen')) {
+      var attractorTl;
       setTimeout(function() {
         toggleBtn.classList.add('attractor');
+        attractorTl = gsap.timeline({ repeat: -1, repeatDelay: 0.6 });
+        attractorTl.to(toggleBtn, {
+          duration: 0.15,
+          scale: 1.65,
+          ease: 'power2.out'
+        });
+        attractorTl.to(toggleBtn, {
+          duration: 1.4,
+          scale: 1,
+          ease: 'elastic.out(1.4, 0.25)'
+        });
       }, 1500);
 
       toggleBtn.addEventListener('mouseenter', function() {
+        if (attractorTl) attractorTl.kill();
+        gsap.set(toggleBtn, { scale: 1 });
         toggleBtn.classList.remove('attractor');
         sessionStorage.setItem('plane-attractor-seen', '1');
       }, { once: true });
@@ -115,7 +129,7 @@
   }
 
   function updateButtonLabel() {
-    if (toggleBtn) toggleBtn.textContent = enabled ? 'Plane Off' : 'Plane On';
+    if (toggleBtn) toggleBtn.textContent = enabled ? 'Plane On' : 'Plane Off';
   }
 
   function toggle() {
