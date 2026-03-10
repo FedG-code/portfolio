@@ -884,6 +884,7 @@ footer span {
 /* Font weight overrides */
 [data-theme="neon"] .hero h1 { font-weight: 700; font-style: normal; }
 [data-theme="neon"] .hero h1 em { font-style: normal; color: var(--accent); }
+[data-theme="neon"] .kern-ri { letter-spacing: 0.03em; }
 [data-theme="neon"] .section-heading { font-weight: 600; }
 [data-theme="neon"] .contact-heading { font-weight: 700; }
 [data-theme="neon"] .work-details h4 { font-weight: 600; }

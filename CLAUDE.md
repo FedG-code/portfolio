@@ -16,12 +16,21 @@ js/
 ```
 
 ## Key Details
-- **Fonts**: 3 fonts loaded from Google Fonts, defined as CSS variables in `shared.css`:
-  - `--font-serif`: Instrument Serif (headings, hero text, emphasis)
-  - `--font-body`: DM Sans (body text, paragraphs)
-  - `--font-mono`: JetBrains Mono (labels, badges, nav, stats, chips, buttons)
-- **CSS variables**: Defined in `:root`, swapped via `data-theme` attribute on `<html>` (`coral` default, `slate` alternate)
-- **Theme persistence**: `localStorage.getItem('portfolio-theme')` - set inline in `<head>` of every page to prevent flash
+- **Fonts**: Two Google Fonts `<link>` tags in every page's `<head>`:
+  1. DM Sans, Instrument Serif, JetBrains Mono (used by coral & slate)
+  2. Sora, Space Mono (used by neon)
+  - Font CSS variables (`--font-serif`, `--font-body`, `--font-mono`) are redefined per theme in `shared.css`
+- **Theme system**: Three themes cycle via button: `coral → slate → neon → coral`
+  - `data-theme` attribute on `<html>` controls the active theme (`coral` default)
+  - Each theme defines its own CSS variable block in `shared.css` (`:root` for coral, `[data-theme="slate"]`, `[data-theme="neon"]`)
+  - Theme-specific overrides (hardcoded colours, border-radius, font weights, etc.) go in `[data-theme="<name>"]` selector blocks after the variable blocks
+  - `js/shared.js` has `const themes = ['coral', 'slate', 'neon']` — the switcher button cycles through and persists to `localStorage`
+  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash)
+- **Theme design notes**:
+  - **coral**: Warm light theme. Pill-shaped nav (centred, `border-radius: 100px`). Instrument Serif headings, DM Sans body, JetBrains Mono labels. Doodle decorations in hero. Rounded corners throughout.
+  - **slate**: Cool light theme. Same layout as coral, different colour palette (teal accent). Same fonts and shapes.
+  - **neon**: Dark techy theme. Full-width fixed nav bar (no pill, `border-radius: 0`). Sora headings/body, Space Mono labels. Lime-green accent (`#c9f059`). Sharp corners (6-12px radius). Grain overlay on `body::before`. Grid pattern in hero `::before`. Doodles hidden. Nav links have underline hover effect via `::after`.
+- **Nav structure**: `<nav>` contains a `.container.nav-inner` wrapper around `.nav-logo` and `.nav-links`. The `.nav-inner` holds the flex layout. This lets neon's full-width nav align content with the page container while coral/slate's pill nav is unaffected.
 - **Work cards**: `<a>` links in `index.html` that navigate to individual project pages; hover highlight effect (accent border + lift + shadow)
 - **JS features**: Scroll reveal (IntersectionObserver), theme switcher with localStorage
 - **Project pages**: Shared template - nav, theme switcher, back link, project hero, repeatable sub-project sections, footer
