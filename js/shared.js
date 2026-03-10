@@ -50,7 +50,10 @@ if (overlay) {
       if (!isTouchLike(card.lastPointerType)) return;
       if (card === activeCard) return; // already expanded, allow navigation
       e.preventDefault();
-      closeActive();
+      if (activeCard) {
+        closeActive(); // just close the current card, don't open this one
+        return;
+      }
       card.classList.add('expanded');
       overlay.classList.add('active');
       activeCard = card;
