@@ -46,6 +46,27 @@
 [data-theme="slate"] .btn:hover { box-shadow: 0 4px 16px #1a8a7d20; }
 [data-theme="slate"] .btn.primary:hover { background: #157a6e; box-shadow: 0 8px 30px #1a8a7d40; }
 
+[data-theme="neon"] {
+  --bg: #0a0a0c;
+  --bg-warm: #131318;
+  --bg-card: #18181f;
+  --border: #2a2a35;
+  --border-hover: #3d3d4d;
+  --text-primary: #e8e6e3;
+  --text-secondary: #8a8a99;
+  --text-muted: #55556a;
+  --accent: #c9f059;
+  --accent-soft: #c9f05920;
+  --accent-mid: #c9f05940;
+  --pop: #59b8f0;
+  --pop-soft: #59b8f015;
+  --cream: #131318;
+  --accent-glow: #c9f05940;
+  --font-serif: 'Sora', sans-serif;
+  --font-body: 'Sora', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
 body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer {
   transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
@@ -145,11 +166,14 @@ nav {
   border: 1px solid var(--border);
   border-radius: 100px;
   padding: 0.6rem 0.6rem 0.6rem 1.5rem;
+  box-shadow: 0 4px 20px #1a181408;
+  backdrop-filter: blur(16px);
+}
+
+.nav-inner {
   display: flex;
   align-items: center;
   gap: 2rem;
-  box-shadow: 0 4px 20px #1a181408;
-  backdrop-filter: blur(16px);
 }
 
 .nav-logo {
@@ -776,6 +800,160 @@ footer span {
   z-index: 103;
   pointer-events: none;
 }
+
+/* ========== NEON THEME OVERRIDES ========== */
+
+/* Nav */
+[data-theme="neon"] nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: #0a0a0ccc;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.25rem 0;
+  box-shadow: none;
+  width: 100%;
+  max-width: none;
+}
+
+[data-theme="neon"] .nav-inner {
+  justify-content: space-between;
+}
+
+[data-theme="neon"] .nav-logo {
+  font-family: 'Space Mono', monospace;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="neon"] .nav-links a {
+  position: relative;
+  border-radius: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-theme="neon"] .nav-links a:hover {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+[data-theme="neon"] .nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 0.3s var(--ease-out);
+}
+
+[data-theme="neon"] .nav-links a:hover::after {
+  width: 100%;
+}
+
+/* Hardcoded color overrides */
+[data-theme="neon"] .btn:hover {
+  box-shadow: 0 4px 16px #c9f05920;
+}
+[data-theme="neon"] .btn.primary {
+  color: #0a0a0c;
+}
+[data-theme="neon"] .btn.primary:hover {
+  background: #d4f76a;
+  box-shadow: 0 8px 30px #c9f05940;
+}
+[data-theme="neon"] .approach-card:hover {
+  box-shadow: 0 12px 40px #c9f05910;
+}
+[data-theme="neon"] .blur-overlay.active {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Font weight overrides */
+[data-theme="neon"] .hero h1 { font-weight: 700; font-style: normal; }
+[data-theme="neon"] .hero h1 em { font-style: normal; color: var(--accent); }
+[data-theme="neon"] .section-heading { font-weight: 600; }
+[data-theme="neon"] .contact-heading { font-weight: 700; }
+[data-theme="neon"] .work-details h4 { font-weight: 600; }
+[data-theme="neon"] .approach-card h3 { font-weight: 600; }
+
+/* Sharp corners */
+[data-theme="neon"] .btn { border-radius: 8px; }
+[data-theme="neon"] .chip { border-radius: 6px; }
+[data-theme="neon"] .work-pill { border-radius: 6px; }
+[data-theme="neon"] .hero-badge { border-radius: 6px; }
+[data-theme="neon"] .work-card { border-radius: 12px; }
+[data-theme="neon"] .tidbit { border-radius: 8px; }
+[data-theme="neon"] .about-box { border-radius: 8px; }
+
+/* Theme switcher + plane toggle */
+[data-theme="neon"] .theme-switcher {
+  top: 4rem;
+  border-radius: 4px;
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+[data-theme="neon"] .theme-switcher:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 12px #c9f05940;
+}
+[data-theme="neon"] .plane-toggle { border-radius: 4px; background: var(--bg-card); border-color: var(--border); }
+[data-theme="neon"] .plane-toggle:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px #c9f05940; }
+[data-theme="neon"] .plane-toggle.attractor { border-radius: 4px; background: var(--accent); border-color: var(--accent); color: #0a0a0c; box-shadow: 0 0 16px #c9f05950; }
+[data-theme="neon"] .plane-toggle.attractor:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
+
+/* Grain overlay */
+[data-theme="neon"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Hide doodles + hero grid bg */
+[data-theme="neon"] .doodle { display: none; }
+
+[data-theme="neon"] .hero::before {
+  content: '';
+  position: absolute;
+  top: 0; right: -10%;
+  width: 60%; height: 100%;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 70%);
+}
+
+/* Image placeholder overrides */
+[data-theme="neon"] .work-image-placeholder.warm { background: radial-gradient(circle at 30% 40%, #c9f05915 0%, transparent 50%), var(--bg-card); }
+[data-theme="neon"] .work-image-placeholder.cool { background: radial-gradient(circle at 30% 40%, #59b8f015 0%, transparent 50%), var(--bg-card); }
+[data-theme="neon"] .work-image-placeholder.fresh { background: radial-gradient(circle at 30% 40%, #59f0a015 0%, transparent 50%), var(--bg-card); }
+
+/* SVG stroke fix + icon bg */
+[data-theme="neon"] .work-icon svg { stroke: var(--text-primary); }
+[data-theme="neon"] .work-icon.orange { background: #c9f05955; }
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {

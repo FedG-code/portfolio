@@ -228,6 +228,16 @@
   max-height: 480px;
 }
 
+/* ========== NEON THEME OVERRIDES ========== */
+[data-theme="neon"] .project-hero-title { font-weight: 700; }
+[data-theme="neon"] .project-text h4 { font-weight: 600; }
+[data-theme="neon"] .project-hero-badge { border-radius: 6px; }
+[data-theme="neon"] .wip-badge { border-radius: 6px; }
+[data-theme="neon"] .project-link { border-radius: 8px; }
+[data-theme="neon"] .work-image-placeholder.warm { background: radial-gradient(circle at 30% 40%, #c9f05915 0%, transparent 50%), #18181f; }
+[data-theme="neon"] .work-image-placeholder.cool { background: radial-gradient(circle at 30% 40%, #59b8f015 0%, transparent 50%), #18181f; }
+[data-theme="neon"] .work-image-placeholder.fresh { background: radial-gradient(circle at 30% 40%, #59f0a015 0%, transparent 50%), #18181f; }
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   .project-content { grid-template-columns: 1fr; }

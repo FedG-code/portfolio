@@ -66,7 +66,7 @@ if (overlay) {
 
 // Theme switcher
 const themeSwitcher = document.getElementById('themeSwitcher');
-const themes = ['coral', 'slate'];
+const themes = ['coral', 'slate', 'neon'];
 let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'coral');
 if (currentIndex === -1) currentIndex = 0;
 
