@@ -889,7 +889,7 @@ footer span {
 }
 
 /* Font weight overrides */
-[data-theme="neon"] .hero h1 { font-weight: 700; font-style: normal; text-indent: -0.08em; }
+[data-theme="neon"] .hero h1 { font-weight: 700; font-style: normal; margin-left: -0.08em; }
 [data-theme="neon"] .hero h1 em { font-style: normal; color: var(--accent); }
 [data-theme="neon"] .kern-ri { letter-spacing: 0.03em; }
 [data-theme="neon"] .section-heading { font-weight: 600; }
