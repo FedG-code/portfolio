@@ -89,7 +89,7 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
   background: var(--cream);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
 }
 
 .plane-toggle:hover {
@@ -101,6 +101,7 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+  will-change: transform;
 }
 
 .plane-toggle.attractor:hover {

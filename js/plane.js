@@ -108,14 +108,14 @@
         toggleBtn.classList.add('attractor');
         attractorTl = gsap.timeline({ repeat: -1, repeatDelay: 0.6 });
         attractorTl.to(toggleBtn, {
-          duration: 0.15,
-          scale: 1.65,
-          ease: 'power2.out'
+          duration: 0.4,
+          scale: 1.3,
+          ease: 'power1.out'
         });
         attractorTl.to(toggleBtn, {
-          duration: 1.4,
+          duration: 0.7,
           scale: 1,
-          ease: 'elastic.out(1.4, 0.25)'
+          ease: 'elastic.out(1.7, 0.45)'
         });
       }, 1500);
 
