@@ -110,12 +110,14 @@
         attractorTl.to(toggleBtn, {
           duration: 0.4,
           scale: 1.3,
-          ease: 'power1.out'
+          ease: 'power1.out',
+          force3D: true
         });
         attractorTl.to(toggleBtn, {
           duration: 0.7,
           scale: 1,
-          ease: 'elastic.out(1.7, 0.45)'
+          ease: 'elastic.out(1.7, 0.45)',
+          force3D: true
         });
       }, 1500);
 
