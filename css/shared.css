@@ -817,7 +817,7 @@ footer span {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 1.25rem 0;
-  padding-top: calc(1.25rem + env(safe-area-inset-top));
+  padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
   box-shadow: none;
   width: 100%;
   max-width: none;

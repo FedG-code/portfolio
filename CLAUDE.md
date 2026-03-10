@@ -68,6 +68,19 @@ If not installed: `npm install -g @playwright/cli@latest`
 - **Running JS on page**: Use `npx playwright-cli eval "() => { ... }"` (arrow function string) for page-level JavaScript execution.
 - **Reload after CSS changes**: After editing CSS files, run `npx playwright-cli reload` before screenshotting, as the browser may cache old styles.
 
+### iOS Safe Area Testing
+`test-safe-area.js` uses Playwright's CDP to simulate real `env(safe-area-inset-*)` values via `Emulation.setSafeAreaInsetsOverride`. This is the only desktop method that makes `env()` resolve to non-zero values.
+
+```bash
+node test-safe-area.js [url] [theme] [device]
+```
+- **url** — defaults to `http://localhost:8080/index.html`
+- **theme** — `coral`, `slate`, or `neon` (defaults to `neon`)
+- **device** — `iPhone 15 Pro` (default, Dynamic Island: top 59px), `iPhone 14` (notch: top 47px), `iPhone SE` (no notch)
+- Outputs `safe-area-{theme}.png` — delete after verification
+
+Requires the local server to be running. The script handles `.reveal` visibility automatically.
+
 ## Conventions
 - No build tools or bundler - static HTML/CSS/JS only
 - Shared styles in `css/shared.css`, project-specific styles in `css/project.css`
