@@ -45,10 +45,9 @@
     <div class="project-hero-badge">Lost Satellite Studios</div>
     <h1 class="project-hero-title reveal">Eve of Destruction</h1>
     <p class="project-hero-desc reveal">
-      A 2D metroidvania with combo-based combat, a morality system that unlocks
-      divergent powers, and ability-gated exploration. As Technical Designer on
-      a small team, I built the combat, enemies and movement from
-      scratch in GDScript.
+      A 2D action-platformer built around combo combat, unlockable abilities, and branching progression.
+       As Technical Designer on a small team, I designed and implemented the combat,
+        enemy, and movement systems in GDScript.
       <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener" style="color: var(--accent)">Steam demo available</a>.
     </p>
     <div class="project-meta reveal">
@@ -94,11 +93,10 @@
       </div>
       <div class="project-text">
         <p>
-          I wanted combos to feel like the player was committing to attacks rather than
-          mashing through them. Each attack is a state in a finite state machine, and I
-          used input buffering so the next hit only fires when the current attack's
-          window closes. This helps lock players into combos, making spamming more punishing
-          and comitting to a string of attacks an important consideration.
+          Designed combat to reward timing and decision-making over repeated input. 
+          Each attack is part of a finite state machine, with input buffering controlling 
+          when the next move can trigger. This gave the combat a clearer sense of structure and 
+          commitment, while also making combo flow easier to tune and maintain.
         </p>
       </div>
     </div>
@@ -109,17 +107,11 @@
       </div>
       <div class="project-text">
         <p>
-          On the second hit the player can branch: neutral continues the standard
-          combo, up launches enemies airborne for air follow-ups, and horizontal
-          triggers a forward lunge. I wanted mid-combo decisions that felt
-          intuitive without needing complex inputs. Each branch is just a
-          direction hold during the buffer window.
-        </p>
-        <p>
-          Berserk mode swaps the moveset entirely, giving the player a parallel
-          combo chain with a heavy finisher. The player also deals damage while entering and exiting berserk mode.
-          Given that the ultimate bar fills easily and triggers automatically, this helped players not feel punished
-          when it triggers mid fight.
+          I also built directional combo branches so players could vary attacks through simple inputs 
+          rather than complex commands. This let the system offer meaningful choice 
+          without becoming difficult to read. In addition, I designed a separate Berserk 
+          moveset to shift the pace and feel of combat when the mode activates, while keeping 
+          transitions consistent with the core combat logic.
         </p>
       </div>
     </div>
@@ -138,16 +130,15 @@
       <div class="project-text">
         <h4>Crystal Eaters &amp; Stars</h4>
         <p>
-          Crystal Eaters are the game's main grunt, but I wanted them to
-          feel coordinated rather than mindless. They run on a ten-state
-          FSM with three layered detection ranges, and nearby Crystal
-          Eaters track each other's positions to avoid crowding the
-          player. In practice this means they fan out and approach from
-          different angles, which forces the player to reposition rather
-          than just standing and swinging. Stars are simpler but both
-          enemy types share the same component architecture for damage,
-          health, and drops, with balance values in external resource
-          files so the designer could tune them without touching code.
+          Designed core enemies to pressure the player through coordination, spacing, 
+          and timing rather than simple aggression. Their behaviour was built to create more interesting 
+          combat situations by forcing repositioning and preventing encounters from becoming too static 
+          or repetitive.
+        </p>
+        <p>
+          I implemented these enemies using shared systems for health, damage, and drops, 
+          while exposing balance values through external resources. This made iteration faster 
+          and allowed design changes to be tested without rewriting underlying logic.
         </p>
       </div>
     </div>
@@ -168,11 +159,9 @@
           exploit once they recognize it.
         </p>
         <p>
-          The shield added an interesting positional layer. It checks the
-          knight's facing direction against the incoming hit in the shared
-          damage component, so attacks on the shielded side bounce off
-          with distinct VFX instead of dealing damage. The player has to
-          work around it or wait for an opening.
+          I also added directional shield logic so positioning became part of the fight, 
+          rather than damage output alone. This helped make the encounter feel more tactical while 
+          staying consistent with the game’s broader combat language.
         </p>
       </div>
     </div>
@@ -193,8 +182,7 @@
           The dash was the trickiest part of the movement system to get right. It needed to
           work as both a combat dodge and a traversal tool, and those two uses pull in
           opposite directions. Too fast and enemies become trivial, too much endlag and
-          platforming feels sluggish. I tuned the speed and recovery frames separately for
-          grounded and airborne states so it could serve both roles.
+          platforming feels sluggish.
         </p>
       </div>
     </div>

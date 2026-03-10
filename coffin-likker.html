@@ -45,13 +45,15 @@
     <div class="project-hero-badge">Personal Projects</div>
     <h1 class="project-hero-title reveal">Coffin-Likker</h1>
     <p class="project-hero-desc reveal">
-      Building a game in preproduction to learn about game development, explore my ideas
-      and learn about managment, shipping and pitching to publishers.
+      A stealth-horror project in pre-production focused on visibility, AI behavior, and environmental tension. Set in the bayou
+      with a lovecraftian narrative. 
+      I am designing and prototyping the core systems in Unity while shaping the game’s direction, 
+      production plan, and pitch materials.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
         <p class="tidbit-label">Role</p>
-        <p class="tidbit-value">Solo Founder</p>
+        <p class="tidbit-value">Solo Developer</p>
       </div>
       <div class="tidbit">
         <p class="tidbit-label">Timeline</p>
@@ -79,11 +81,10 @@
       <div class="project-text">
         <h4>Vision &amp; Visibility</h4>
         <p>
-          I felt like darkwood's mechanic of enemies and objects being invisible outside of the player
-          vision cone was unexplored in the gaming space. Fog of war is present in many places but strangely
-          not in single player experiences with a vision cone. I wanted to expand on this "fear of the dark"
-          feeling and place it in a bayou. I am also going to lightly be "stealing" darkest dungeon's lovecraftian
-          horror. I used custom HLSL shaders and reused blend styles to create a visibility mask. 
+          I built a visibility system that allows the player to still see their environment, but hides
+          enemies not in the player's vision. The core tension is derived from this information mismatch.
+          The player can still see the space around themselves, they just have no idea <strong>what could be lurking there.</strong> 
+          Implemented in Unity with custom HLSL shaders.
         </p>
         <p>
           After going to a talk by Henry Hoffman (the creator of Hue) I started to really consider how
@@ -93,20 +94,19 @@
       </div>
     </div>
 
-    <!-- Communcating Location -->
+    <!-- Readable Danger -->
     <div class="project-content project-content--reversed reveal">
       <div>
         <img class="work-image" src="assets/soundring.gif" alt="Combat and sound propagation gameplay" loading="lazy">
       </div>
       <div class="project-text">
-        <h4>Communicating Location</h4>
+        <h4>Readable Danger</h4>
         <p>
-          In a game where the player has so little information it's important to not make them
-          feel completely lost. I'm experimenting with a push and pull system where certain enemies
-          have a very large awarness range but make noise (which the player can see). And blind enemies
-          who make little noise and the player is at risk of bumping into them. It was important to do this
-          since darkwood usually weaponises the fact that they various rooms and faraway doors that get opened,
-          to communicate this information.
+          I designed enemy behaviors to communicate danger without giving the player full information. 
+          In particular, some enemies make noise AND create a "ripple" effect on the water. 
+          The ripple serves to provide the players more partial information that they must decipher.
+          As a secondary benefit, the ripples and splash sound help highlight moments of tension, where enemies
+          will rush down the player.
         </p>
       </div>
     </div>
@@ -143,16 +143,9 @@
       </div>
       <div class="project-text">
         <p>
-          A 1v1 board game where two players compete to cover a shared grid with
-          tetris-shaped pieces. The brief was "light and dark" and also "alchemy". I
-          thought of Splatoon style territory control for light and dark, and merging the
-          tetris pieces together to create new shapes for alchemy. The point of combining is
-          actually also to make "perfect play" harder, since tetris pieces are often easy to slot
-          in. Overlap your opponent's territory claims it. First to roughly 70% coverage wins.
-        </p>
-        <p>
-          Designed the gameplay mechanic, coded it, and collaborated with an
-          artist on visual design and a sound designer on audio. Built in my free time using Godot.
+          A competitive board game prototype where two players place shaped tiles to control a shared grid. 
+          I introduced a merging system to make board states less predictable and reduce obvious optimal play. 
+          Designed and implemented the prototype in Godot, collaborating with an artist and sound designer.
         </p>
         <div class="work-stats">
           <div class="work-stat">
@@ -183,9 +176,10 @@
         <p>
           A small game about catching fish and reaching an island before a storm
           hits. The brief was "calm before the storm", and I wanted to maximise the fear
-          of the oncoming storm with small random elements, the fish spawning location and island
-          spawn locations, the direction of the storm and there's a slight randomness in when the storm
-          hits. The boat is also unwieldy to add pressure to the player.
+          and uncertainty of the oncoming storm by randomising some small elements: the fish and islands spawn at random locations, 
+          the storm spawns from a random direction. This obfuscation of information forces
+          the player to have to play more reactively, rather than being able to plan ahead. Some fish are worth more than others so as to make
+          the players have to make split second decisions on pathing. The boat is also unwieldy to add pressure to the player.
         </p>
         <p>
           Built using Godot in my free time.

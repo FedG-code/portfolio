@@ -59,13 +59,6 @@ If not installed: `npm install -g @playwright/cli@latest`
 - **Running JS on page**: Use `npx playwright-cli eval "() => { ... }"` (arrow function string) for page-level JavaScript execution.
 - **Reload after CSS changes**: After editing CSS files, run `npx playwright-cli reload` before screenshotting, as the browser may cache old styles.
 
-## Writing & Tone
-- **No em dashes**. Never use `—`, `&mdash;`, or long dashes anywhere. Use commas, periods, or restructure the sentence instead. Hyphens (`-`) are fine for separators in labels and metadata.
-- **Serious, direct tone**. No grandiose or marketing-style language. State what was built and how, not how impressive it is.
-- **No filler phrases** like "I care deeply about", "relentlessly", "from zero", or "let's build something together".
-- **Technical writing should be digestible**. If describing a system, lead with what the player/user experiences, then explain the implementation.
-- **Factual subheadings**. Describe what the project is, not a tagline pitch.
-
 ## Conventions
 - No build tools or bundler - static HTML/CSS/JS only
 - Shared styles in `css/shared.css`, project-specific styles in `css/project.css`
