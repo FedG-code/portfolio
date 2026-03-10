@@ -17,6 +17,7 @@
   var WING_Z_OFFSET     = 0.3;   // world units behind plane center (positive = further back)
   var PROJECTILE_SPEED  = 8.0;
   var TAIL_SPEED_RATIO  = 0.7;
+  var FIRE_INTERVAL     = 0.12;  // seconds between rapid-fire bursts (hold click)
 
   // --- Viewport gate ---
   if (window.innerWidth <= MIN_VIEWPORT) return;
@@ -45,6 +46,7 @@
   var lastMouseMoveTime = 0;
   var MOUSE_STALE_MS = 100;
   var projectiles = [];
+  var fireIntervalId = null;
 
   // --- Iframe avoidance ---
   var cachedIframeRects = [];
@@ -173,6 +175,7 @@
       cancelAnimationFrame(animationFrameId);
       animationFrameId = null;
     }
+    stopFiring();
     for (var i = 0; i < projectiles.length; i++) {
       scene.remove(projectiles[i].line);
       projectiles[i].line.geometry.dispose();
@@ -344,6 +347,13 @@
     if (e.button !== 0) return;
     if (e.target.closest('.plane-toggle, nav, .theme-switcher')) return;
     fireProjectiles();
+    clearInterval(fireIntervalId);
+    fireIntervalId = setInterval(fireProjectiles, FIRE_INTERVAL * 1000);
+  }
+
+  function stopFiring() {
+    clearInterval(fireIntervalId);
+    fireIntervalId = null;
   }
 
   // --- Animation Loop ---
@@ -517,6 +527,8 @@
       document.addEventListener('mouseleave', onMouseLeave);
       document.addEventListener('mouseenter', onMouseEnter);
       document.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mouseup', stopFiring);
+      window.addEventListener('mouseleave', stopFiring);
       window.addEventListener('resize', onResize);
       window.addEventListener('resize', markIframeRectsStale);
       window.addEventListener('scroll', markIframeRectsStale, { passive: true });

@@ -40,6 +40,8 @@ var DESTRUCTIBLE_SELECTOR = [
 // --- TextSplitter ---
 var splitInstances = [];
 var allChars = [];
+var isSplit = false;
+var isArmed = false;
 
 function splitAllText() {
   revertAllText();
@@ -67,6 +69,12 @@ function revertAllText() {
   });
   splitInstances = [];
   allChars = [];
+}
+
+function preloadSplit() {
+  if (window.innerWidth <= 768) return;  // same gate as plane.js MIN_VIEWPORT
+  splitAllText();
+  isSplit = true;
 }
 
 // --- CollisionDetector ---
@@ -141,6 +149,7 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
     var el = hit.el;
     el.dataset.shattered = '1';
     currentShattered++;
+    el.style.display = 'inline-block';
     blastChars.push(el);
 
     // Scatter angle: away from impact point
@@ -217,6 +226,7 @@ function scheduleTypingReform(chars) {
       // Pre-position: kill scatter tween, set drop start pose
       gsap.delayedCall(startDelay - 0.01, function() {
         gsap.killTweensOf(el);
+        el.style.display = 'inline-block';
         gsap.set(el, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
       });
 
@@ -234,6 +244,7 @@ function scheduleTypingReform(chars) {
           onComplete: function() {
             el.dataset.shattered = '0';
             el.style.color = el.dataset.originalColor || '';
+            el.style.display = '';
             currentShattered--;
             cacheStale = true;
           }
@@ -260,7 +271,11 @@ var resizeListenerActive = false;
 window.TextDestruction = {
   init: function() {
     readAccentColor();
-    splitAllText();
+    if (!isSplit) {
+      splitAllText();
+      isSplit = true;
+    }
+    isArmed = true;
     cacheStale = true;
     if (!resizeListenerActive) {
       window.addEventListener('resize', onResizeDebounced);
@@ -269,19 +284,22 @@ window.TextDestruction = {
   },
 
   destroy: function() {
+    isArmed = false;
     allChars.forEach(function(el) {
       gsap.killTweensOf(el);
+      if (el.dataset.shattered === '1') {
+        gsap.set(el, { x: 0, y: 0, rotation: 0, opacity: 1 });
+        el.style.display = '';
+        el.dataset.shattered = '0';
+      }
     });
-    revertAllText();
     currentShattered = 0;
     charRectCache = [];
-    if (resizeListenerActive) {
-      window.removeEventListener('resize', onResizeDebounced);
-      resizeListenerActive = false;
-    }
+    // Do NOT revert split or remove resize listener — spans persist
   },
 
   onProjectileAt: function(screenX, screenY) {
+    if (!isArmed) return;
     var hits = getCharsInBlastRadius(screenX, screenY);
     if (hits.length > 0) {
       shatterChars(hits, screenX, screenY);
@@ -289,7 +307,25 @@ window.TextDestruction = {
   },
 
   onThemeChange: function() {
-    this.destroy();
-    this.init();
+    var wasArmed = isArmed;
+    allChars.forEach(function(el) {
+      gsap.killTweensOf(el);
+    });
+    currentShattered = 0;
+    charRectCache = [];
+    revertAllText();
+    isSplit = false;
+    splitAllText();
+    isSplit = true;
+    readAccentColor();
+    isArmed = wasArmed;
+    cacheStale = true;
   }
 };
+
+// --- Auto-run preload on script load ---
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(preloadSplit);
+} else {
+  setTimeout(preloadSplit, 100);
+}
