@@ -94,6 +94,12 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
   color: var(--accent);
 }
 
+/* ========== PLANE ACTIVE (disable text selection during plane mode) ========== */
+html.plane-active {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* ========== PLANE TOGGLE ========== */
 .plane-toggle {
   position: fixed;
@@ -967,6 +973,12 @@ footer span {
   .work-expand-grid { grid-template-columns: 1fr; }
   .work-card.expanded .work-card-header { padding: 1.5rem; }
   .work-expand-inner { padding: 0 1.5rem 1.5rem; }
+}
+
+/* Destruction system */
+.destruct-char {
+  display: inline-block;
+  will-change: transform, opacity;
 }
 
 @media (max-width: 768px) {

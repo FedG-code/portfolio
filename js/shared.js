@@ -82,6 +82,7 @@ themeSwitcher.addEventListener('click', () => {
   document.documentElement.setAttribute('data-theme', themes[currentIndex]);
   localStorage.setItem('portfolio-theme', themes[currentIndex]);
   updateLabel();
+  if (window.TextDestruction) TextDestruction.onThemeChange();
 });
 
 // Mobile auto-hide nav & theme switcher on scroll

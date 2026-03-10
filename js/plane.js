@@ -13,9 +13,10 @@
   var LS_KEY            = 'portfolio-plane';
   var IFRAME_BUFFER     = 50;
   var IFRAME_BUFFER_TOP = 65;
-  // var WING_OFFSET       = 0.3;
-  // var PROJECTILE_SPEED  = 4.0;
-  // var TAIL_SPEED_RATIO  = 0.7;
+  var WING_OFFSET       = 0.2;
+  var WING_Z_OFFSET     = 0.3;   // world units behind plane center (positive = further back)
+  var PROJECTILE_SPEED  = 8.0;
+  var TAIL_SPEED_RATIO  = 0.7;
 
   // --- Viewport gate ---
   if (window.innerWidth <= MIN_VIEWPORT) return;
@@ -43,7 +44,7 @@
   var targetPosition = null; // THREE.Vector3, created after scripts load
   var lastMouseMoveTime = 0;
   var MOUSE_STALE_MS = 100;
-  // var projectiles = [];
+  var projectiles = [];
 
   // --- Iframe avoidance ---
   var cachedIframeRects = [];
@@ -144,13 +145,17 @@
     updateButtonLabel();
 
     if (enabled) {
+      document.documentElement.classList.add('plane-active');
       if (!initialized) {
         init();
       } else {
         start();
       }
+      if (window.TextDestruction) TextDestruction.init();
     } else {
+      document.documentElement.classList.remove('plane-active');
       stop();
+      if (window.TextDestruction) TextDestruction.destroy();
     }
   }
 
@@ -168,13 +173,14 @@
       cancelAnimationFrame(animationFrameId);
       animationFrameId = null;
     }
-    // for (var i = 0; i < projectiles.length; i++) {
-    //   scene.remove(projectiles[i].line);
-    //   projectiles[i].line.geometry.dispose();
-    //   projectiles[i].line.material.dispose();
-    // }
-    // projectiles.length = 0;
+    for (var i = 0; i < projectiles.length; i++) {
+      scene.remove(projectiles[i].line);
+      projectiles[i].line.geometry.dispose();
+      projectiles[i].line.material.dispose();
+    }
+    projectiles.length = 0;
     if (canvasContainer) canvasContainer.style.display = 'none';
+    document.documentElement.classList.remove('plane-active');
   }
 
   // --- Dynamic Script Loading ---
@@ -210,6 +216,13 @@
     var wz = (sy / window.innerHeight - 0.5) * FRUSTUM_SIZE;
     return { x: wx, z: wz };
   }
+
+  function worldToScreen(wx, wz) {
+    var sx = (wx / (FRUSTUM_SIZE * aspect) + 0.5) * window.innerWidth;
+    var sy = (wz / FRUSTUM_SIZE + 0.5) * window.innerHeight;
+    return { x: sx, y: sy };
+  }
+  window._planeWorldToScreen = worldToScreen;
 
   // --- Mouse Events ---
   function onMouseMove(e) {
@@ -287,49 +300,51 @@
     }
   }
 
-  // --- Projectile helpers (commented out — uncomment to enable) ---
-  // function getAccentColor() {
-  //   var hex = getComputedStyle(document.documentElement)
-  //     .getPropertyValue('--accent').trim();
-  //   return new THREE.Color(hex);
-  // }
-  //
-  // function fireProjectiles() {
-  //   var color = getAccentColor();
-  //   var target = screenToWorld(mouseScreenX, mouseScreenY);
-  //   var px = planeGroup.position.x;
-  //   var pz = planeGroup.position.z;
-  //   var offsets = [-WING_OFFSET, WING_OFFSET];
-  //
-  //   for (var i = 0; i < offsets.length; i++) {
-  //     var wingX = px + offsets[i] * Math.cos(currentRoll);
-  //     var positions = new Float32Array(6);
-  //     positions[0] = wingX;  positions[1] = 0; positions[2] = pz;
-  //     positions[3] = wingX;  positions[4] = 0; positions[5] = pz;
-  //
-  //     var geometry = new THREE.BufferGeometry();
-  //     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  //     var material = new THREE.LineBasicMaterial({ color: color });
-  //     var line = new THREE.Line(geometry, material);
-  //     scene.add(line);
-  //
-  //     projectiles.push({
-  //       line: line,
-  //       startX: wingX,
-  //       startZ: pz,
-  //       endX: target.x,
-  //       endZ: target.z,
-  //       progress: 0
-  //     });
-  //   }
-  // }
-  //
-  // function onMouseDown(e) {
-  //   if (!running || !planeGroup || !planeGroup.visible) return;
-  //   if (e.button !== 0) return;
-  //   if (e.target.closest('.plane-toggle, nav, .theme-switcher')) return;
-  //   fireProjectiles();
-  // }
+  // --- Projectile helpers ---
+  function getAccentColor() {
+    var hex = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent').trim();
+    return new THREE.Color(hex);
+  }
+
+  function fireProjectiles() {
+    var color = getAccentColor();
+    var px = planeGroup.position.x;
+    var pz = planeGroup.position.z;
+    var endX = px;
+    var endZ = pz - CURSOR_OFFSET_Z;
+    var offsets = [-WING_OFFSET, WING_OFFSET];
+
+    for (var i = 0; i < offsets.length; i++) {
+      var wingX = px + offsets[i] * Math.cos(currentRoll);
+      var wingZ = pz + WING_Z_OFFSET;
+      var positions = new Float32Array(6);
+      positions[0] = wingX;  positions[1] = 0; positions[2] = wingZ;
+      positions[3] = wingX;  positions[4] = 0; positions[5] = wingZ;
+
+      var geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      var material = new THREE.LineBasicMaterial({ color: color });
+      var line = new THREE.Line(geometry, material);
+      scene.add(line);
+
+      projectiles.push({
+        line: line,
+        startX: wingX,
+        startZ: wingZ,
+        endX: endX,
+        endZ: endZ,
+        progress: 0
+      });
+    }
+  }
+
+  function onMouseDown(e) {
+    if (!running || !planeGroup || !planeGroup.visible) return;
+    if (e.button !== 0) return;
+    if (e.target.closest('.plane-toggle, nav, .theme-switcher')) return;
+    fireProjectiles();
+  }
 
   // --- Animation Loop ---
   function animate() {
@@ -386,29 +401,36 @@
       prevMouseScreenX = mouseScreenX;
     }
 
-    // // Update projectiles
-    // for (var p = projectiles.length - 1; p >= 0; p--) {
-    //   var proj = projectiles[p];
-    //   proj.progress += PROJECTILE_SPEED * delta;
-    //   var headT = Math.min(proj.progress, 1.0);
-    //   var tailT = Math.min(proj.progress * TAIL_SPEED_RATIO, 1.0);
-    //
-    //   var pos = proj.line.geometry.attributes.position.array;
-    //   pos[0] = proj.startX + (proj.endX - proj.startX) * headT;
-    //   pos[1] = 0;
-    //   pos[2] = proj.startZ + (proj.endZ - proj.startZ) * headT;
-    //   pos[3] = proj.startX + (proj.endX - proj.startX) * tailT;
-    //   pos[4] = 0;
-    //   pos[5] = proj.startZ + (proj.endZ - proj.startZ) * tailT;
-    //   proj.line.geometry.attributes.position.needsUpdate = true;
-    //
-    //   if (tailT >= 1.0) {
-    //     scene.remove(proj.line);
-    //     proj.line.geometry.dispose();
-    //     proj.line.material.dispose();
-    //     projectiles.splice(p, 1);
-    //   }
-    // }
+    // Update projectiles
+    for (var p = projectiles.length - 1; p >= 0; p--) {
+      var proj = projectiles[p];
+      proj.progress += PROJECTILE_SPEED * delta;
+      var headT = Math.min(proj.progress, 1.0);
+      var tailT = Math.min(proj.progress * TAIL_SPEED_RATIO, 1.0);
+
+      var pos = proj.line.geometry.attributes.position.array;
+      pos[0] = proj.startX + (proj.endX - proj.startX) * headT;
+      pos[1] = 0;
+      pos[2] = proj.startZ + (proj.endZ - proj.startZ) * headT;
+      pos[3] = proj.startX + (proj.endX - proj.startX) * tailT;
+      pos[4] = 0;
+      pos[5] = proj.startZ + (proj.endZ - proj.startZ) * tailT;
+      proj.line.geometry.attributes.position.needsUpdate = true;
+
+      // Text destruction: shatter at impact point only
+      if (window.TextDestruction && headT >= 1.0 && !proj.impacted) {
+        proj.impacted = true;
+        var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
+        TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
+      }
+
+      if (tailT >= 1.0) {
+        scene.remove(proj.line);
+        proj.line.geometry.dispose();
+        proj.line.material.dispose();
+        projectiles.splice(p, 1);
+      }
+    }
 
     renderer.render(scene, camera);
   }
@@ -494,14 +516,16 @@
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseleave', onMouseLeave);
       document.addEventListener('mouseenter', onMouseEnter);
-      // document.addEventListener('mousedown', onMouseDown);
+      document.addEventListener('mousedown', onMouseDown);
       window.addEventListener('resize', onResize);
       window.addEventListener('resize', markIframeRectsStale);
       window.addEventListener('scroll', markIframeRectsStale, { passive: true });
 
       initialized = true;
       running = true;
+      document.documentElement.classList.add('plane-active');
       animationFrameId = requestAnimationFrame(animate);
+      if (window.TextDestruction) TextDestruction.init();
     }).catch(function (err) {
       console.warn('Three.js scripts failed to load:', err);
     });
