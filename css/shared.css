@@ -813,7 +813,7 @@ footer span {
   border-radius: 0;
   border: none;
   border-bottom: 1px solid var(--border);
-  background: #0a0a0ccc;
+  background: #0a0a0c;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 1.25rem 0;
@@ -832,6 +832,7 @@ footer span {
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
+  margin-left: 1px;
 }
 
 [data-theme="neon"] .nav-links a {
@@ -882,7 +883,7 @@ footer span {
 }
 
 /* Font weight overrides */
-[data-theme="neon"] .hero h1 { font-weight: 700; font-style: normal; }
+[data-theme="neon"] .hero h1 { font-weight: 700; font-style: normal; text-indent: -0.08em; }
 [data-theme="neon"] .hero h1 em { font-style: normal; color: var(--accent); }
 [data-theme="neon"] .kern-ri { letter-spacing: 0.03em; }
 [data-theme="neon"] .section-heading { font-weight: 600; }
