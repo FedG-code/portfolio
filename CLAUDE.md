@@ -13,6 +13,7 @@ css/
   project.css           - Project page-specific styles (hero, sections, gallery)
 js/
   shared.js             - Scroll reveal + theme switcher with localStorage persistence
+  destruction.js        - Text destruction system (plane mode shatter + sequential reform)
 ```
 
 ## Key Details
@@ -33,6 +34,13 @@ js/
 - **Nav structure**: `<nav>` contains a `.container.nav-inner` wrapper around `.nav-logo` and `.nav-links`. The `.nav-inner` holds the flex layout. This lets neon's full-width nav align content with the page container while coral/slate's pill nav is unaffected.
 - **Work cards**: `<a>` links in `index.html` that navigate to individual project pages; hover highlight effect (accent border + lift + shadow)
 - **JS features**: Scroll reveal (IntersectionObserver), theme switcher with localStorage
+- **Text Destruction** (`js/destruction.js`): "Plane mode" feature — a paper airplane projectile shatters text on collision, then characters reform.
+  - **Dependencies**: GSAP core, SplitText plugin, Physics2DPlugin (all loaded externally, no npm)
+  - **How it works**: `TextDestruction.init()` splits all destructible text elements (headings, paragraphs, labels, etc.) into word and char `<span>`s via `SplitText` (classes `destruct-word` and `destruct-char`). Word spans are `inline-block; white-space: nowrap` to prevent mid-word breaks. When plane mode is active, `onProjectileAt(x, y)` finds chars within `BLAST_RADIUS` and shatters them.
+  - **Scatter phase**: Chars fly away from impact using `physics2D` (velocity, angle, gravity) with a brief accent-colour flash, fading to `opacity: 0` over `SCATTER_DURATION` (1.2s).
+  - **Reform phase** (sequential typing drop-in): After a `REFORM_PAUSE` (1.0s), chars re-enter left-to-right in DOM reading order. Each char is pre-positioned 16px above its slot (`DROP_DISTANCE`), then drops into place with `power2.out` (no bounce) over `CHAR_LAND_DURATION` (0.12s). Consecutive chars are staggered by `CHAR_STAGGER` (0.055s) with an extra `WORD_EXTRA_STAGGER` (0.05s) pause at word boundaries (detected by `parentElement` change).
+  - **Lifecycle**: `TextDestruction.onThemeChange()` destroys and re-inits on theme switch. Resize is debounced to re-split text. A `charRectCache` (invalidated on scroll/resize) accelerates hit detection.
+  - **Selector list** (`DESTRUCTIBLE_SELECTOR`): targets headings, hero text, work cards, about section, chips, contact, project pages, footer — excludes nav, theme switcher, buttons.
 - **Project pages**: Shared template - nav, theme switcher, back link, project hero, repeatable sub-project sections, footer
 
 ## Serving Locally

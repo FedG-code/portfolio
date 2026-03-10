@@ -980,6 +980,10 @@ footer span {
   display: inline-block;
   will-change: transform, opacity;
 }
+.destruct-word {
+  white-space: nowrap;
+  display: inline-block;
+}
 
 @media (max-width: 768px) {
   .plane-toggle { display: none; }

@@ -10,14 +10,16 @@ gsap.registerPlugin(SplitText, Physics2DPlugin);
 var BLAST_RADIUS = 40;
 var MAX_SHATTERED = 300;
 var SCATTER_DURATION = 1.2;
-var REFORM_DELAY = 1.5;
-var REFORM_DURATION = 0.6;
+var REFORM_PAUSE       = 0.8;
+var CHAR_LAND_DURATION = 0.12;
+var CHAR_STAGGER       = 0.055;
+var WORD_EXTRA_STAGGER = 0.05;
+var DROP_DISTANCE      = 16;
 var GRAVITY = 600;
 var MIN_VELOCITY = 150;
 var MAX_VELOCITY = 500;
 var ANGLE_SPREAD = 60;
 var MAX_ROTATION = 720;
-var REFORM_STAGGER = 0.03;
 
 var DESTRUCTIBLE_SELECTOR = [
   'h1', 'h2', 'h3', 'h4',
@@ -50,7 +52,8 @@ function splitAllText() {
     var instance = SplitText.create(el, {
       type: 'words, chars',
       tag: 'span',
-      charsClass: 'destruct-char'
+      charsClass: 'destruct-char',
+      wordsClass: 'destruct-word'
     });
 
     splitInstances.push(instance);
@@ -130,8 +133,7 @@ function readAccentColor() {
 function shatterChars(hits, impactScreenX, impactScreenY) {
   if (!accentColor) readAccentColor();
 
-  // Group hits by parent word span for stagger reform
-  var wordGroups = {};
+  var blastChars = [];
 
   hits.forEach(function(hit) {
     if (currentShattered >= MAX_SHATTERED) return;
@@ -139,12 +141,7 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
     var el = hit.el;
     el.dataset.shattered = '1';
     currentShattered++;
-
-    // Track word grouping for staggered reform
-    var wordEl = el.parentElement;
-    var wordKey = wordEl ? wordEl.dataset.splitTextWord || Math.random() : Math.random();
-    if (!wordGroups[wordKey]) wordGroups[wordKey] = [];
-    wordGroups[wordKey].push(el);
+    blastChars.push(el);
 
     // Scatter angle: away from impact point
     var angle = Math.atan2(hit.dy, hit.dx) * (180 / Math.PI);
@@ -181,33 +178,69 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
     });
   });
 
-  // Schedule staggered reform per word group
-  Object.keys(wordGroups).forEach(function(key) {
-    var chars = wordGroups[key];
-    chars.forEach(function(el, idx) {
-      var totalDelay = SCATTER_DURATION + REFORM_DELAY + (idx * REFORM_STAGGER);
-      gsap.delayedCall(totalDelay, function() {
-        reformChar(el);
-      });
-    });
-  });
+  if (blastChars.length > 0) {
+    scheduleTypingReform(blastChars);
+  }
 }
 
-function reformChar(el) {
-  gsap.to(el, {
-    duration: REFORM_DURATION,
-    x: 0,
-    y: 0,
-    rotation: 0,
-    opacity: 1,
-    ease: 'back.out(1.4)',
-    onComplete: function() {
-      el.dataset.shattered = '0';
-      el.style.color = el.dataset.originalColor || '';
-      currentShattered--;
-      cacheStale = true;
-    }
+function scheduleTypingReform(chars) {
+  // Sort by DOM reading order: top-to-bottom, left-to-right (5px line tolerance)
+  var charRects = chars.map(function(el) {
+    var rect = el.getBoundingClientRect();
+    return { el: el, top: rect.top, left: rect.left };
   });
+
+  charRects.sort(function(a, b) {
+    var lineDiff = a.top - b.top;
+    if (Math.abs(lineDiff) > 5) return lineDiff;
+    return a.left - b.left;
+  });
+
+  // Compute sequential delays with extra pause at word boundaries
+  var delays = [];
+  var cumulative = 0;
+  for (var i = 0; i < charRects.length; i++) {
+    if (i > 0) {
+      cumulative += CHAR_STAGGER;
+      // Detect word boundary by parent element change
+      if (charRects[i].el.parentElement !== charRects[i - 1].el.parentElement) {
+        cumulative += WORD_EXTRA_STAGGER;
+      }
+    }
+    delays.push(cumulative);
+  }
+
+  var startDelay = SCATTER_DURATION + REFORM_PAUSE;
+
+  for (var j = 0; j < charRects.length; j++) {
+    (function(el, delay) {
+      // Pre-position: kill scatter tween, set drop start pose
+      gsap.delayedCall(startDelay - 0.01, function() {
+        gsap.killTweensOf(el);
+        gsap.set(el, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
+      });
+
+      // Drop-in animation
+      gsap.delayedCall(startDelay + delay, function() {
+        gsap.to(el, {
+          duration: CHAR_LAND_DURATION,
+          y: 0,
+          ease: 'power2.out'
+        });
+        gsap.to(el, {
+          duration: CHAR_LAND_DURATION * 0.4,
+          opacity: 1,
+          ease: 'none',
+          onComplete: function() {
+            el.dataset.shattered = '0';
+            el.style.color = el.dataset.originalColor || '';
+            currentShattered--;
+            cacheStale = true;
+          }
+        });
+      });
+    })(charRects[j].el, delays[j]);
+  }
 }
 
 // --- Resize debounce for re-split ---
