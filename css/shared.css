@@ -797,6 +797,8 @@ footer span {
 }
 
 @media (max-width: 600px) {
+  html { overflow-x: hidden; }
   .nav-links { display: none; }
   nav { padding: 0.6rem 1.25rem; }
+  nav.scroll-hidden, .theme-switcher.scroll-hidden { opacity: 0; pointer-events: none; }
 }

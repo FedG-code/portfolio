@@ -56,3 +56,44 @@ themeSwitcher.addEventListener('click', () => {
   localStorage.setItem('portfolio-theme', themes[currentIndex]);
   updateLabel();
 });
+
+// Mobile auto-hide nav & theme switcher on scroll
+(function () {
+  var nav = document.querySelector('nav');
+  var switcher = document.getElementById('themeSwitcher');
+  if (!nav || !switcher) return;
+
+  var lastY = window.scrollY;
+  var ticking = false;
+
+  function onScroll() {
+    if (window.innerWidth > 600) {
+      nav.classList.remove('scroll-hidden');
+      switcher.classList.remove('scroll-hidden');
+      lastY = window.scrollY;
+      ticking = false;
+      return;
+    }
+
+    var y = window.scrollY;
+    var threshold = document.documentElement.scrollHeight * 0.1;
+
+    if (y > lastY && y > threshold) {
+      nav.classList.add('scroll-hidden');
+      switcher.classList.add('scroll-hidden');
+    } else if (y < lastY) {
+      nav.classList.remove('scroll-hidden');
+      switcher.classList.remove('scroll-hidden');
+    }
+
+    lastY = y;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      requestAnimationFrame(onScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
