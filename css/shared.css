@@ -98,14 +98,15 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
 }
 
 @keyframes plane-glow {
-  0%, 100% { box-shadow: 0 0 8px 2px var(--accent-mid); }
-  50% { box-shadow: 0 0 18px 6px var(--accent-mid); }
+  0%, 100% { box-shadow: 0 0 14px 5px color-mix(in srgb, var(--accent) 50%, transparent); }
+  50% { box-shadow: 0 0 28px 10px color-mix(in srgb, var(--accent) 60%, transparent); }
 }
 
 .plane-toggle.attractor {
   animation: plane-glow 2s ease-in-out infinite;
-  background: var(--accent-glow);
-  border-color: var(--accent-mid);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .plane-toggle.attractor:hover {
@@ -113,6 +114,7 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
   box-shadow: none;
   background: var(--cream);
   border-color: var(--accent);
+  color: var(--accent);
 }
 
 html { scroll-behavior: smooth; }

@@ -115,7 +115,7 @@
   }
 
   function updateButtonLabel() {
-    if (toggleBtn) toggleBtn.textContent = enabled ? 'Plane On' : 'Plane Off';
+    if (toggleBtn) toggleBtn.textContent = enabled ? 'Plane Off' : 'Plane On';
   }
 
   function toggle() {
