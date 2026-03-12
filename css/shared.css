@@ -992,7 +992,7 @@ footer span {
 
 /* Destruction system */
 .destruct-char {
-  display: inline;
+  display: inline-block;
 }
 .destruct-word {
   white-space: nowrap;

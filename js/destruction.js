@@ -59,6 +59,13 @@ function splitAllText() {
     });
 
     splitInstances.push(instance);
+
+    // Cache computed color on parent so shatterChars() avoids per-char getComputedStyle
+    var parentColor = getComputedStyle(el).color;
+    instance.chars.forEach(function(ch) {
+      ch.dataset.computedColor = parentColor;
+    });
+
     allChars = allChars.concat(instance.chars);
   });
 }
@@ -80,17 +87,39 @@ function preloadSplit() {
 // --- CollisionDetector ---
 var charRectCache = [];
 var cacheStale = true;
+var cacheRebuilding = false;
 var scrollStale = false;
 var lastCacheScrollY = 0;
 
+function scheduleEagerCacheWarm() {
+  if (!cacheRebuilding) {
+    cacheRebuilding = true;
+    requestAnimationFrame(rebuildCharCache);
+  }
+}
+
 function rebuildCharCache() {
+  cacheRebuilding = false;
   charRectCache = [];
   var viewH = window.innerHeight;
   var viewW = window.innerWidth;
 
+  // Pre-filter: check parent visibility to skip entire off-screen text blocks
+  var visibleParents = new Set();
+  var checkedParents = new Map();
+  for (var p = 0; p < allChars.length; p++) {
+    var parent = allChars[p].parentElement;
+    if (checkedParents.has(parent)) continue;
+    var pRect = parent.getBoundingClientRect();
+    var visible = pRect.bottom >= 0 && pRect.top <= viewH && pRect.right >= 0 && pRect.left <= viewW;
+    checkedParents.set(parent, visible);
+    if (visible) visibleParents.add(parent);
+  }
+
   for (var i = 0; i < allChars.length; i++) {
     var el = allChars[i];
     if (el.dataset.shattered === '1') continue;
+    if (!visibleParents.has(el.parentElement)) continue;
 
     var rect = el.getBoundingClientRect();
     if (rect.bottom < 0 || rect.top > viewH) continue;
@@ -133,14 +162,15 @@ function getCharsInBlastRadius(screenX, screenY) {
         dy: dy,
         dist: Math.sqrt(dx * dx + dy * dy)
       });
-      charRectCache.splice(i, 1);
+      charRectCache[i] = charRectCache[charRectCache.length - 1];
+      charRectCache.pop();
     }
   }
   return hits;
 }
 
 window.addEventListener('scroll', function() { scrollStale = true; }, { passive: true });
-window.addEventListener('resize', function() { cacheStale = true; });
+window.addEventListener('resize', function() { cacheStale = true; scheduleEagerCacheWarm(); });
 
 // --- ShatterAnimator ---
 var currentShattered = 0;
@@ -167,7 +197,6 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
     var el = hit.el;
     el.dataset.shattered = '1';
     currentShattered++;
-    el.style.display = 'inline-block';
     blastChars.push(el);
 
     // Scatter angle: away from impact point
@@ -184,7 +213,7 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
     // Store original color for reform
     var originalColor = el.style.color || '';
     el.dataset.originalColor = originalColor;
-    origColors.push(originalColor || getComputedStyle(el).color);
+    origColors.push(originalColor || el.dataset.computedColor || getComputedStyle(el).color);
   });
 
   if (blastChars.length > 0) {
@@ -241,9 +270,9 @@ function scheduleTypingReform(chars) {
   gsap.delayedCall(startDelay - 0.01, function() {
     for (var k = 0; k < els.length; k++) {
       gsap.killTweensOf(els[k]);
-      els[k].style.display = 'inline-block';
-      gsap.set(els[k], { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
     }
+    // Single batched set (1 call instead of N)
+    gsap.set(els, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
 
     // Single batched drop-in with function-based stagger (2 tweens instead of 2N)
     gsap.to(els, {
@@ -265,6 +294,7 @@ function scheduleTypingReform(chars) {
         }
         currentShattered -= els.length;
         cacheStale = true;
+        scheduleEagerCacheWarm();
       }
     });
   });
@@ -277,6 +307,8 @@ function onResizeDebounced() {
   resizeTimer = setTimeout(function() {
     if (splitInstances.length > 0) {
       splitAllText();
+      cacheStale = true;
+      scheduleEagerCacheWarm();
     }
   }, 300);
 }
@@ -293,6 +325,7 @@ window.TextDestruction = {
     }
     isArmed = true;
     cacheStale = true;
+    scheduleEagerCacheWarm();
     if (!resizeListenerActive) {
       window.addEventListener('resize', onResizeDebounced);
       resizeListenerActive = true;
@@ -336,6 +369,7 @@ window.TextDestruction = {
     readAccentColor();
     isArmed = wasArmed;
     cacheStale = true;
+    scheduleEagerCacheWarm();
   }
 };
 
