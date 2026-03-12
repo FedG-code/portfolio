@@ -26,9 +26,12 @@
   var SCROLL_DOWN_THRESHOLD   = 0.66;
   var SCROLL_UP_THRESHOLD     = 0.5;
 
+  var _isMobileCached = null;
   var isMobile = function () {
-    return window.innerWidth <= 768 ||
+    if (_isMobileCached !== null) return _isMobileCached;
+    _isMobileCached = window.innerWidth <= 768 ||
       ('ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches);
+    return _isMobileCached;
   };
 
   // --- State ---
@@ -59,6 +62,13 @@
   var cachedAccentColor = null;
   var POOL_SIZE = 20;
   var projectilePool = [];
+
+  // --- Scroll speed gate & impact throttle ---
+  var lastAnimScrollY = 0;
+  var scrollSpeed = 0;
+  var SCROLL_SPEED_THRESHOLD = 800; // px/sec — skip destruction above this
+  var lastImpactTime = 0;
+  var IMPACT_THROTTLE = 80; // ms
 
   // --- Touch state ---
   var touchId = null;
@@ -623,6 +633,11 @@
       }
     }
 
+    // Track scroll speed for destruction gating
+    var currentScrollY = window.scrollY;
+    scrollSpeed = Math.abs(currentScrollY - lastAnimScrollY) / Math.max(delta, 0.001);
+    lastAnimScrollY = currentScrollY;
+
     // Update projectiles
     for (var p = projectiles.length - 1; p >= 0; p--) {
       var proj = projectiles[p];
@@ -639,11 +654,17 @@
       pos[5] = proj.startZ + (proj.endZ - proj.startZ) * tailT;
       proj.poolEntry.geometry.attributes.position.needsUpdate = true;
 
-      // Text destruction: shatter at impact point only
+      // Text destruction: shatter at impact point only (gated by scroll speed + throttle)
       if (window.TextDestruction && headT >= 1.0 && !proj.impacted) {
         proj.impacted = true;
-        var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
-        TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
+        if (scrollSpeed < SCROLL_SPEED_THRESHOLD) {
+          var now = performance.now();
+          if (now - lastImpactTime >= IMPACT_THROTTLE) {
+            lastImpactTime = now;
+            var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
+            TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
+          }
+        }
       }
 
       if (tailT >= 1.0) {
@@ -659,6 +680,7 @@
   // --- Resize ---
   function onResize() {
     if (!renderer) return;
+    _isMobileCached = null; // invalidate on resize
     aspect = window.innerWidth / window.innerHeight;
     camera.left   = -FRUSTUM_SIZE * aspect / 2;
     camera.right  =  FRUSTUM_SIZE * aspect / 2;
@@ -690,9 +712,9 @@
       camera.lookAt(0, 0, 0);
 
       // Renderer
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({ antialias: !isMobile(), alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(isMobile() ? 1 : Math.min(window.devicePixelRatio, 2));
       renderer.outputEncoding = THREE.sRGBEncoding;
       if (canvasContainer) canvasContainer.appendChild(renderer.domElement);
 

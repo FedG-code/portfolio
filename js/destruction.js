@@ -156,6 +156,11 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
 
   var blastChars = [];
 
+  var angles = [];
+  var velocities = [];
+  var rotations = [];
+  var origColors = [];
+
   hits.forEach(function(hit) {
     if (currentShattered >= MAX_SHATTERED) return;
 
@@ -168,55 +173,52 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
     // Scatter angle: away from impact point
     var angle = Math.atan2(hit.dy, hit.dx) * (180 / Math.PI);
     angle += (Math.random() - 0.5) * ANGLE_SPREAD;
+    angles.push(angle);
 
     // Velocity inversely proportional to distance
     var velocityFactor = 1 - (hit.dist / BLAST_RADIUS);
-    var velocity = MIN_VELOCITY + (MAX_VELOCITY - MIN_VELOCITY) * velocityFactor;
+    velocities.push(MIN_VELOCITY + (MAX_VELOCITY - MIN_VELOCITY) * velocityFactor);
 
-    var rotationVelocity = (Math.random() - 0.5) * MAX_ROTATION;
+    rotations.push((Math.random() - 0.5) * MAX_ROTATION);
 
     // Store original color for reform
     var originalColor = el.style.color || '';
     el.dataset.originalColor = originalColor;
-
-    // Color flash: briefly tint to accent
-    gsap.fromTo(el, { color: accentColor }, {
-      duration: 0.15,
-      color: originalColor || getComputedStyle(el).color,
-      ease: 'power1.out'
-    });
-
-    // Scatter with physics
-    gsap.to(el, {
-      duration: SCATTER_DURATION,
-      physics2D: {
-        velocity: velocity,
-        angle: angle,
-        gravity: GRAVITY
-      },
-      rotation: rotationVelocity,
-      opacity: 0,
-      ease: 'none'
-    });
+    origColors.push(originalColor || getComputedStyle(el).color);
   });
 
   if (blastChars.length > 0) {
+    // Batch color flash (1 tween instead of N)
+    gsap.fromTo(blastChars, { color: accentColor }, {
+      duration: 0.15,
+      color: function(i) { return origColors[i]; },
+      ease: 'power1.out'
+    });
+
+    // Batch scatter with physics (1 tween instead of N)
+    gsap.to(blastChars, {
+      duration: SCATTER_DURATION,
+      physics2D: {
+        velocity: function(i) { return velocities[i]; },
+        angle: function(i) { return angles[i]; },
+        gravity: GRAVITY
+      },
+      rotation: function(i) { return rotations[i]; },
+      opacity: 0,
+      ease: 'none'
+    });
+
     scheduleTypingReform(blastChars);
   }
 }
 
 function scheduleTypingReform(chars) {
-  // Sort by DOM reading order: top-to-bottom, left-to-right (5px line tolerance)
-  var charRects = chars.map(function(el) {
-    var rect = el.getBoundingClientRect();
-    return { el: el, top: rect.top, left: rect.left };
+  // Sort by DOM reading order (no layout forced)
+  chars.sort(function(a, b) {
+    var pos = a.compareDocumentPosition(b);
+    return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
   });
-
-  charRects.sort(function(a, b) {
-    var lineDiff = a.top - b.top;
-    if (Math.abs(lineDiff) > 5) return lineDiff;
-    return a.left - b.left;
-  });
+  var charRects = chars.map(function(el) { return { el: el }; });
 
   // Compute sequential delays with extra pause at word boundaries
   var delays = [];
@@ -233,38 +235,39 @@ function scheduleTypingReform(chars) {
   }
 
   var startDelay = SCATTER_DURATION + REFORM_PAUSE;
+  var els = charRects.map(function(c) { return c.el; });
 
-  for (var j = 0; j < charRects.length; j++) {
-    (function(el, delay) {
-      // Pre-position: kill scatter tween, set drop start pose
-      gsap.delayedCall(startDelay - 0.01, function() {
-        gsap.killTweensOf(el);
-        el.style.display = 'inline-block';
-        gsap.set(el, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
-      });
+  // Pre-position all chars just before reform starts (1 delayedCall instead of N)
+  gsap.delayedCall(startDelay - 0.01, function() {
+    for (var k = 0; k < els.length; k++) {
+      gsap.killTweensOf(els[k]);
+      els[k].style.display = 'inline-block';
+      gsap.set(els[k], { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
+    }
 
-      // Drop-in animation
-      gsap.delayedCall(startDelay + delay, function() {
-        gsap.to(el, {
-          duration: CHAR_LAND_DURATION,
-          y: 0,
-          ease: 'power2.out'
-        });
-        gsap.to(el, {
-          duration: CHAR_LAND_DURATION * 0.4,
-          opacity: 1,
-          ease: 'none',
-          onComplete: function() {
-            el.dataset.shattered = '0';
-            el.style.color = el.dataset.originalColor || '';
-            el.style.display = '';
-            currentShattered--;
-            cacheStale = true;
-          }
-        });
-      });
-    })(charRects[j].el, delays[j]);
-  }
+    // Single batched drop-in with function-based stagger (2 tweens instead of 2N)
+    gsap.to(els, {
+      duration: CHAR_LAND_DURATION,
+      y: 0,
+      ease: 'power2.out',
+      stagger: function(i) { return delays[i]; }
+    });
+    gsap.to(els, {
+      duration: CHAR_LAND_DURATION * 0.4,
+      opacity: 1,
+      ease: 'none',
+      stagger: function(i) { return delays[i]; },
+      onComplete: function() {
+        for (var m = 0; m < els.length; m++) {
+          els[m].dataset.shattered = '0';
+          els[m].style.color = els[m].dataset.originalColor || '';
+          els[m].style.display = '';
+        }
+        currentShattered -= els.length;
+        cacheStale = true;
+      }
+    });
+  });
 }
 
 // --- Resize debounce for re-split ---
