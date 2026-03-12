@@ -98,6 +98,7 @@ body, nav, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer 
 html.plane-active {
   user-select: none;
   -webkit-user-select: none;
+  scroll-behavior: auto;
 }
 
 /* ========== PLANE TOGGLE ========== */
@@ -985,7 +986,10 @@ footer span {
 }
 
 @media (max-width: 768px) {
-  .plane-toggle { display: none; }
+  .plane-toggle {
+    top: 7rem;
+    right: 1.5rem;
+  }
 }
 
 @media (max-width: 600px) {

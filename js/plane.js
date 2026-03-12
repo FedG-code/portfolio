@@ -19,8 +19,17 @@
   var TAIL_SPEED_RATIO  = 0.7;
   var FIRE_INTERVAL     = 0.12;  // seconds between rapid-fire bursts (hold click)
 
-  // --- Viewport gate ---
-  if (window.innerWidth <= MIN_VIEWPORT) return;
+  // --- Touch / mobile constants ---
+  var TOUCH_HIT_RADIUS       = 60;
+  var MAX_SCROLL_SPEED        = 12;
+  var SCROLL_DECAY            = 0.9;
+  var SCROLL_DOWN_THRESHOLD   = 0.66;
+  var SCROLL_UP_THRESHOLD     = 0.5;
+
+  var isMobile = function () {
+    return window.innerWidth <= 768 ||
+      ('ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches);
+  };
 
   // --- State ---
   var enabled = sessionStorage.getItem(LS_KEY) === 'on'; // default: off
@@ -47,6 +56,14 @@
   var MOUSE_STALE_MS = 100;
   var projectiles = [];
   var fireIntervalId = null;
+
+  // --- Touch state ---
+  var touchId = null;
+  var touchScreenX = 0;
+  var touchScreenY = 0;
+  var prevTouchScreenX = 0;
+  var isTouchDragging = false;
+  var scrollVelocity = 0;
 
   // --- Iframe avoidance ---
   var cachedIframeRects = [];
@@ -134,6 +151,13 @@
         toggleBtn.classList.remove('attractor');
         sessionStorage.setItem('plane-attractor-seen', '1');
       }, { once: true });
+
+      toggleBtn.addEventListener('touchstart', function() {
+        if (attractorTl) attractorTl.kill();
+        gsap.set(toggleBtn, { scale: 1 });
+        toggleBtn.classList.remove('attractor');
+        sessionStorage.setItem('plane-attractor-seen', '1');
+      }, { once: true });
     }
   }
 
@@ -152,6 +176,12 @@
         init();
       } else {
         start();
+        if (isMobile() && planeGroup) {
+          var spawnPos = screenToWorld(window.innerWidth / 2, window.innerHeight * 0.66);
+          planeGroup.position.set(spawnPos.x, 0, spawnPos.z);
+          targetPosition.set(spawnPos.x, 0, spawnPos.z);
+          planeGroup.visible = true;
+        }
       }
       if (window.TextDestruction) TextDestruction.init();
     } else {
@@ -303,6 +333,91 @@
     }
   }
 
+  // --- Touch Events ---
+  function onTouchStart(e) {
+    if (!running || !planeGroup || !planeGroup.visible) return;
+    if (touchId !== null) return; // already tracking a touch
+
+    var touch = e.changedTouches[0];
+    var planeScreen = worldToScreen(planeGroup.position.x, planeGroup.position.z);
+    var dx = touch.clientX - planeScreen.x;
+    var dy = touch.clientY - planeScreen.y;
+    if (Math.sqrt(dx * dx + dy * dy) > TOUCH_HIT_RADIUS) return; // miss — let normal touch through
+
+    touchId = touch.identifier;
+    isTouchDragging = true;
+    touchScreenX = touch.clientX;
+    touchScreenY = touch.clientY;
+    prevTouchScreenX = touch.clientX;
+
+    // Start firing
+    fireProjectiles();
+    clearInterval(fireIntervalId);
+    fireIntervalId = setInterval(fireProjectiles, FIRE_INTERVAL * 1000);
+
+    e.preventDefault();
+  }
+
+  function onTouchMove(e) {
+    if (!isTouchDragging) return; // don't preventDefault — allows normal scrolling
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === touchId) {
+        prevTouchScreenX = touchScreenX;
+        touchScreenX = e.changedTouches[i].clientX;
+        touchScreenY = e.changedTouches[i].clientY;
+        break;
+      }
+    }
+    e.preventDefault();
+  }
+
+  function onTouchEnd(e) {
+    if (!isTouchDragging) return; // don't preventDefault — normal taps work
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === touchId) {
+        touchId = null;
+        isTouchDragging = false;
+        stopFiring();
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+
+  // --- Mobile mouse fallback (DevTools emulation) ---
+  function onMobileMouseDown(e) {
+    if (!running || !planeGroup || !planeGroup.visible) return;
+    if (e.button !== 0) return;
+    if (e.target.closest('.plane-toggle, nav, .theme-switcher')) return;
+
+    var planeScreen = worldToScreen(planeGroup.position.x, planeGroup.position.z);
+    var dx = e.clientX - planeScreen.x;
+    var dy = e.clientY - planeScreen.y;
+    if (Math.sqrt(dx * dx + dy * dy) > TOUCH_HIT_RADIUS) return;
+
+    isTouchDragging = true;
+    touchScreenX = e.clientX;
+    touchScreenY = e.clientY;
+    prevTouchScreenX = e.clientX;
+
+    fireProjectiles();
+    clearInterval(fireIntervalId);
+    fireIntervalId = setInterval(fireProjectiles, FIRE_INTERVAL * 1000);
+  }
+
+  function onMobileMouseMove(e) {
+    if (!isTouchDragging) return;
+    prevTouchScreenX = touchScreenX;
+    touchScreenX = e.clientX;
+    touchScreenY = e.clientY;
+  }
+
+  function onMobileMouseUp() {
+    if (!isTouchDragging) return;
+    isTouchDragging = false;
+    stopFiring();
+  }
+
   // --- Projectile helpers ---
   function getAccentColor() {
     var hex = getComputedStyle(document.documentElement)
@@ -368,30 +483,38 @@
       if (topPropeller) topPropeller.rotation.y -= PROPELLER_SPEED * delta;
 
       // Compute target position
-      snapMouseIfTrappedInIframe();
-      if (mouseOnScreen) {
-        // The plane sits below the cursor by CURSOR_OFFSET_Z world units.
-        // Check the plane's effective screen position against iframe rects.
-        var offsetPx = CURSOR_OFFSET_Z / FRUSTUM_SIZE * window.innerHeight;
-        var planeScreenY = mouseScreenY + offsetPx;
-        var avoidPoint = getAvoidanceTarget(mouseScreenX, planeScreenY);
-        var world;
-        if (avoidPoint) {
-          // avoidPoint is where the plane should be on screen — no extra offset
-          world = screenToWorld(avoidPoint.x, avoidPoint.y);
-          targetPosition.x = world.x;
-          targetPosition.z = world.z;
-        } else {
-          world = screenToWorld(mouseScreenX, mouseScreenY);
-          targetPosition.x = world.x;
-          targetPosition.z = world.z + CURSOR_OFFSET_Z;
+      if (isMobile()) {
+        // Mobile: plane follows touch drag, holds position when not dragging
+        if (isTouchDragging) {
+          var touchWorld = screenToWorld(touchScreenX, touchScreenY);
+          targetPosition.x = touchWorld.x;
+          targetPosition.z = touchWorld.z;
         }
+        // When not dragging, targetPosition stays put (plane holds position)
       } else {
-        var halfWidth = FRUSTUM_SIZE * aspect / 2;
-        if (planeGroup.position.x >= 0) {
-          targetPosition.x = halfWidth + OFFSCREEN_MARGIN;
+        // Desktop: existing logic with iframe avoidance
+        snapMouseIfTrappedInIframe();
+        if (mouseOnScreen) {
+          var offsetPx = CURSOR_OFFSET_Z / FRUSTUM_SIZE * window.innerHeight;
+          var planeScreenY = mouseScreenY + offsetPx;
+          var avoidPoint = getAvoidanceTarget(mouseScreenX, planeScreenY);
+          var world;
+          if (avoidPoint) {
+            world = screenToWorld(avoidPoint.x, avoidPoint.y);
+            targetPosition.x = world.x;
+            targetPosition.z = world.z;
+          } else {
+            world = screenToWorld(mouseScreenX, mouseScreenY);
+            targetPosition.x = world.x;
+            targetPosition.z = world.z + CURSOR_OFFSET_Z;
+          }
         } else {
-          targetPosition.x = -halfWidth - OFFSCREEN_MARGIN;
+          var halfWidth = FRUSTUM_SIZE * aspect / 2;
+          if (planeGroup.position.x >= 0) {
+            targetPosition.x = halfWidth + OFFSCREEN_MARGIN;
+          } else {
+            targetPosition.x = -halfWidth - OFFSCREEN_MARGIN;
+          }
         }
       }
       targetPosition.y = 0;
@@ -399,16 +522,52 @@
       // Lerp position
       planeGroup.position.lerp(targetPosition, LERP_SPEED);
 
+      // Scroll-on-drag (mobile only)
+      if (isMobile()) {
+        if (isTouchDragging) {
+          var normY = touchScreenY / window.innerHeight;
+          if (normY > SCROLL_DOWN_THRESHOLD) {
+            var progress = (normY - SCROLL_DOWN_THRESHOLD) / (1 - SCROLL_DOWN_THRESHOLD);
+            scrollVelocity = MAX_SCROLL_SPEED * progress * progress;
+          } else if (normY < SCROLL_UP_THRESHOLD) {
+            var progress = (SCROLL_UP_THRESHOLD - normY) / SCROLL_UP_THRESHOLD;
+            scrollVelocity = -MAX_SCROLL_SPEED * progress * progress;
+          } else {
+            scrollVelocity *= SCROLL_DECAY;
+          }
+        } else {
+          scrollVelocity *= SCROLL_DECAY;
+        }
+        if (Math.abs(scrollVelocity) > 0.5) {
+          window.scrollBy(0, scrollVelocity);
+        } else {
+          scrollVelocity = 0;
+        }
+      }
+
       // Roll
-      var dx = mouseScreenX - prevMouseScreenX;
-      if (mouseOnScreen && dx !== 0) {
-        targetRoll = THREE.MathUtils.clamp(-dx * ROLL_SENSITIVITY, -MAX_ROLL_ANGLE, MAX_ROLL_ANGLE);
+      if (isMobile()) {
+        if (isTouchDragging) {
+          var dx = touchScreenX - prevTouchScreenX;
+          if (dx !== 0) {
+            targetRoll = THREE.MathUtils.clamp(-dx * ROLL_SENSITIVITY, -MAX_ROLL_ANGLE, MAX_ROLL_ANGLE);
+          }
+        }
+      } else {
+        var dx = mouseScreenX - prevMouseScreenX;
+        if (mouseOnScreen && dx !== 0) {
+          targetRoll = THREE.MathUtils.clamp(-dx * ROLL_SENSITIVITY, -MAX_ROLL_ANGLE, MAX_ROLL_ANGLE);
+        }
       }
       targetRoll = THREE.MathUtils.lerp(targetRoll, 0, 0.03);
       currentRoll = THREE.MathUtils.lerp(currentRoll, targetRoll, ROLL_LERP_SPEED);
       planeGroup.rotation.z = currentRoll;
 
-      prevMouseScreenX = mouseScreenX;
+      if (isMobile()) {
+        prevTouchScreenX = touchScreenX;
+      } else {
+        prevMouseScreenX = mouseScreenX;
+      }
     }
 
     // Update projectiles
@@ -515,6 +674,13 @@
           planeGroup.add(planeModel);
           planeGroup.visible = false;
           scene.add(planeGroup);
+
+          if (isMobile() && enabled) {
+            var spawnPos = screenToWorld(window.innerWidth / 2, window.innerHeight * 0.66);
+            planeGroup.position.set(spawnPos.x, 0, spawnPos.z);
+            targetPosition.set(spawnPos.x, 0, spawnPos.z);
+            planeGroup.visible = true;
+          }
         },
         undefined,
         function (error) {
@@ -523,12 +689,23 @@
       );
 
       // Events
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseleave', onMouseLeave);
-      document.addEventListener('mouseenter', onMouseEnter);
-      document.addEventListener('mousedown', onMouseDown);
-      window.addEventListener('mouseup', stopFiring);
-      window.addEventListener('mouseleave', stopFiring);
+      if (isMobile()) {
+        document.addEventListener('touchstart', onTouchStart, { passive: false });
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd, { passive: false });
+        document.addEventListener('touchcancel', onTouchEnd, { passive: false });
+        // Mouse fallback for DevTools mobile emulation
+        document.addEventListener('mousedown', onMobileMouseDown);
+        document.addEventListener('mousemove', onMobileMouseMove);
+        window.addEventListener('mouseup', onMobileMouseUp);
+      } else {
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseleave', onMouseLeave);
+        document.addEventListener('mouseenter', onMouseEnter);
+        document.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mouseup', stopFiring);
+        window.addEventListener('mouseleave', stopFiring);
+      }
       window.addEventListener('resize', onResize);
       window.addEventListener('resize', markIframeRectsStale);
       window.addEventListener('scroll', markIframeRectsStale, { passive: true });
