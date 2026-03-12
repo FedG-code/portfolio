@@ -83,6 +83,7 @@ themeSwitcher.addEventListener('click', () => {
   localStorage.setItem('portfolio-theme', themes[currentIndex]);
   updateLabel();
   if (window.TextDestruction) TextDestruction.onThemeChange();
+  if (window._planeOnThemeChange) window._planeOnThemeChange();
 });
 
 // Mobile auto-hide nav & theme switcher on scroll

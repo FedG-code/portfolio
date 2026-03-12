@@ -80,6 +80,8 @@ function preloadSplit() {
 // --- CollisionDetector ---
 var charRectCache = [];
 var cacheStale = true;
+var scrollStale = false;
+var lastCacheScrollY = 0;
 
 function rebuildCharCache() {
   charRectCache = [];
@@ -101,10 +103,21 @@ function rebuildCharCache() {
     });
   }
   cacheStale = false;
+  scrollStale = false;
+  lastCacheScrollY = window.scrollY;
 }
 
 function getCharsInBlastRadius(screenX, screenY) {
-  if (cacheStale) rebuildCharCache();
+  if (cacheStale) {
+    rebuildCharCache();
+  } else if (scrollStale) {
+    var scrollDelta = window.scrollY - lastCacheScrollY;
+    for (var j = 0; j < charRectCache.length; j++) {
+      charRectCache[j].cy -= scrollDelta;
+    }
+    lastCacheScrollY = window.scrollY;
+    scrollStale = false;
+  }
 
   var hits = [];
   var rSq = BLAST_RADIUS * BLAST_RADIUS;
@@ -126,7 +139,7 @@ function getCharsInBlastRadius(screenX, screenY) {
   return hits;
 }
 
-window.addEventListener('scroll', function() { cacheStale = true; }, { passive: true });
+window.addEventListener('scroll', function() { scrollStale = true; }, { passive: true });
 window.addEventListener('resize', function() { cacheStale = true; });
 
 // --- ShatterAnimator ---

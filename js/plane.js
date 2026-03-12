@@ -56,6 +56,9 @@
   var MOUSE_STALE_MS = 100;
   var projectiles = [];
   var fireIntervalId = null;
+  var cachedAccentColor = null;
+  var POOL_SIZE = 20;
+  var projectilePool = [];
 
   // --- Touch state ---
   var touchId = null;
@@ -252,9 +255,8 @@
     }
     stopFiring();
     for (var i = 0; i < projectiles.length; i++) {
-      scene.remove(projectiles[i].line);
-      projectiles[i].line.geometry.dispose();
-      projectiles[i].line.material.dispose();
+      projectiles[i].poolEntry.line.visible = false;
+      projectiles[i].poolEntry.active = false;
     }
     projectiles.length = 0;
     if (canvasContainer) canvasContainer.style.display = 'none';
@@ -399,8 +401,6 @@
     fireProjectiles();
     clearInterval(fireIntervalId);
     fireIntervalId = setInterval(fireProjectiles, FIRE_INTERVAL * 1000);
-
-    e.preventDefault();
   }
 
   function onTouchMove(e) {
@@ -470,8 +470,15 @@
     return new THREE.Color(hex);
   }
 
+  function acquireFromPool() {
+    for (var i = 0; i < projectilePool.length; i++) {
+      if (!projectilePool[i].active) return projectilePool[i];
+    }
+    return null; // pool exhausted
+  }
+
   function fireProjectiles() {
-    var color = getAccentColor();
+    var color = cachedAccentColor || getAccentColor();
     var px = planeGroup.position.x;
     var pz = planeGroup.position.z;
     var endX = px;
@@ -479,20 +486,21 @@
     var offsets = [-WING_OFFSET, WING_OFFSET];
 
     for (var i = 0; i < offsets.length; i++) {
+      var poolEntry = acquireFromPool();
+      if (!poolEntry) return; // pool exhausted, skip
+
       var wingX = px + offsets[i] * Math.cos(currentRoll);
       var wingZ = pz + WING_Z_OFFSET;
-      var positions = new Float32Array(6);
+      var positions = poolEntry.positions;
       positions[0] = wingX;  positions[1] = 0; positions[2] = wingZ;
       positions[3] = wingX;  positions[4] = 0; positions[5] = wingZ;
-
-      var geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      var material = new THREE.LineBasicMaterial({ color: color });
-      var line = new THREE.Line(geometry, material);
-      scene.add(line);
+      poolEntry.geometry.attributes.position.needsUpdate = true;
+      poolEntry.material.color.copy(color);
+      poolEntry.line.visible = true;
+      poolEntry.active = true;
 
       projectiles.push({
-        line: line,
+        poolEntry: poolEntry,
         startX: wingX,
         startZ: wingZ,
         endX: endX,
@@ -622,14 +630,14 @@
       var headT = Math.min(proj.progress, 1.0);
       var tailT = Math.min(proj.progress * TAIL_SPEED_RATIO, 1.0);
 
-      var pos = proj.line.geometry.attributes.position.array;
+      var pos = proj.poolEntry.positions;
       pos[0] = proj.startX + (proj.endX - proj.startX) * headT;
       pos[1] = 0;
       pos[2] = proj.startZ + (proj.endZ - proj.startZ) * headT;
       pos[3] = proj.startX + (proj.endX - proj.startX) * tailT;
       pos[4] = 0;
       pos[5] = proj.startZ + (proj.endZ - proj.startZ) * tailT;
-      proj.line.geometry.attributes.position.needsUpdate = true;
+      proj.poolEntry.geometry.attributes.position.needsUpdate = true;
 
       // Text destruction: shatter at impact point only
       if (window.TextDestruction && headT >= 1.0 && !proj.impacted) {
@@ -639,9 +647,8 @@
       }
 
       if (tailT >= 1.0) {
-        scene.remove(proj.line);
-        proj.line.geometry.dispose();
-        proj.line.material.dispose();
+        proj.poolEntry.line.visible = false;
+        proj.poolEntry.active = false;
         projectiles.splice(p, 1);
       }
     }
@@ -699,6 +706,20 @@
       // State
       targetPosition = new THREE.Vector3(0, 0, 0);
       clock = new THREE.Clock();
+      cachedAccentColor = getAccentColor();
+      window._planeOnThemeChange = function() { cachedAccentColor = getAccentColor(); };
+
+      // Pre-allocate projectile pool
+      for (var pi = 0; pi < POOL_SIZE; pi++) {
+        var positions = new Float32Array(6);
+        var geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        var material = new THREE.LineBasicMaterial({ color: 0xffffff });
+        var line = new THREE.Line(geometry, material);
+        line.visible = false;
+        scene.add(line);
+        projectilePool.push({ line: line, geometry: geometry, material: material, positions: positions, active: false });
+      }
 
       // Load model
       var loader = new THREE.GLTFLoader();
@@ -735,7 +756,7 @@
 
       // Events
       if (isMobile()) {
-        document.addEventListener('touchstart', onTouchStart, { passive: false });
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd, { passive: false });
         document.addEventListener('touchcancel', onTouchEnd, { passive: false });
