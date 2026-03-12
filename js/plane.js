@@ -125,7 +125,7 @@
   function startBounce() {
     stopBounce();
     triggerBounce();
-    bounceInterval = setInterval(triggerBounce, 6000);
+    bounceInterval = setInterval(triggerBounce, 4000);
   }
 
   function triggerBounce() {
@@ -171,6 +171,12 @@
         toggleBtn.classList.add('attractor');
         bounceDelayId = setTimeout(function() { startBounce(); }, 1500);
       }
+    }
+
+    // If nav is already scroll-hidden (e.g. page reloaded while scrolled), start hidden
+    var nav = document.querySelector('nav');
+    if (nav && nav.classList.contains('scroll-hidden')) {
+      toggleBtn.classList.add('scroll-hidden');
     }
 
     toggleBtn.addEventListener('click', toggle);
@@ -220,6 +226,11 @@
       if (window.TextDestruction) TextDestruction.init();
     } else {
       document.documentElement.classList.remove('plane-active');
+      // If other buttons are already scroll-hidden, fade out the plane toggle too
+      var nav = document.querySelector('nav');
+      if (nav && nav.classList.contains('scroll-hidden')) {
+        toggleBtn.classList.add('scroll-hidden');
+      }
       stop();
       if (window.TextDestruction) TextDestruction.destroy();
     }
@@ -755,6 +766,13 @@
   }
 
   // --- Bootstrap ---
+  // Disable plane mode on same-page reload (keep it on cross-page navigation)
+  var navEntry = performance.getEntriesByType('navigation')[0];
+  if (navEntry && navEntry.type === 'reload') {
+    enabled = false;
+    sessionStorage.removeItem(LS_KEY);
+  }
+
   createToggleButton();
   if (enabled) init();
 })();
