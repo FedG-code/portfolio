@@ -89,6 +89,7 @@ themeSwitcher.addEventListener('click', () => {
 (function () {
   var nav = document.querySelector('nav');
   var switcher = document.getElementById('themeSwitcher');
+  var planeToggle = document.querySelector('.plane-toggle');
   if (!nav || !switcher) return;
 
   var lastY = window.scrollY;
@@ -98,6 +99,7 @@ themeSwitcher.addEventListener('click', () => {
     if (window.innerWidth > 600) {
       nav.classList.remove('scroll-hidden');
       switcher.classList.remove('scroll-hidden');
+      if (planeToggle) planeToggle.classList.remove('scroll-hidden');
       lastY = window.scrollY;
       ticking = false;
       return;
@@ -109,9 +111,13 @@ themeSwitcher.addEventListener('click', () => {
     if (y > lastY && y > threshold) {
       nav.classList.add('scroll-hidden');
       switcher.classList.add('scroll-hidden');
+      if (planeToggle && !document.documentElement.classList.contains('plane-active')) {
+        planeToggle.classList.add('scroll-hidden');
+      }
     } else if (y < lastY) {
       nav.classList.remove('scroll-hidden');
       switcher.classList.remove('scroll-hidden');
+      if (planeToggle) planeToggle.classList.remove('scroll-hidden');
     }
 
     lastY = y;

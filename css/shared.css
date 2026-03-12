@@ -996,7 +996,7 @@ footer span {
   html { overflow-x: hidden; }
   .nav-links { display: none; }
   nav { padding: 0.6rem 1.25rem; }
-  nav.scroll-hidden, .theme-switcher.scroll-hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  nav.scroll-hidden, .theme-switcher.scroll-hidden, .plane-toggle.scroll-hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   [data-theme="neon"] nav {
     position: static;
     backdrop-filter: none;

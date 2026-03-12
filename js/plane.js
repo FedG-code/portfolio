@@ -668,7 +668,7 @@
           });
 
           planeModel.rotation.y = -Math.PI / 2;
-          planeModel.scale.setScalar(MODEL_SCALE);
+          planeModel.scale.setScalar(isMobile() ? MODEL_SCALE * 1.3 : MODEL_SCALE);
 
           planeGroup = new THREE.Group();
           planeGroup.add(planeModel);
