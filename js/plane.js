@@ -125,7 +125,7 @@
   function startBounce() {
     stopBounce();
     triggerBounce();
-    bounceInterval = setInterval(triggerBounce, 4000);
+    bounceInterval = setInterval(triggerBounce, 3000);
   }
 
   function triggerBounce() {
