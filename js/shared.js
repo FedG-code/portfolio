@@ -89,13 +89,17 @@ themeSwitcher.addEventListener('click', () => {
 (function () {
   var nav = document.querySelector('nav');
   var switcher = document.getElementById('themeSwitcher');
-  var planeToggle = document.querySelector('.plane-toggle');
   if (!nav || !switcher) return;
 
   var lastY = window.scrollY;
   var ticking = false;
 
+  function getPlaneToggle() {
+    return document.querySelector('.plane-toggle');
+  }
+
   function onScroll() {
+    var planeToggle = getPlaneToggle();
     if (window.innerWidth > 600) {
       nav.classList.remove('scroll-hidden');
       switcher.classList.remove('scroll-hidden');

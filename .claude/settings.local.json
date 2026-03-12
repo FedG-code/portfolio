@@ -15,7 +15,9 @@
       "Bash(curl:*)",
       "Bash(grep:*)",
       "WebSearch",
-      "Bash(start https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md)"
+      "Bash(start https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md)",
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ]
   }
 }

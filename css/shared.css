@@ -118,6 +118,9 @@ html.plane-active {
   color: var(--text-secondary);
   cursor: pointer;
   transition: border-color 0.3s, color 0.3s, background 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .plane-toggle:hover {
@@ -126,16 +129,19 @@ html.plane-active {
 }
 
 .plane-toggle.attractor {
-  background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent);
+  background: var(--cream);
   will-change: transform;
+}
+
+.plane-toggle.attractor.bouncing {
+  animation: nudgeBounce 1.2s ease;
 }
 
 .plane-toggle.attractor:hover {
   animation: none;
-  box-shadow: none;
-  background: var(--cream);
+  background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -789,6 +795,14 @@ footer span {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes nudgeBounce {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-5px); }
+  40% { transform: translateY(0); }
+  55% { transform: translateY(-3px); }
+  70% { transform: translateY(0); }
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -921,8 +935,8 @@ footer span {
 }
 [data-theme="neon"] .plane-toggle { border-radius: 4px; background: var(--bg-card); border-color: var(--border); }
 [data-theme="neon"] .plane-toggle:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px #c9f05940; }
-[data-theme="neon"] .plane-toggle.attractor { border-radius: 4px; background: var(--accent); border-color: var(--accent); color: #0a0a0c; box-shadow: 0 0 16px #c9f05950; }
-[data-theme="neon"] .plane-toggle.attractor:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
+[data-theme="neon"] .plane-toggle.attractor { border-radius: 4px; background: var(--bg-card); border-color: var(--accent); color: var(--accent); box-shadow: none; }
+[data-theme="neon"] .plane-toggle.attractor:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px #c9f05940; }
 
 /* Grain overlay */
 [data-theme="neon"] body::before {

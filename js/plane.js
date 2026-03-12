@@ -116,53 +116,85 @@
 
   var canvasContainer = document.getElementById('plane-canvas');
   var toggleBtn = null;
+  var crosshairIcon = null;
+  var labelSpan = null;
+  var bounceInterval = null;
+  var bounceTimeout = null;
+  var bounceDelayId = null;
+
+  function startBounce() {
+    stopBounce();
+    triggerBounce();
+    bounceInterval = setInterval(triggerBounce, 6000);
+  }
+
+  function triggerBounce() {
+    toggleBtn.classList.add('bouncing');
+    bounceTimeout = setTimeout(function() {
+      toggleBtn.classList.remove('bouncing');
+    }, 1200);
+  }
+
+  function stopBounce() {
+    if (bounceDelayId) clearTimeout(bounceDelayId);
+    if (bounceInterval) clearInterval(bounceInterval);
+    if (bounceTimeout) clearTimeout(bounceTimeout);
+    bounceDelayId = null;
+    bounceInterval = null;
+    bounceTimeout = null;
+    if (toggleBtn) toggleBtn.classList.remove('bouncing');
+  }
 
   // --- Toggle Button ---
   function createToggleButton() {
     toggleBtn = document.createElement('button');
     toggleBtn.className = 'plane-toggle';
-    updateButtonLabel();
-    toggleBtn.addEventListener('click', toggle);
-    document.body.appendChild(toggleBtn);
+    toggleBtn.innerHTML =
+      '<svg class="plane-toggle-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
+        '<circle cx="8" cy="8" r="3.5"/>' +
+        '<line x1="8" y1="0.5" x2="8" y2="3.5"/>' +
+        '<line x1="8" y1="12.5" x2="8" y2="15.5"/>' +
+        '<line x1="0.5" y1="8" x2="3.5" y2="8"/>' +
+        '<line x1="12.5" y1="8" x2="15.5" y2="8"/>' +
+      '</svg>' +
+      '<span class="plane-toggle-label"></span>';
 
-    // Attractor bounce — once per session
-    if (!sessionStorage.getItem('plane-attractor-seen')) {
-      var attractorTl;
-      setTimeout(function() {
+    crosshairIcon = toggleBtn.querySelector('.plane-toggle-icon');
+    labelSpan = toggleBtn.querySelector('.plane-toggle-label');
+
+    if (enabled) {
+      crosshairIcon.style.display = 'none';
+      labelSpan.textContent = 'Stop';
+    } else {
+      labelSpan.textContent = 'Fly';
+      if (!sessionStorage.getItem('plane-attractor-seen')) {
         toggleBtn.classList.add('attractor');
-        attractorTl = gsap.timeline({ repeat: -1, repeatDelay: 0.6 });
-        attractorTl.to(toggleBtn, {
-          duration: 0.4,
-          scale: 1.3,
-          ease: 'power1.out',
-          force3D: true
-        });
-        attractorTl.to(toggleBtn, {
-          duration: 0.7,
-          scale: 1,
-          ease: 'elastic.out(1.7, 0.45)',
-          force3D: true
-        });
-      }, 1500);
-
-      toggleBtn.addEventListener('mouseenter', function() {
-        if (attractorTl) attractorTl.kill();
-        gsap.set(toggleBtn, { scale: 1 });
-        toggleBtn.classList.remove('attractor');
-        sessionStorage.setItem('plane-attractor-seen', '1');
-      }, { once: true });
-
-      toggleBtn.addEventListener('touchstart', function() {
-        if (attractorTl) attractorTl.kill();
-        gsap.set(toggleBtn, { scale: 1 });
-        toggleBtn.classList.remove('attractor');
-        sessionStorage.setItem('plane-attractor-seen', '1');
-      }, { once: true });
+        bounceDelayId = setTimeout(function() { startBounce(); }, 1500);
+      }
     }
+
+    toggleBtn.addEventListener('click', toggle);
+
+    toggleBtn.addEventListener('pointerenter', function() {
+      if (toggleBtn.classList.contains('attractor')) {
+        stopBounce();
+        toggleBtn.classList.remove('attractor');
+        sessionStorage.setItem('plane-attractor-seen', '1');
+      }
+    });
+
+    document.body.appendChild(toggleBtn);
   }
 
   function updateButtonLabel() {
-    if (toggleBtn) toggleBtn.textContent = enabled ? 'Plane On' : 'Plane Off';
+    if (!toggleBtn) return;
+    if (enabled) {
+      crosshairIcon.style.display = 'none';
+      labelSpan.textContent = 'Stop';
+    } else {
+      crosshairIcon.style.display = '';
+      labelSpan.textContent = 'Fly';
+    }
   }
 
   function toggle() {
@@ -171,6 +203,8 @@
     updateButtonLabel();
 
     if (enabled) {
+      toggleBtn.classList.remove('attractor');
+      stopBounce();
       document.documentElement.classList.add('plane-active');
       if (!initialized) {
         init();
