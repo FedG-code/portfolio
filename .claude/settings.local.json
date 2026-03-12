@@ -14,7 +14,8 @@
       "Bash(npx playwright:*)",
       "Bash(curl:*)",
       "Bash(grep:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(start https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md)"
     ]
   }
 }

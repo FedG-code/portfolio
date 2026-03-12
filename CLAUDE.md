@@ -49,7 +49,7 @@ npx http-server -p 8080 -c-1
 ```
 
 ## Verification
-After making visual changes, start the local server yourself (`npx http-server -p 8080 -c-1` in background) and use `playwright-cli` to screenshot the page and verify the result. Do not prompt the user to start the server.
+After making visual changes, start the local server yourself (`npx http-server -p 8080 -c-1 -o` in background) and use `playwright-cli` to screenshot the page and verify the result. Do not prompt the user to start the server.
 
 Before starting the server, check if port 8080 is already in use (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080`). Skip starting if it's already running.
 
