@@ -70,6 +70,24 @@ playwright-cli screenshot --filename=screenshot.png
 
 If not installed: `npm install -g @playwright/cli@latest`
 
+### Performance Testing
+
+Run the mobile performance test suite:
+```bash
+node tests/perf-test.js
+```
+
+Prerequisite: local server on port 8080 (`npx http-server -p 8080 -c-1`).
+
+This emulates an iPhone 14 with 4x CPU throttle and measures frame timing across four scenarios (baseline scroll, plane idle, plane firing, post-scroll reform). Results are JSON to stdout — check `droppedFrames` percentage and `layoutCount` to detect regressions.
+
+Key thresholds:
+- avgFrameMs > 25 = bad (visible jank)
+- droppedFrames > 15% of total = bad
+- layoutCount > 200 per scenario = likely layout thrashing in destruction.js
+
+If performance degrades after a change, compare the scenario-level metrics against the baseline to isolate whether the regression is in the render loop, hit detection, or animation system.
+
 ### Playwright Tips
 - **Scrolling to sections**: Use `npx playwright-cli eval "() => document.querySelector('#work').scrollIntoView()"` to scroll to a specific element before taking a screenshot.
 - **Expanding work cards**: Work cards use `.expanded` class toggled by JS. To expand a card for screenshots, use `npx playwright-cli eval "() => document.querySelector('.work-card').classList.add('expanded')"` then wait ~2s for the `max-height` transition before screenshotting. Use `.querySelectorAll('.work-card')[N]` to target a specific card by index.
