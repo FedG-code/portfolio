@@ -42,7 +42,7 @@ js/
   - **Lifecycle**: `TextDestruction.onThemeChange()` destroys and re-inits on theme switch. Resize is debounced to re-split text. A `charRectCache` (invalidated on scroll/resize) accelerates hit detection.
   - **Selector list** (`DESTRUCTIBLE_SELECTOR`): targets headings, hero text, work cards, about section, chips, contact, project pages, footer — excludes nav, theme switcher, buttons.
   - **Mobile-gated constants**: `_isMob` (viewport ≤768 OR touch+coarse) gates performance-sensitive values. Desktop is completely unchanged. Mobile overrides: `MAX_SHATTERED` 150 (vs 300), `REFORM_PAUSE` 1.0s (vs 0.8s), `CHAR_STAGGER` 0.035s (vs 0.055s), `WORD_EXTRA_STAGGER` 0.03s (vs 0.05s), `MAX_VELOCITY` 350 (vs 500), `MAX_ROTATION` 360° (vs 720°). Color flash tween is skipped on mobile. Impact coalescing on mobile batches same-frame `onProjectileAt()` calls via RAF.
-  - **Impact handling**: Every projectile impact calls `TextDestruction.onProjectileAt()` unconditionally (no throttle). The scroll speed gate (`SCROLL_SPEED_THRESHOLD`) was also removed earlier — it unnecessarily limited desktop destruction.
+  - **Impact throttle**: `IMPACT_THROTTLE` in `plane.js` is 80ms on mobile, 0ms on desktop. The scroll speed gate (`SCROLL_SPEED_THRESHOLD`) was removed — it unnecessarily limited desktop destruction.
   - **Design fallback**: If optimisation doesn't resolve plane mode scroll+fire lag, the fallback is to **disable page scrolling while plane mode is active** (e.g. CSS `overflow: hidden` on `<html>` when `.plane-active`). This eliminates scroll-triggered cache invalidation and the compound scroll+destruction cost entirely.
 - **Project pages**: Shared template - nav, theme switcher, back link, project hero, repeatable sub-project sections, footer
 
