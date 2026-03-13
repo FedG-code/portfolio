@@ -60,6 +60,21 @@ const THRESHOLDS = {
     'reform_active.maxFrameMs': 60,
     'reform_active.p95FrameMs': 30,
   },
+  figure8_scroll_fire: {
+    'scroll_fire.maxFrameMs': 60,
+    'scroll_fire.p95FrameMs': 35,
+    'scroll_fire.avgFrameMs': 25,
+    'scroll_fire.droppedFramePct': 40,
+  },
+  sustained_annihilation: {
+    'annihilation_early.maxFrameMs': 100,
+    'annihilation_overlap.maxFrameMs': 70,
+    'annihilation_overlap.p95FrameMs': 40,
+    'annihilation_overlap.avgFrameMs': 25,
+    'annihilation_overlap.droppedFramePct': 40,
+    'cooldown.p95FrameMs': 30,
+    'ScriptDurationMs': 1500,
+  },
 };
 
 // --- Helpers: Frame Timing (reused from perf-test.js) ---
@@ -604,6 +619,183 @@ async function scenarioHighCountReform(page, cdpSession) {
   };
 }
 
+// --- Scenario 6: Figure-8 Scroll + Fire ---
+
+async function scenarioFigure8ScrollFire(page, cdpSession) {
+  process.stderr.write('  Running scenario: figure8_scroll_fire...\n');
+
+  // Reset destruction state
+  await resetDestructionState(page);
+
+  // Scroll to top and arm
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  await ensureDestructionArmed(page);
+
+  const metricsBefore = await getCdpMetrics(cdpSession);
+  await injectMarkerFrameCollector(page);
+
+  // Figure-8 loop: ~60 steps at 100ms each = ~6 seconds
+  // Lissajous: Y = centerY + amp * sin(t), X = centerX + amp * sin(2t)
+  const STEPS = 60;
+  const STEP_DELAY = 100;
+  const SCROLL_STEP = 3; // ~180px/sec, under plane.js 800px/sec gate
+
+  await page.evaluate(() => window.__perfMark('scroll_fire_start'));
+
+  for (let i = 0; i < STEPS; i++) {
+    const t = (i / STEPS) * Math.PI * 2;
+
+    await page.evaluate(({ t, scrollStep }) => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const centerX = vw * 0.5;
+      const centerY = vh * 0.5;
+      const ampX = vw * 0.35;  // sweeps 15%–85% of viewport width
+      const ampY = vh * 0.3;   // sweeps 20%–80% of viewport height
+
+      const x = centerX + ampX * Math.sin(2 * t);
+      const y = centerY + ampY * Math.sin(t);
+
+      // Scroll down
+      window.scrollBy(0, scrollStep);
+
+      // Fire destruction at figure-8 position
+      TextDestruction.onProjectileAt(x, y);
+    }, { t, scrollStep: SCROLL_STEP });
+
+    await page.waitForTimeout(STEP_DELAY);
+  }
+
+  await page.evaluate(() => window.__perfMark('scroll_fire_end'));
+
+  // Wait 3s for all reform animations to complete
+  await page.evaluate(() => window.__perfMark('reform_tail_start'));
+  await page.waitForTimeout(3000);
+  await page.evaluate(() => window.__perfMark('reform_tail_end'));
+
+  const frames = await stopFrameCollector(page);
+  const metricsAfter = await getCdpMetrics(cdpSession);
+
+  const finalShattered = await page.evaluate(() => currentShattered);
+
+  return {
+    scroll_fire: sliceFramesByMarkers(frames, 'scroll_fire_start', 'scroll_fire_end'),
+    reform_tail: sliceFramesByMarkers(frames, 'reform_tail_start', 'reform_tail_end'),
+    finalShattered,
+    cdp: diffMetrics(metricsBefore, metricsAfter),
+  };
+}
+
+// --- Scenario 7: Sustained About Annihilation ---
+
+async function scenarioSustainedAnnihilation(page, cdpSession) {
+  process.stderr.write('  Running scenario: sustained_annihilation...\n');
+
+  // Reset destruction state
+  await resetDestructionState(page);
+
+  // Scroll to #about and arm
+  await scrollToElement(page, '#about');
+  await ensureDestructionArmed(page);
+
+  // Compute dense grid of impact points (60px spacing) across all visible text in #about
+  const gridPoints = await page.evaluate(() => {
+    const GRID_SPACING = 60;
+    const points = [];
+    const selectors = [
+      '#about .section-label',
+      '#about .section-heading',
+      '.about-prose p',
+      '.about-box-title',
+      '.about-box-text',
+      '.chip',
+    ];
+
+    for (const sel of selectors) {
+      document.querySelectorAll(sel).forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.height === 0) return;
+
+        // Generate grid points across the element
+        for (let x = rect.left + GRID_SPACING / 2; x < rect.right; x += GRID_SPACING) {
+          for (let y = rect.top + GRID_SPACING / 2; y < rect.bottom; y += GRID_SPACING) {
+            if (y > 0 && y < window.innerHeight) {
+              points.push({ x, y });
+            }
+          }
+        }
+      });
+    }
+
+    return points;
+  });
+
+  process.stderr.write(`    Grid points: ${gridPoints.length}\n`);
+
+  const CYCLES = 6;
+  const CYCLE_INTERVAL = 300;
+
+  const metricsBefore = await getCdpMetrics(cdpSession);
+  await injectMarkerFrameCollector(page);
+
+  await page.evaluate(() => window.__perfMark('annihilation_start'));
+
+  // Fire 6 cycles at 300ms intervals, each cycle hits ALL grid points
+  for (let cycle = 0; cycle < CYCLES; cycle++) {
+    await page.evaluate(({ pts, cycleIdx }) => {
+      window.__perfMark(`cycle_${cycleIdx}_start`);
+      for (const p of pts) {
+        TextDestruction.onProjectileAt(p.x, p.y);
+      }
+      window.__perfMark(`cycle_${cycleIdx}_end`);
+    }, { pts: gridPoints, cycleIdx: cycle });
+
+    if (cycle < CYCLES - 1) {
+      await page.waitForTimeout(CYCLE_INTERVAL);
+    }
+  }
+
+  await page.evaluate(() => window.__perfMark('annihilation_end'));
+
+  // Cooldown: wait 4s for trailing reforms
+  await page.evaluate(() => window.__perfMark('cooldown_start'));
+  await page.waitForTimeout(4000);
+  await page.evaluate(() => window.__perfMark('cooldown_end'));
+
+  const frames = await stopFrameCollector(page);
+  const metricsAfter = await getCdpMetrics(cdpSession);
+
+  // Split frames into early (cycles 0-2) and overlap (cycles 3+) windows
+  const allFrames = [];
+  let annihilationStartTime = null;
+  let inAnnihilation = false;
+
+  for (const f of frames) {
+    if (f.marker === 'annihilation_start') { inAnnihilation = true; continue; }
+    if (f.marker === 'annihilation_end') { inAnnihilation = false; continue; }
+    if (inAnnihilation && f.delta !== undefined) {
+      if (annihilationStartTime === null) annihilationStartTime = f.timestamp;
+      allFrames.push({ ...f, relativeMs: f.timestamp - annihilationStartTime });
+    }
+  }
+
+  // Cycles are at 0, 300, 600, 900, 1200, 1500ms
+  // Early = cycles 0-2 = 0-900ms, Overlap = cycles 3+ = 900ms+
+  const earlyCutoff = CYCLE_INTERVAL * 3; // 900ms
+  const earlyFrames = allFrames.filter(f => f.relativeMs < earlyCutoff);
+  const overlapFrames = allFrames.filter(f => f.relativeMs >= earlyCutoff);
+
+  return {
+    annihilation_early: computeFrameStats(earlyFrames),
+    annihilation_overlap: computeFrameStats(overlapFrames),
+    cooldown: sliceFramesByMarkers(frames, 'cooldown_start', 'cooldown_end'),
+    gridPointCount: gridPoints.length,
+    cycleCount: CYCLES,
+    cdp: diffMetrics(metricsBefore, metricsAfter),
+  };
+}
+
 // --- Analysis ---
 
 function buildAnalysis(results) {
@@ -668,6 +860,52 @@ function buildAnalysis(results) {
     }
   }
 
+  // Check figure8_scroll_fire thresholds
+  if (results.figure8_scroll_fire) {
+    const sf = results.figure8_scroll_fire.scroll_fire;
+    if (sf.maxFrameMs > THRESHOLDS.figure8_scroll_fire['scroll_fire.maxFrameMs']) {
+      flags.push(`figure8_scroll_fire: maxFrameMs ${sf.maxFrameMs}ms > ${THRESHOLDS.figure8_scroll_fire['scroll_fire.maxFrameMs']}ms (scroll+fire frame spike)`);
+    }
+    if (sf.p95FrameMs > THRESHOLDS.figure8_scroll_fire['scroll_fire.p95FrameMs']) {
+      flags.push(`figure8_scroll_fire: p95FrameMs ${sf.p95FrameMs}ms > ${THRESHOLDS.figure8_scroll_fire['scroll_fire.p95FrameMs']}ms (sustained scroll+fire jank)`);
+    }
+    if (sf.avgFrameMs > THRESHOLDS.figure8_scroll_fire['scroll_fire.avgFrameMs']) {
+      flags.push(`figure8_scroll_fire: avgFrameMs ${sf.avgFrameMs}ms > ${THRESHOLDS.figure8_scroll_fire['scroll_fire.avgFrameMs']}ms (consistently slow scroll+fire)`);
+    }
+    if (sf.droppedFramePct > THRESHOLDS.figure8_scroll_fire['scroll_fire.droppedFramePct']) {
+      flags.push(`figure8_scroll_fire: droppedFramePct ${sf.droppedFramePct}% > ${THRESHOLDS.figure8_scroll_fire['scroll_fire.droppedFramePct']}% (too many dropped frames)`);
+    }
+  }
+
+  // Check sustained_annihilation thresholds
+  if (results.sustained_annihilation) {
+    const ae = results.sustained_annihilation.annihilation_early;
+    if (ae.maxFrameMs > THRESHOLDS.sustained_annihilation['annihilation_early.maxFrameMs']) {
+      flags.push(`sustained_annihilation: early maxFrameMs ${ae.maxFrameMs}ms > ${THRESHOLDS.sustained_annihilation['annihilation_early.maxFrameMs']}ms (first-cycle spike)`);
+    }
+    const ao = results.sustained_annihilation.annihilation_overlap;
+    if (ao.maxFrameMs > THRESHOLDS.sustained_annihilation['annihilation_overlap.maxFrameMs']) {
+      flags.push(`sustained_annihilation: maxFrameMs ${ao.maxFrameMs}ms > ${THRESHOLDS.sustained_annihilation['annihilation_overlap.maxFrameMs']}ms (overlap frame spike)`);
+    }
+    if (ao.p95FrameMs > THRESHOLDS.sustained_annihilation['annihilation_overlap.p95FrameMs']) {
+      flags.push(`sustained_annihilation: p95FrameMs ${ao.p95FrameMs}ms > ${THRESHOLDS.sustained_annihilation['annihilation_overlap.p95FrameMs']}ms (sustained overlap jank)`);
+    }
+    if (ao.avgFrameMs > THRESHOLDS.sustained_annihilation['annihilation_overlap.avgFrameMs']) {
+      flags.push(`sustained_annihilation: avgFrameMs ${ao.avgFrameMs}ms > ${THRESHOLDS.sustained_annihilation['annihilation_overlap.avgFrameMs']}ms (consistently slow overlap)`);
+    }
+    if (ao.droppedFramePct > THRESHOLDS.sustained_annihilation['annihilation_overlap.droppedFramePct']) {
+      flags.push(`sustained_annihilation: droppedFramePct ${ao.droppedFramePct}% > ${THRESHOLDS.sustained_annihilation['annihilation_overlap.droppedFramePct']}% (too many dropped frames)`);
+    }
+    const cd = results.sustained_annihilation.cooldown;
+    if (cd.p95FrameMs > THRESHOLDS.sustained_annihilation['cooldown.p95FrameMs']) {
+      flags.push(`sustained_annihilation: cooldown p95FrameMs ${cd.p95FrameMs}ms > ${THRESHOLDS.sustained_annihilation['cooldown.p95FrameMs']}ms (reform tail too slow)`);
+    }
+    const scriptMs = results.sustained_annihilation.cdp.ScriptDurationMs || 0;
+    if (scriptMs > THRESHOLDS.sustained_annihilation['ScriptDurationMs']) {
+      flags.push(`sustained_annihilation: ScriptDurationMs ${scriptMs}ms > ${THRESHOLDS.sustained_annihilation['ScriptDurationMs']}ms (JS budget exceeded)`);
+    }
+  }
+
   // Find worst scenario by maxFrameMs across all sub-windows
   const subWindows = {
     'scatter_spike.scatter_active': results.scatter_spike?.scatter_active,
@@ -675,6 +913,9 @@ function buildAnalysis(results) {
     'dense_burst.burst_scatter': results.dense_burst?.burst_scatter,
     'overlap_scatter_reform.overlap_peak': results.overlap_scatter_reform?.overlap_peak,
     'high_count_reform.reform_active': results.high_count_reform?.reform_active,
+    'figure8_scroll_fire.scroll_fire': results.figure8_scroll_fire?.scroll_fire,
+    'sustained_annihilation.annihilation_early': results.sustained_annihilation?.annihilation_early,
+    'sustained_annihilation.annihilation_overlap': results.sustained_annihilation?.annihilation_overlap,
   };
 
   let worstScenario = '';
@@ -743,6 +984,14 @@ async function main() {
     // --- Scenario 5: High Char Count Reform ---
     process.stderr.write('\nPhase 5: High Char Count Reform\n');
     results.high_count_reform = await scenarioHighCountReform(page, cdpSession);
+
+    // --- Scenario 6: Figure-8 Scroll + Fire ---
+    process.stderr.write('\nPhase 6: Figure-8 Scroll + Fire\n');
+    results.figure8_scroll_fire = await scenarioFigure8ScrollFire(page, cdpSession);
+
+    // --- Scenario 7: Sustained About Annihilation ---
+    process.stderr.write('\nPhase 7: Sustained About Annihilation\n');
+    results.sustained_annihilation = await scenarioSustainedAnnihilation(page, cdpSession);
 
   } finally {
     await browser.close();

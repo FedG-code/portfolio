@@ -41,6 +41,9 @@ js/
   - **Reform phase** (sequential typing drop-in): After a `REFORM_PAUSE` (1.0s), chars re-enter left-to-right in DOM reading order. Each char is pre-positioned 16px above its slot (`DROP_DISTANCE`), then drops into place with `power2.out` (no bounce) over `CHAR_LAND_DURATION` (0.12s). Consecutive chars are staggered by `CHAR_STAGGER` (0.055s) with an extra `WORD_EXTRA_STAGGER` (0.05s) pause at word boundaries (detected by `parentElement` change).
   - **Lifecycle**: `TextDestruction.onThemeChange()` destroys and re-inits on theme switch. Resize is debounced to re-split text. A `charRectCache` (invalidated on scroll/resize) accelerates hit detection.
   - **Selector list** (`DESTRUCTIBLE_SELECTOR`): targets headings, hero text, work cards, about section, chips, contact, project pages, footer — excludes nav, theme switcher, buttons.
+  - **Mobile-gated constants**: `_isMob` (viewport ≤768 OR touch+coarse) gates performance-sensitive values. Desktop is completely unchanged. Mobile overrides: `MAX_SHATTERED` 150 (vs 300), `REFORM_PAUSE` 1.0s (vs 0.8s), `CHAR_STAGGER` 0.035s (vs 0.055s), `WORD_EXTRA_STAGGER` 0.03s (vs 0.05s), `MAX_VELOCITY` 350 (vs 500), `MAX_ROTATION` 360° (vs 720°). Color flash tween is skipped on mobile. Impact coalescing on mobile batches same-frame `onProjectileAt()` calls via RAF.
+  - **Impact throttle**: `IMPACT_THROTTLE` in `plane.js` is 80ms on mobile, 0ms on desktop. The scroll speed gate (`SCROLL_SPEED_THRESHOLD`) was removed — it unnecessarily limited desktop destruction.
+  - **Design fallback**: If optimisation doesn't resolve plane mode scroll+fire lag, the fallback is to **disable page scrolling while plane mode is active** (e.g. CSS `overflow: hidden` on `<html>` when `.plane-active`). This eliminates scroll-triggered cache invalidation and the compound scroll+destruction cost entirely.
 - **Project pages**: Shared template - nav, theme switcher, back link, project hero, repeatable sub-project sections, footer
 
 ## Serving Locally
@@ -97,12 +100,14 @@ Prerequisite: local server on port 8080 (`npx http-server -p 8080 -c-1`).
 
 Uses windowed measurement to isolate destruction.js frame spikes that get averaged away in broad 5-second windows. Calls `TextDestruction.onProjectileAt()` directly — bypasses plane.js for deterministic testing.
 
-Five scenarios:
+Seven scenarios:
 - **scatter_spike**: Single impact on dense text (#about). Isolates the 1.2s physics2D scatter window. Thresholds: maxFrameMs > 40, p95 > 30, avg > 22.
 - **cache_rebuild**: Forces `cacheStale = true` then impacts to trigger `rebuildCharCache()`. Measures the `getBoundingClientRect()` loop cost. Threshold: maxFrameMs > 50.
 - **dense_burst**: 6 rapid-fire impacts at 100ms intervals across #about. Measures overlapping physics2D tweens. Thresholds: p95 > 35, droppedFrames > 30%, ScriptDurationMs > 800.
 - **overlap_scatter_reform**: 3 staggered impacts on hero (h1 → hero-desc → tidbits) creating triple wave overlap (scatter + reform simultaneously). Thresholds: maxFrameMs > 50, p95 > 35.
 - **high_count_reform**: 8-10 impacts to shatter near MAX_SHATTERED chars, then measures the reform animation window. Thresholds: maxFrameMs > 60, p95 > 30.
+- **figure8_scroll_fire**: Simultaneous scrolling + destruction across the full page height (figure-8 Lissajous pattern). Tests scroll-triggered cache invalidation, overlapping scatter+reform across viewport changes, and compound scroll+destruction cost. Thresholds: maxFrameMs > 60, p95 > 35, avg > 25, droppedFrames > 40%.
+- **sustained_annihilation**: Destroys all text in #about every 0.3s for 6 cycles using a 60px impact grid. Measures overlapping scatter+reform waves at extreme frequency. Thresholds: overlap maxFrameMs > 70, p95 > 40, avg > 25, droppedFrames > 40%.
 
 ### Playwright Tips
 - **Scrolling to sections**: Use `npx playwright-cli eval "() => document.querySelector('#work').scrollIntoView()"` to scroll to a specific element before taking a screenshot.

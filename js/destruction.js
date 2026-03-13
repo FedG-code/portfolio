@@ -6,20 +6,24 @@
 
 gsap.registerPlugin(SplitText, Physics2DPlugin);
 
-// --- Tuneable Constants ---
-var BLAST_RADIUS = 40;
-var MAX_SHATTERED = 300;
-var SCATTER_DURATION = 1.2;
-var REFORM_PAUSE       = 0.8;
+// --- Mobile detection ---
+var _isMob = window.innerWidth <= 768 ||
+  ('ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches);
+
+// --- Tuneable Constants (mobile-gated where noted) ---
+var BLAST_RADIUS       = 40;
+var MAX_SHATTERED      = _isMob ? 150 : 300;       // halve on mobile — caps concurrent physics2D tweens
+var SCATTER_DURATION   = 1.2;
+var REFORM_PAUSE       = _isMob ? 1.0 : 0.8;       // longer pause on mobile — less scatter/reform overlap
 var CHAR_LAND_DURATION = 0.12;
-var CHAR_STAGGER       = 0.055;
-var WORD_EXTRA_STAGGER = 0.05;
+var CHAR_STAGGER       = _isMob ? 0.035 : 0.055;   // faster stagger on mobile — shorter reform window
+var WORD_EXTRA_STAGGER = _isMob ? 0.03 : 0.05;     // proportional reduction
 var DROP_DISTANCE      = 16;
-var GRAVITY = 600;
-var MIN_VELOCITY = 150;
-var MAX_VELOCITY = 500;
-var ANGLE_SPREAD = 60;
-var MAX_ROTATION = 720;
+var GRAVITY            = 600;
+var MIN_VELOCITY       = 150;
+var MAX_VELOCITY       = _isMob ? 350 : 500;        // less velocity on mobile — simpler physics
+var ANGLE_SPREAD       = 60;
+var MAX_ROTATION       = _isMob ? 360 : 720;        // halve rotation on mobile — fewer transform recalcs
 
 var DESTRUCTIBLE_SELECTOR = [
   'h1', 'h2', 'h3', 'h4',
@@ -172,6 +176,18 @@ function getCharsInBlastRadius(screenX, screenY) {
 window.addEventListener('scroll', function() { scrollStale = true; }, { passive: true });
 window.addEventListener('resize', function() { cacheStale = true; scheduleEagerCacheWarm(); });
 
+// --- Impact coalescing (mobile-only) ---
+var pendingHits = [];
+var coalescePending = false;
+
+function flushPendingHits() {
+  coalescePending = false;
+  if (pendingHits.length === 0) return;
+  var batch = pendingHits;
+  pendingHits = [];
+  shatterChars(batch, 0, 0);
+}
+
 // --- ShatterAnimator ---
 var currentShattered = 0;
 var accentColor = '';
@@ -217,25 +233,31 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
   });
 
   if (blastChars.length > 0) {
-    // Batch color flash (1 tween instead of N)
-    gsap.fromTo(blastChars, { color: accentColor }, {
-      duration: 0.15,
-      color: function(i) { return origColors[i]; },
-      ease: 'power1.out'
-    });
+    // Batch color flash (1 tween instead of N) — skip on mobile to reduce tween count
+    if (!_isMob) {
+      gsap.fromTo(blastChars, { color: accentColor }, {
+        duration: 0.15,
+        color: function(i) { return origColors[i]; },
+        ease: 'power1.out'
+      });
+    }
 
     // Batch scatter with physics (1 tween instead of N)
-    gsap.to(blastChars, {
+    var scatterProps = {
       duration: SCATTER_DURATION,
       physics2D: {
         velocity: function(i) { return velocities[i]; },
         angle: function(i) { return angles[i]; },
         gravity: GRAVITY
       },
-      rotation: function(i) { return rotations[i]; },
       opacity: 0,
       ease: 'none'
-    });
+    };
+    // Skip rotation on mobile — fewer transform recalcs per frame
+    if (!_isMob) {
+      scatterProps.rotation = function(i) { return rotations[i]; };
+    }
+    gsap.to(blastChars, scatterProps);
 
     scheduleTypingReform(blastChars);
   }
@@ -274,19 +296,29 @@ function scheduleTypingReform(chars) {
     // Single batched set (1 call instead of N)
     gsap.set(els, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
 
-    // Single batched drop-in with function-based stagger (2 tweens instead of 2N)
-    gsap.to(els, {
-      duration: CHAR_LAND_DURATION,
-      y: 0,
-      ease: 'power2.out',
-      stagger: function(i) { return delays[i]; }
-    });
-    gsap.to(els, {
-      duration: CHAR_LAND_DURATION * 0.4,
-      opacity: 1,
-      ease: 'none',
-      stagger: function(i) { return delays[i]; },
-      onComplete: function() {
+    function reformComplete() {
+      if (_isMob) {
+        // Chunk cleanup across frames to avoid synchronous DOM write storm
+        var CHUNK = 40;
+        var idx = 0;
+        function cleanChunk() {
+          var end = Math.min(idx + CHUNK, els.length);
+          for (var m = idx; m < end; m++) {
+            els[m].dataset.shattered = '0';
+            els[m].style.color = els[m].dataset.originalColor || '';
+            els[m].style.display = '';
+          }
+          idx = end;
+          if (idx < els.length) {
+            requestAnimationFrame(cleanChunk);
+          } else {
+            currentShattered -= els.length;
+            cacheStale = true;
+            scheduleEagerCacheWarm();
+          }
+        }
+        cleanChunk();
+      } else {
         for (var m = 0; m < els.length; m++) {
           els[m].dataset.shattered = '0';
           els[m].style.color = els[m].dataset.originalColor || '';
@@ -296,7 +328,34 @@ function scheduleTypingReform(chars) {
         cacheStale = true;
         scheduleEagerCacheWarm();
       }
-    });
+    }
+
+    if (_isMob) {
+      // Single merged tween on mobile (1 tween instead of 2)
+      gsap.to(els, {
+        duration: CHAR_LAND_DURATION,
+        y: 0,
+        opacity: 1,
+        ease: 'power2.out',
+        stagger: function(i) { return delays[i]; },
+        onComplete: reformComplete
+      });
+    } else {
+      // Desktop: separate tweens for y (power2.out) and opacity (linear) for better visual
+      gsap.to(els, {
+        duration: CHAR_LAND_DURATION,
+        y: 0,
+        ease: 'power2.out',
+        stagger: function(i) { return delays[i]; }
+      });
+      gsap.to(els, {
+        duration: CHAR_LAND_DURATION * 0.4,
+        opacity: 1,
+        ease: 'none',
+        stagger: function(i) { return delays[i]; },
+        onComplete: reformComplete
+      });
+    }
   });
 }
 
@@ -351,7 +410,16 @@ window.TextDestruction = {
     if (!isArmed) return;
     var hits = getCharsInBlastRadius(screenX, screenY);
     if (hits.length > 0) {
-      shatterChars(hits, screenX, screenY);
+      if (_isMob) {
+        // Coalesce same-frame hits into one batched shatterChars call
+        pendingHits = pendingHits.concat(hits);
+        if (!coalescePending) {
+          coalescePending = true;
+          requestAnimationFrame(flushPendingHits);
+        }
+      } else {
+        shatterChars(hits, screenX, screenY);
+      }
     }
   },
 

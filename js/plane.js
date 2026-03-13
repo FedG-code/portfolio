@@ -63,12 +63,9 @@
   var POOL_SIZE = 20;
   var projectilePool = [];
 
-  // --- Scroll speed gate & impact throttle ---
-  var lastAnimScrollY = 0;
-  var scrollSpeed = 0;
-  var SCROLL_SPEED_THRESHOLD = 800; // px/sec — skip destruction above this
+  // --- Impact throttle (mobile-only) ---
   var lastImpactTime = 0;
-  var IMPACT_THROTTLE = 80; // ms
+  var IMPACT_THROTTLE = isMobile() ? 80 : 0; // ms — only throttle on mobile
 
   // --- Touch state ---
   var touchId = null;
@@ -633,11 +630,6 @@
       }
     }
 
-    // Track scroll speed for destruction gating
-    var currentScrollY = window.scrollY;
-    scrollSpeed = Math.abs(currentScrollY - lastAnimScrollY) / Math.max(delta, 0.001);
-    lastAnimScrollY = currentScrollY;
-
     // Update projectiles
     for (var p = projectiles.length - 1; p >= 0; p--) {
       var proj = projectiles[p];
@@ -654,16 +646,14 @@
       pos[5] = proj.startZ + (proj.endZ - proj.startZ) * tailT;
       proj.poolEntry.geometry.attributes.position.needsUpdate = true;
 
-      // Text destruction: shatter at impact point only (gated by scroll speed + throttle)
+      // Text destruction: shatter at impact point (throttled on mobile only)
       if (window.TextDestruction && headT >= 1.0 && !proj.impacted) {
         proj.impacted = true;
-        if (scrollSpeed < SCROLL_SPEED_THRESHOLD) {
-          var now = performance.now();
-          if (now - lastImpactTime >= IMPACT_THROTTLE) {
-            lastImpactTime = now;
-            var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
-            TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
-          }
+        var now = performance.now();
+        if (now - lastImpactTime >= IMPACT_THROTTLE) {
+          lastImpactTime = now;
+          var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
+          TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
         }
       }
 
