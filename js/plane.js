@@ -63,10 +63,6 @@
   var POOL_SIZE = 20;
   var projectilePool = [];
 
-  // --- Impact throttle (mobile-only) ---
-  var lastImpactTime = 0;
-  var IMPACT_THROTTLE = isMobile() ? 80 : 0; // ms — only throttle on mobile
-
   // --- Touch state ---
   var touchId = null;
   var touchScreenX = 0;
@@ -646,15 +642,11 @@
       pos[5] = proj.startZ + (proj.endZ - proj.startZ) * tailT;
       proj.poolEntry.geometry.attributes.position.needsUpdate = true;
 
-      // Text destruction: shatter at impact point (throttled on mobile only)
+      // Text destruction: shatter at impact point
       if (window.TextDestruction && headT >= 1.0 && !proj.impacted) {
         proj.impacted = true;
-        var now = performance.now();
-        if (now - lastImpactTime >= IMPACT_THROTTLE) {
-          lastImpactTime = now;
-          var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
-          TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
-        }
+        var screenPos = window._planeWorldToScreen(proj.endX, proj.endZ);
+        TextDestruction.onProjectileAt(screenPos.x, screenPos.y);
       }
 
       if (tailT >= 1.0) {
@@ -704,7 +696,7 @@
       // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: !isMobile(), alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(isMobile() ? 1 : Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.outputEncoding = THREE.sRGBEncoding;
       if (canvasContainer) canvasContainer.appendChild(renderer.domElement);
 
