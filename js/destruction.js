@@ -12,7 +12,7 @@ var _isMob = window.innerWidth <= 768 ||
 
 // --- Tuneable Constants (mobile-gated where noted) ---
 var BLAST_RADIUS       = 40;
-var MAX_SHATTERED      = _isMob ? 150 : 300;       // halve on mobile — caps concurrent physics2D tweens
+var MAX_SHATTERED      = _isMob ? 100 : 300;       // reduce on mobile — caps concurrent tweens
 var SCATTER_DURATION   = 1.2;
 var REFORM_PAUSE       = _isMob ? 1.0 : 0.8;       // longer pause on mobile — less scatter/reform overlap
 var CHAR_LAND_DURATION = 0.12;
@@ -98,13 +98,17 @@ var lastCacheScrollY = 0;
 function scheduleEagerCacheWarm() {
   if (!cacheRebuilding) {
     cacheRebuilding = true;
-    requestAnimationFrame(rebuildCharCache);
+    requestAnimationFrame(function() { rebuildCharCache(true); });
   }
 }
 
-function rebuildCharCache() {
+var CACHE_CHUNK_SIZE = 200; // chars per RAF frame during async rebuild (mobile only)
+var asyncCacheBuffer = [];  // holds partial results during async rebuild
+var asyncCacheIndex = 0;
+var asyncVisibleParents = null;
+
+function rebuildCharCache(eager) {
   cacheRebuilding = false;
-  charRectCache = [];
   var viewH = window.innerHeight;
   var viewW = window.innerWidth;
 
@@ -120,6 +124,19 @@ function rebuildCharCache() {
     if (visible) visibleParents.add(parent);
   }
 
+  // Async chunked rebuild on mobile — only for eager warm-ups, not on-demand lookups
+  if (eager && _isMob && allChars.length > CACHE_CHUNK_SIZE) {
+    asyncCacheBuffer = [];
+    asyncCacheIndex = 0;
+    asyncVisibleParents = visibleParents;
+    cacheStale = false;
+    scrollStale = false;
+    lastCacheScrollY = window.scrollY;
+    rebuildCharCacheChunk();
+    return;
+  }
+
+  var newCache = [];
   for (var i = 0; i < allChars.length; i++) {
     var el = allChars[i];
     if (el.dataset.shattered === '1') continue;
@@ -129,15 +146,49 @@ function rebuildCharCache() {
     if (rect.bottom < 0 || rect.top > viewH) continue;
     if (rect.right < 0 || rect.left > viewW) continue;
 
-    charRectCache.push({
+    newCache.push({
       el: el,
       cx: rect.left + rect.width / 2,
       cy: rect.top + rect.height / 2
     });
   }
+  charRectCache = newCache;
   cacheStale = false;
   scrollStale = false;
   lastCacheScrollY = window.scrollY;
+}
+
+function rebuildCharCacheChunk() {
+  var viewH = window.innerHeight;
+  var viewW = window.innerWidth;
+  var end = Math.min(asyncCacheIndex + CACHE_CHUNK_SIZE, allChars.length);
+
+  for (var i = asyncCacheIndex; i < end; i++) {
+    var el = allChars[i];
+    if (el.dataset.shattered === '1') continue;
+    if (!asyncVisibleParents.has(el.parentElement)) continue;
+
+    var rect = el.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > viewH) continue;
+    if (rect.right < 0 || rect.left > viewW) continue;
+
+    asyncCacheBuffer.push({
+      el: el,
+      cx: rect.left + rect.width / 2,
+      cy: rect.top + rect.height / 2
+    });
+  }
+
+  asyncCacheIndex = end;
+  if (asyncCacheIndex < allChars.length) {
+    requestAnimationFrame(rebuildCharCacheChunk);
+  } else {
+    // Finalize: swap buffer into live cache
+    charRectCache = asyncCacheBuffer;
+    asyncCacheBuffer = [];
+    asyncVisibleParents = null;
+    lastCacheScrollY = window.scrollY;
+  }
 }
 
 function getCharsInBlastRadius(screenX, screenY) {
@@ -242,22 +293,40 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
       });
     }
 
-    // Batch scatter with physics (1 tween instead of N)
-    var scatterProps = {
-      duration: SCATTER_DURATION,
-      physics2D: {
-        velocity: function(i) { return velocities[i]; },
-        angle: function(i) { return angles[i]; },
-        gravity: GRAVITY
-      },
-      opacity: 0,
-      ease: 'none'
-    };
-    // Skip rotation on mobile — fewer transform recalcs per frame
-    if (!_isMob) {
+    // Batch scatter animation
+    if (_isMob) {
+      // Mobile: replace physics2D with pre-computed end positions (simple gsap.to)
+      // Straight-line eased motion is visually indistinguishable on small screens
+      var endXs = [];
+      var endYs = [];
+      for (var si = 0; si < blastChars.length; si++) {
+        var rad = angles[si] * (Math.PI / 180);
+        var dist = velocities[si] * SCATTER_DURATION * 0.5; // approximate travel distance
+        endXs.push(Math.cos(rad) * dist);
+        endYs.push(Math.sin(rad) * dist + GRAVITY * SCATTER_DURATION * SCATTER_DURATION * 0.25);
+      }
+      gsap.to(blastChars, {
+        duration: SCATTER_DURATION,
+        x: function(i) { return '+=' + endXs[i]; },
+        y: function(i) { return '+=' + endYs[i]; },
+        opacity: 0,
+        ease: 'power2.in'
+      });
+    } else {
+      // Desktop: full physics2D with rotation for premium visual
+      var scatterProps = {
+        duration: SCATTER_DURATION,
+        physics2D: {
+          velocity: function(i) { return velocities[i]; },
+          angle: function(i) { return angles[i]; },
+          gravity: GRAVITY
+        },
+        opacity: 0,
+        ease: 'none'
+      };
       scatterProps.rotation = function(i) { return rotations[i]; };
+      gsap.to(blastChars, scatterProps);
     }
-    gsap.to(blastChars, scatterProps);
 
     scheduleTypingReform(blastChars);
   }

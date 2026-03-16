@@ -65,7 +65,7 @@
 
   // --- Impact throttle (mobile-only) ---
   var lastImpactTime = 0;
-  var IMPACT_THROTTLE = isMobile() ? 80 : 0; // ms — only throttle on mobile
+  var IMPACT_THROTTLE = isMobile() ? 120 : 0; // ms — only throttle on mobile
 
   // --- Touch state ---
   var touchId = null;
