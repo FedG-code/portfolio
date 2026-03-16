@@ -15,13 +15,8 @@
       "Bash(curl:*)",
       "Bash(grep:*)",
       "WebSearch",
-      "Bash(start https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md)",
       "Bash(git add:*)",
-      "Bash(git push:*)",
-      "Bash(git -C /c/Users/feder/source/repos/portfolio status)",
-      "Bash(git -C /c/Users/feder/source/repos/portfolio diff js/plane.js js/destruction.js)",
-      "Bash(git -C /c/Users/feder/source/repos/portfolio log --oneline -5)",
-      "Bash(git -C /c/Users/feder/source/repos/portfolio push)"
+      "Bash(git push:*)"
     ]
   }
 }

@@ -1,22 +1,9 @@
 {
   "mcpServers": {
-
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest", "--headless"],
       "description": "Browser automation — lets Claude Code see and screenshot the site during development for visual feedback loops"
-    },
-
-    "magic-ui": {
-      "command": "npx",
-      "args": ["-y", "@magicuidesign/mcp@latest"],
-      "description": "Magic UI component library — polished React/Tailwind animations, scroll effects, text animations, device mockups, bento grids"
-    },
-
-    "shadcn-ui": {
-      "command": "npx",
-      "args": ["-y", "@shadcn/mcp@latest"],
-      "description": "shadcn/ui components — clean, accessible base components (cards, nav, dialogs, buttons) from any configured registry"
     }
   }
 }
