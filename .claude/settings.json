@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx http-server:*)",
+      "Bash(node tests/*)",
+      "Bash(playwright-cli:*)",
+      "Bash(curl -s:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)*",
+      "Bash(git push --force:*)"
+    ]
+  }
+}
