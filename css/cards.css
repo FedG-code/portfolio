@@ -1,0 +1,275 @@
+/* ========== SPA PAGE SYSTEM ========== */
+.spa-page {
+  display: none;
+  opacity: 0;
+}
+.spa-page.active {
+  display: block;
+  opacity: 1;
+}
+.spa-page.measuring {
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.spa-page.transitioning {
+  z-index: 200;
+}
+
+/* ========== PAGE CONTAINER (fetched content) ========== */
+.page-container {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  padding-bottom: 220px;
+}
+
+/* ========== DRAG BLUR OVERLAY ========== */
+.drag-blur-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  background: rgba(0,0,0,0);
+  pointer-events: none;
+  will-change: backdrop-filter, background;
+}
+
+/* ========== HAND CONTAINER ========== */
+.hand-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  height: 400px;
+  width: 100%;
+  max-width: 700px;
+  pointer-events: none;
+}
+
+/* ========== PERSPECTIVE + FLY OVERLAY ========== */
+.perspective-container {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.fly-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  pointer-events: none;
+}
+
+/* ========== CARD BASE ========== */
+.card {
+  position: absolute;
+  width: 220px;
+  height: 320px;
+  left: 0;
+  top: 0;
+  cursor: grab;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+}
+.card.dragging {
+  cursor: grabbing;
+  z-index: 100 !important;
+}
+.card:not(.dragging):not(.playing) {
+  transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.card.playing {
+  cursor: default;
+  will-change: transform;
+}
+
+/* ========== CARD INNER (CORAL default) ========== */
+.card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  transition: box-shadow 0.3s, border-color 0.3s;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+}
+
+.card-title {
+  padding: 8px 10px 5px;
+  text-align: center;
+  position: relative;
+  z-index: 4;
+}
+.card-title h3 {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.card-art {
+  position: relative;
+  z-index: 2;
+  margin: 0 6px;
+  height: 155px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.card-art-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card[data-accent="red"]    .card-art-inner { background: linear-gradient(145deg, #f5d5c8, #ecc0ae 50%, #f5d5c8); }
+.card[data-accent="purple"] .card-art-inner { background: linear-gradient(145deg, #e0d5f0, #d0c5e8 50%, #e0d5f0); }
+.card[data-accent="green"]  .card-art-inner { background: linear-gradient(145deg, #c8e8d5, #b8dcc8 50%, #c8e8d5); }
+.card[data-accent="gold"]   .card-art-inner { background: linear-gradient(145deg, #f0e4c8, #e8d8b8 50%, #f0e4c8); }
+.card-art-icon {
+  font-size: 44px;
+  opacity: 0.12;
+  display: inline-block;
+}
+
+.type-bar {
+  position: relative;
+  z-index: 5;
+  margin: -13px 8px 0;
+  padding: 4px 8px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--text-secondary);
+}
+
+.card-textbox {
+  position: relative;
+  z-index: 3;
+  margin: 5px 0 0;
+  padding: 8px 10px;
+  min-height: 80px;
+}
+.card-textbox p {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.accent-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 4;
+  border-radius: 0 0 14px 14px;
+}
+.card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #e85d26, transparent); opacity: 0.3; }
+.card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #6a4cba, transparent); opacity: 0.3; }
+.card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #28885a, transparent); opacity: 0.3; }
+.card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #e8a44a, transparent); opacity: 0.3; }
+
+/* ========== SLATE THEME OVERRIDES ========== */
+[data-theme="slate"] .card-inner {
+  background: var(--bg-card);
+  border: 2.5px solid var(--border);
+  border-radius: 12px;
+}
+
+[data-theme="slate"] .card[data-accent="red"]    .card-art-inner { background: linear-gradient(145deg, #e0d0cc, #d4c4be 50%, #e0d0cc); }
+[data-theme="slate"] .card[data-accent="purple"] .card-art-inner { background: linear-gradient(145deg, #d0cce0, #c4bed8 50%, #d0cce0); }
+[data-theme="slate"] .card[data-accent="green"]  .card-art-inner { background: linear-gradient(145deg, #c4dcd4, #b8d0c8 50%, #c4dcd4); }
+[data-theme="slate"] .card[data-accent="gold"]   .card-art-inner { background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8); }
+
+[data-theme="slate"] .type-bar {
+  border-radius: 4px;
+}
+
+[data-theme="slate"] .card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #d4614e, transparent); }
+[data-theme="slate"] .card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #6a7cba, transparent); }
+[data-theme="slate"] .card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #1a8a7d, transparent); }
+[data-theme="slate"] .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #c4944a, transparent); }
+
+/* ========== NEON THEME OVERRIDES ========== */
+[data-theme="neon"] .card-inner {
+  background: #131318;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+}
+
+[data-theme="neon"] .card-title h3 {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}
+
+[data-theme="neon"] .card-art {
+  border-radius: 4px;
+}
+[data-theme="neon"] .card-art-inner {
+  background: #0a0a0c;
+  border: 1px solid #1e1e28;
+}
+[data-theme="neon"] .card-art-icon {
+  color: var(--accent);
+  opacity: 0.15;
+}
+
+[data-theme="neon"] .type-bar {
+  font-family: var(--font-mono);
+  border-radius: 3px;
+  background: #131318;
+  border: 1px solid #c9f05935;
+  color: var(--accent);
+}
+
+[data-theme="neon"] .card-textbox p {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* All neon accent strips use lime */
+[data-theme="neon"] .accent-strip {
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: var(--accent) !important;
+  opacity: 0.4;
+  border-radius: 0;
+}
+
+/* Neon cards get a lime glow line at the top */
+[data-theme="neon"] .card-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  z-index: 10;
+  background: linear-gradient(90deg, transparent 5%, #c9f05960 30%, #c9f05980 50%, #c9f05960 70%, transparent 95%);
+  border-radius: 8px 8px 0 0;
+}

@@ -8,61 +8,8 @@ const observer = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+window.revealObserver = observer;
 reveals.forEach(el => observer.observe(el));
-
-// Expand cards with blur overlay
-const overlay = document.getElementById('blurOverlay');
-if (overlay) {
-  const cards = document.querySelectorAll('.work-card');
-  let activeCard = null;
-
-  const isTouchLike = (type) => type === 'touch' || type === 'pen';
-
-  function closeActive() {
-    if (activeCard) {
-      activeCard.classList.remove('expanded');
-      overlay.classList.remove('active');
-      activeCard = null;
-    }
-  }
-
-  cards.forEach(card => {
-    // Desktop: hover to expand/collapse
-    card.addEventListener('pointerenter', (e) => {
-      if (isTouchLike(e.pointerType)) return;
-      closeActive();
-      card.classList.add('expanded');
-      overlay.classList.add('active');
-      activeCard = card;
-    });
-    card.addEventListener('pointerleave', (e) => {
-      if (isTouchLike(e.pointerType)) return;
-      if (card === activeCard) closeActive();
-    });
-
-    // Track pointer type per interaction
-    card.addEventListener('pointerdown', (e) => {
-      card.lastPointerType = e.pointerType;
-    });
-
-    // Touch: first tap expands, second tap navigates
-    card.addEventListener('click', (e) => {
-      if (!isTouchLike(card.lastPointerType)) return;
-      if (card === activeCard) return; // already expanded, allow navigation
-      e.preventDefault();
-      if (activeCard) {
-        closeActive(); // just close the current card, don't open this one
-        return;
-      }
-      card.classList.add('expanded');
-      overlay.classList.add('active');
-      activeCard = card;
-    });
-  });
-
-  // Tap overlay to close expanded card
-  overlay.addEventListener('click', () => closeActive());
-}
 
 // Theme switcher
 const themeSwitcher = document.getElementById('themeSwitcher');
@@ -84,6 +31,7 @@ themeSwitcher.addEventListener('click', () => {
   updateLabel();
   if (window.TextDestruction) TextDestruction.onThemeChange();
   if (window._planeOnThemeChange) window._planeOnThemeChange();
+  if (window._cardHandOnThemeChange) window._cardHandOnThemeChange();
 });
 
 // Mobile auto-hide nav & theme switcher on scroll
