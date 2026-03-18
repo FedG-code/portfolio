@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spire — Page Transition Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:#c8bfad; font-family:sans-serif;
+  overflow:hidden;
+}
+
+.scene {
+  width:100vw; height:100vh; position:relative; overflow:hidden;
+  background:#d8cfc0;
+  user-select:none; -webkit-user-select:none; -moz-user-select:none;
+  cursor:default; touch-action:none;
+}
+
+/* Paper grain texture */
+.scene::before {
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+/* Vignette */
+.scene::after {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 50%, rgba(176,168,144,0.35) 100%);
+}
+
+/* Spire map lines background */
+.map-lines { position:absolute; inset:0; z-index:0; opacity:0.12; }
+
+/* Status bar */
+.status-bar {
+  display:flex; justify-content:center; gap:14px;
+  padding:18px 0 6px; position:relative; z-index:2;
+}
+.status-bar span {
+  font-family:'Fira Code',monospace; font-size:11px;
+  color:#6a5a3a; background:rgba(0,0,0,0.06);
+  padding:3px 10px; border-radius:4px;
+}
+.hint {
+  text-align:center; padding:4px 16px 10px;
+  font-family:'Cinzel',serif; font-size:13px;
+  color:#5a4e38; line-height:1.4;
+  position:relative; z-index:2;
+}
+
+/* ── Blur overlay for card drag ── */
+.drag-blur-overlay {
+  position:absolute; inset:0;
+  z-index:50;
+  backdrop-filter:blur(0px);
+  -webkit-backdrop-filter:blur(0px);
+  background:rgba(0,0,0,0);
+  pointer-events:none;
+  will-change:backdrop-filter, background;
+}
+
+/* ── Hand container ── */
+.hand-container {
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  z-index:60; height:400px; width:100%;
+  max-width:700px;
+}
+
+/* ── Card base ── */
+.card {
+  position:absolute; width:220px; height:320px;
+  left:0; top:0;
+  cursor:grab; will-change:transform;
+  user-select:none; -webkit-user-select:none;
+}
+.card.dragging { cursor:grabbing; z-index:100 !important; }
+.card:not(.dragging):not(.playing) {
+  transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.card.playing {
+  cursor:default;
+  will-change:transform;
+}
+
+/* ── Card inner (the visible card surface) ── */
+.card-inner {
+  width:100%; height:100%; border-radius:14px;
+  position:relative; overflow:hidden;
+  background:#d8cfc0;
+  pointer-events:none;
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+.card[data-accent="red"]    .card-inner { border:7px solid #8a5a5a; }
+.card[data-accent="purple"] .card-inner { border:7px solid #6a5a8a; }
+.card[data-accent="green"]  .card-inner { border:7px solid #5a8a6a; }
+.card[data-accent="gold"]   .card-inner { border:7px solid #8a7a5a; }
+
+/* ── Title ── */
+.card-title {
+  padding:8px 10px 5px; text-align:center;
+  position:relative; z-index:4;
+}
+.card-title h3 {
+  font-family:'Cinzel',serif; font-weight:700; font-size:13.5px;
+  color:#2a2418; line-height:1.2; letter-spacing:0.3px;
+}
+
+/* ── Art area ── */
+.card-art {
+  position:relative; z-index:2;
+  margin:0; height:155px;
+  overflow:hidden;
+  border-bottom:1px solid rgba(100,90,70,0.12);
+}
+.card-art-inner {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+}
+.card[data-accent="red"]    .card-art-inner { background:linear-gradient(145deg,#c8b0a8,#b8a098 50%,#c8b0a8); }
+.card[data-accent="purple"] .card-art-inner { background:linear-gradient(145deg,#b8b0c8,#a8a0b8 50%,#b8b0c8); }
+.card[data-accent="green"]  .card-art-inner { background:linear-gradient(145deg,#a8c8b0,#98b8a0 50%,#a8c8b0); }
+.card[data-accent="gold"]   .card-art-inner { background:linear-gradient(145deg,#c8c0a8,#b8b098 50%,#c8c0a8); }
+.card-art-icon { font-size:44px; opacity:0.16; }
+
+/* ── Type bar ── */
+.type-bar {
+  position:relative; z-index:5;
+  margin:-13px 8px 0;
+  padding:4px 8px;
+  text-align:center;
+  font-family:'Cinzel',serif; font-size:8.5px; font-weight:600;
+  letter-spacing:0.4px; line-height:1.3;
+  white-space:nowrap;
+  background:#d8cfc0;
+  border:1px solid rgba(100,90,70,0.18);
+  border-radius:4px;
+}
+.card[data-accent="red"]    .type-bar { color:#7a3028; }
+.card[data-accent="purple"] .type-bar { color:#4a2c80; }
+.card[data-accent="green"]  .type-bar { color:#1a5838; }
+.card[data-accent="gold"]   .type-bar { color:#7a6020; }
+.type-sep { font-family:'Cinzel',serif; margin:0 2px; }
+
+/* ── Text box area ── */
+.card-textbox {
+  position:relative; z-index:3;
+  margin:5px 0 0;
+  padding:8px 10px;
+  min-height:80px;
+}
+.card-textbox p {
+  font-family:'Fira Code',monospace; font-size:9px;
+  color:#5a4e38; line-height:1.55; letter-spacing:0.2px;
+}
+
+/* ── Accent strip ── */
+.accent-strip {
+  position:absolute; bottom:0; left:0; right:0; height:5px;
+  z-index:4; border-radius:0 0 7px 7px;
+}
+.card[data-accent="red"]    .accent-strip { background:linear-gradient(90deg,transparent,#c83830,transparent); opacity:0.25; }
+.card[data-accent="purple"] .accent-strip { background:linear-gradient(90deg,transparent,#6a4cba,transparent); opacity:0.25; }
+.card[data-accent="green"]  .accent-strip { background:linear-gradient(90deg,transparent,#28885a,transparent); opacity:0.25; }
+.card[data-accent="gold"]   .accent-strip { background:linear-gradient(90deg,transparent,#e8a44a,transparent); opacity:0.25; }
+
+/* ── Isolation container for playing card ── */
+.perspective-container {
+  position:absolute; inset:0;
+  z-index:60;
+  pointer-events:none;
+}
+
+/* ── Flying elements overlay ── */
+.fly-overlay {
+  position:fixed; inset:0;
+  z-index:500;
+  pointer-events:none;
+}
+
+/* ═══════════════════════════════════════════════
+   SPIRE PAGE SYSTEM
+   ═══════════════════════════════════════════════ */
+.spire-page {
+  display:none;
+  opacity:0;
+  position:absolute;
+  inset:0;
+  z-index:5;
+  overflow-y:auto;
+  background:transparent;
+  padding-bottom:200px; /* clearance for the card hand */
+}
+.spire-page.active {
+  display:block;
+  opacity:1;
+}
+.spire-page.measuring {
+  display:block;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.spire-page.transitioning {
+  z-index:200; /* promoted above blur overlay during transition */
+}
+
+/* ── Page content styles (adapted from coffin-likker / project pages) ── */
+.spire-page .container {
+  max-width:960px;
+  margin:0 auto;
+  padding:0 24px;
+}
+
+/* Project hero */
+.spire-page .project-hero {
+  padding:80px 0 40px;
+}
+.spire-page .project-hero-badge {
+  font-family:'Fira Code',monospace;
+  font-size:11px;
+  color:#6a5a3a;
+  background:rgba(0,0,0,0.06);
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:4px;
+  margin-bottom:16px;
+}
+.spire-page .project-hero-title {
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  font-size:clamp(2rem, 5vw, 3.5rem);
+  color:#2a2418;
+  line-height:1.15;
+  margin-bottom:16px;
+}
+.spire-page .project-hero-desc {
+  font-family:'Fira Code',monospace;
+  font-size:14px;
+  color:#5a4e38;
+  line-height:1.7;
+  max-width:640px;
+  margin-bottom:24px;
+}
+.spire-page .project-meta {
+  display:flex;
+  gap:32px;
+  flex-wrap:wrap;
+}
+.spire-page .tidbit { }
+.spire-page .tidbit-label {
+  font-family:'Fira Code',monospace;
+  font-size:10px;
+  color:#8a7a5a;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:2px;
+}
+.spire-page .tidbit-value {
+  font-family:'Cinzel',serif;
+  font-size:14px;
+  font-weight:600;
+  color:#2a2418;
+}
+
+/* Project sections */
+.spire-page .project-section {
+  padding:48px 0;
+  border-top:1px solid rgba(100,90,70,0.12);
+}
+.spire-page .section-label {
+  font-family:'Fira Code',monospace;
+  font-size:11px;
+  color:#8a7a5a;
+  margin-bottom:8px;
+}
+.spire-page .section-heading {
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  font-size:clamp(1.5rem, 3vw, 2.2rem);
+  color:#2a2418;
+  margin-bottom:32px;
+}
+.spire-page .wip-badge {
+  font-family:'Fira Code',monospace;
+  font-size:9px;
+  background:rgba(200,160,60,0.2);
+  color:#7a6020;
+  padding:2px 8px;
+  border-radius:3px;
+  margin-left:8px;
+  vertical-align:middle;
+}
+
+/* Project content grid */
+.spire-page .project-content {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:32px;
+  align-items:start;
+  margin-bottom:48px;
+}
+.spire-page .project-content--reversed {
+  direction:rtl;
+}
+.spire-page .project-content--reversed > * {
+  direction:ltr;
+}
+
+.spire-page .work-image {
+  width:100%;
+  border-radius:8px;
+  display:block;
+  /* Placeholder for images — use gradient since no assets */
+  min-height:200px;
+  background:linear-gradient(145deg, #b8b0c8, #a8a0b8 50%, #b8b0c8);
+}
+
+.spire-page .project-text h4 {
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  font-size:16px;
+  color:#2a2418;
+  margin-bottom:12px;
+}
+.spire-page .project-text p {
+  font-family:'Fira Code',monospace;
+  font-size:12px;
+  color:#5a4e38;
+  line-height:1.7;
+  margin-bottom:12px;
+}
+
+/* Work stats */
+.spire-page .work-stats {
+  display:flex;
+  gap:24px;
+  margin-top:16px;
+}
+.spire-page .work-stat {
+  display:flex;
+  flex-direction:column;
+}
+.spire-page .work-stat-num {
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  font-size:14px;
+  color:#2a2418;
+}
+.spire-page .work-stat-label {
+  font-family:'Fira Code',monospace;
+  font-size:9px;
+  color:#8a7a5a;
+}
+
+/* ── Home page content ── */
+.spire-page .hero-section {
+  padding:120px 0 60px;
+  text-align:center;
+}
+.spire-page .hero-section h1 {
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  font-size:clamp(2rem, 5vw, 3.5rem);
+  color:#2a2418;
+  line-height:1.15;
+  margin-bottom:16px;
+}
+.spire-page .hero-section p {
+  font-family:'Fira Code',monospace;
+  font-size:14px;
+  color:#5a4e38;
+  line-height:1.7;
+  max-width:540px;
+  margin:0 auto 24px;
+}
+.spire-page .hero-tidbits {
+  display:flex;
+  justify-content:center;
+  gap:32px;
+  flex-wrap:wrap;
+}
+
+/* Structure elements that fade in during transition */
+.structure-el {
+  /* These start invisible and fade in during the transition */
+}
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <!-- Map path background -->
+  <svg class="map-lines" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <path d="M240,60 Q440,140 380,280 T560,520 Q660,640 720,720" fill="none" stroke="#a0936e" stroke-width="1.5" stroke-dasharray="6 8"/>
+    <path d="M1200,55 Q1040,170 1080,320 T900,550 Q820,660 720,720" fill="none" stroke="#a0936e" stroke-width="1.5" stroke-dasharray="6 8"/>
+    <path d="M720,720 Q720,780 720,860" fill="none" stroke="#a0936e" stroke-width="1.5" stroke-dasharray="6 8"/>
+    <circle cx="240" cy="60" r="4" fill="#8a7a5a" opacity="0.4"/>
+    <circle cx="380" cy="280" r="4" fill="#8a7a5a" opacity="0.4"/>
+    <circle cx="560" cy="520" r="4" fill="#8a7a5a" opacity="0.4"/>
+    <circle cx="1200" cy="55" r="4" fill="#8a7a5a" opacity="0.4"/>
+    <circle cx="1080" cy="320" r="4" fill="#8a7a5a" opacity="0.4"/>
+    <circle cx="900" cy="550" r="4" fill="#8a7a5a" opacity="0.4"/>
+    <circle cx="720" cy="720" r="6" fill="#e8a44a" opacity="0.5"/>
+  </svg>
+
+  <div class="status-bar" id="statusBar">
+    <span>Drag toward center to play</span>
+    <span id="activeLabel">Active: Home</span>
+  </div>
+  <div class="hint" id="hintText">Drag a card into the play zone to navigate</div>
+
+  <!-- HOME PAGE (active by default) -->
+  <div class="spire-page active" id="page-home">
+    <div class="container">
+      <div class="hero-section">
+        <h1>Never shipped a boring product.</h1>
+        <p>Developer with three years of experience shipping a variety of web and gaming products. 
+          I have a passion for design and champion high standards of polish.</p>
+        <div class="hero-tidbits">
+          <div class="tidbit">
+            <p class="tidbit-label">Based in</p>
+            <p class="tidbit-value">London, UK</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Currently</p>
+            <p class="tidbit-value">Logifuture</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Side project</p>
+            <p class="tidbit-value">Coffin-Likker</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COFFIN-LIKKER PAGE -->
+  <div class="spire-page" id="page-coffin-likker">
+    <div class="container">
+      <section class="project-hero">
+        <div class="project-hero-badge">Personal Projects</div>
+        <h1 class="project-hero-title">Coffin-Likker</h1>
+        <p class="project-hero-desc">
+          A stealth-horror project in pre-production focused on visibility, AI behavior, and environmental tension. Set in the bayou
+          with a lovecraftian narrative. I am designing and prototyping the core systems in Unity while shaping the game's direction, 
+          production plan, and pitch materials.
+        </p>
+        <div class="project-meta">
+          <div class="tidbit">
+            <p class="tidbit-label">Role</p>
+            <p class="tidbit-value">Solo Developer</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Timeline</p>
+            <p class="tidbit-value">2025 – Present</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Stack</p>
+            <p class="tidbit-value">Unity 6, C#</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 01: Coffin-Likker -->
+      <section class="project-section" data-section="1">
+        <p class="section-label">01 - Coffin-Likker <span class="wip-badge">In Development</span></p>
+        <h2 class="section-heading">Muk (working title)</h2>
+
+        <div class="project-content">
+          <div>
+            <div class="work-image" data-placeholder="vision"></div>
+          </div>
+          <div class="project-text">
+            <h4>Vision &amp; Visibility</h4>
+            <p>
+              I built a visibility system that allows the player to still see their environment, but hides
+              enemies not in the player's vision. The core tension is derived from this information mismatch.
+              The player can still see the space around themselves, they just have no idea what could be lurking there.
+              Implemented in Unity with custom HLSL shaders.
+            </p>
+            <p>
+              After going to a talk by Henry Hoffman (the creator of Hue) I started to really consider how
+              much more I could connect the gameplay and the art direction. I decided to lean into black and white
+              and I'm experimenting with using red to highlight combat.
+            </p>
+          </div>
+        </div>
+
+        <div class="project-content project-content--reversed">
+          <div>
+            <div class="work-image" data-placeholder="sound"></div>
+          </div>
+          <div class="project-text">
+            <h4>Readable Danger</h4>
+            <p>
+              I designed enemy behaviors to communicate danger without giving the player full information.
+              In particular, some enemies make noise AND create a "ripple" effect on the water.
+              The ripple serves to provide the players more partial information that they must decipher.
+              As a secondary benefit, the ripples and splash sound help highlight moments of tension, where enemies
+              will rush down the player.
+            </p>
+          </div>
+        </div>
+
+        <div class="project-content">
+          <div>
+            <div class="work-image" data-placeholder="enemy"></div>
+          </div>
+          <div class="project-text">
+            <h4>Enemy and Shadows</h4>
+            <p>
+              Enemies are highly reactive to the player and can be alerted to the player's location
+              by sound or by proximity. However, some enemies (like the angel enemy seen above) will react
+              to being "seen". This was a useful opportunity for me to create an entire system which informs
+              any object in the game when it's visible to the player. In turn, creating this system allowed me
+              to vastly reduce the cost of casting shadows, as I could just limit shadow casting to only objects
+              that are actually visible to the player, allowing me to have so many shadow casting objects in a single
+              space in the first place.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 02: Tetrarcana -->
+      <section class="project-section" data-section="2">
+        <p class="section-label">02 - Game Jam</p>
+        <h2 class="section-heading">Tetrarcana</h2>
+        <div class="project-content project-content--reversed">
+          <div>
+            <div class="work-image" data-placeholder="tetrarcana"></div>
+          </div>
+          <div class="project-text">
+            <p>
+              A competitive board game prototype where two players place shaped tiles to control a shared grid.
+              I introduced a merging system to make board states less predictable, tetris
+              pieces are famous for often slotting "well" into spaces so by forcing users to overlap them
+              they created unique shapes that were harder to use optimally.
+              Designed and implemented the prototype in Godot, collaborating with an artist and sound designer.
+            </p>
+            <div class="work-stats">
+              <div class="work-stat">
+                <span class="work-stat-num">2 Week</span>
+                <span class="work-stat-label">Game Jam</span>
+              </div>
+              <div class="work-stat">
+                <span class="work-stat-num">1v1</span>
+                <span class="work-stat-label">Board Game</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 03: Calm Before the Storm -->
+      <section class="project-section" data-section="3">
+        <p class="section-label">03 - Game Jam</p>
+        <h2 class="section-heading">Calm Before the Storm</h2>
+        <div class="project-content">
+          <div>
+            <div class="work-image" data-placeholder="calm"></div>
+          </div>
+          <div class="project-text">
+            <p>
+              A small game about catching fish and reaching an island before a storm
+              hits. The brief was "calm before the storm", and I wanted to maximise the fear
+              and uncertainty of the oncoming storm by randomising some small elements: the fish and islands spawn at random locations,
+              the storm spawns from a random direction. This obfuscation of information forces
+              the player to have to play more reactively, rather than being able to plan ahead.
+            </p>
+            <div class="work-stats">
+              <div class="work-stat">
+                <span class="work-stat-num">1 Week</span>
+                <span class="work-stat-label">Game Jam</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- LOGIFUTURE PAGE (stub for testing multi-page) -->
+  <div class="spire-page" id="page-logifuture">
+    <div class="container">
+      <section class="project-hero">
+        <div class="project-hero-badge">Professional Work</div>
+        <h1 class="project-hero-title">Logifuture</h1>
+        <p class="project-hero-desc">
+          Built and released several casino games working closely with designers and artists. 
+          Redesigned, pitched and implemented mini versions of casino games for sportsbook crossover. 
+          Maintained 40+ existing games.
+        </p>
+        <div class="project-meta">
+          <div class="tidbit">
+            <p class="tidbit-label">Role</p>
+            <p class="tidbit-value">Game Developer</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Timeline</p>
+            <p class="tidbit-value">2023 – Present</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Stack</p>
+            <p class="tidbit-value">PixiJS, JavaScript</p>
+          </div>
+        </div>
+      </section>
+      <section class="project-section" data-section="1">
+        <p class="section-label">01 - Casino Games</p>
+        <h2 class="section-heading">Casino Games</h2>
+        <div class="project-content">
+          <div><div class="work-image" data-placeholder="casino"></div></div>
+          <div class="project-text">
+            <h4>Game Development at Scale</h4>
+            <p>Shipped over 10 casino games to production with millions of monthly bets. 
+               Worked across the full stack from game logic to animation and sound integration.
+               Collaborated with designers and artists to deliver polished gaming experiences.</p>
+            <div class="work-stats">
+              <div class="work-stat"><span class="work-stat-num">1.5M</span><span class="work-stat-label">Bets a month</span></div>
+              <div class="work-stat"><span class="work-stat-num">10+</span><span class="work-stat-label">Games shipped</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- LOST SATELLITE PAGE (stub) -->
+  <div class="spire-page" id="page-lost-satellite">
+    <div class="container">
+      <section class="project-hero">
+        <div class="project-hero-badge">Contract Work</div>
+        <h1 class="project-hero-title">Lost Satellite Studios</h1>
+        <p class="project-hero-desc">
+          Designed and built the combat, enemies and movement system for a narrative-driven metroidvania in Godot.
+        </p>
+        <div class="project-meta">
+          <div class="tidbit">
+            <p class="tidbit-label">Role</p>
+            <p class="tidbit-value">Technical Designer</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Timeline</p>
+            <p class="tidbit-value">2024</p>
+          </div>
+          <div class="tidbit">
+            <p class="tidbit-label">Stack</p>
+            <p class="tidbit-value">Godot, GDScript</p>
+          </div>
+        </div>
+      </section>
+      <section class="project-section" data-section="1">
+        <p class="section-label">01 - Metroidvania</p>
+        <h2 class="section-heading">EoD</h2>
+        <div class="project-content">
+          <div><div class="work-image" data-placeholder="satellite"></div></div>
+          <div class="project-text">
+            <h4>Combat, Enemies and Movement</h4>
+            <p>Designed and built the combat, enemies and movement system for a narrative-driven metroidvania. 
+               Focus on responsive controls, challenging but fair enemy patterns, and fluid traversal mechanics.</p>
+            <div class="work-stats">
+              <div class="work-stat"><span class="work-stat-num">6 Months</span><span class="work-stat-label">Timeline</span></div>
+              <div class="work-stat"><span class="work-stat-num">Steam</span><span class="work-stat-label">Demo Live</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Blur overlay -->
+  <div class="drag-blur-overlay" id="dragBlurOverlay"></div>
+
+  <!-- Perspective wrapper for playing card -->
+  <div class="perspective-container" id="perspectiveContainer"></div>
+
+  <!-- Flying elements overlay -->
+  <div class="fly-overlay" id="flyOverlay"></div>
+
+  <!-- Hand -->
+  <div class="hand-container" id="hand"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script>
+
+/* ═══════════════════════════════════════════════
+   CARD DATA
+   ═══════════════════════════════════════════════ */
+const CARDS = [
+  {
+    id: 0, accent:'red',
+    title:'Logifuture',
+    typeLeft:'Casino Games', typeRight:'Game Developer',
+    icon:'\u2666',
+    text:'Developed casino game features across web and mobile platforms, shipping live products to players worldwide.',
+    accentColor:'#c83830', accentMuted:'#8a5a5a',
+    pageId:'page-logifuture',
+  },
+  {
+    id: 1, accent:'purple',
+    title:'Coffin-Likker',
+    typeLeft:'Project', typeRight:'Solo Developer',
+    icon:'\u2620',
+    text:'Stealth-horror project focused on visibility, AI behavior, and environmental tension. Set in the bayou.',
+    accentColor:'#6a4cba', accentMuted:'#6a5a8a',
+    pageId:'page-coffin-likker',
+  },
+  {
+    id: 2, accent:'green',
+    title:'Lost Satellite',
+    typeLeft:'EoD', typeRight:'Tech Designer',
+    icon:'\u263E',
+    text:'Combat, enemies and movement for a narrative-driven metroidvania in Godot.',
+    accentColor:'#28885a', accentMuted:'#5a8a6a',
+    pageId:'page-lost-satellite',
+  },
+  {
+    id: 3, accent:'gold',
+    title:'Home',
+    typeLeft:'Index', typeRight:'Portfolio',
+    icon:'\u2302',
+    text:'Return to the main page. Overview of all projects and contact information.',
+    accentColor:'#e8a44a', accentMuted:'#8a7a5a',
+    pageId:'page-home',
+  },
+];
+
+/* ═══════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════ */
+const HOLD_RADIUS = 1400;
+const FAN_SPREAD = 20;
+const OVERLAP_SPACING = 155;
+const SINK_BELOW = 190;
+const HOVER_LIFT = 50;
+const CARD_W = 220;
+const CARD_H = 320;
+const HAND_W = 700;
+const HAND_H = 400;
+const PLAY_ZONE_HALF_W = 385;
+const PLAY_ZONE_HALF_H = 289;
+const MAX_BLUR = 8;
+const MAX_OVERLAY_OPACITY = 0.3;
+const MAX_GLOW_SIZE = 30;
+
+// Page transition constants
+const DECOMPOSE_DURATION = 0.1;
+const FLY_DURATION = 0.5;
+
+/* ═══════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════ */
+let activePageCardId = 3; // Start with Home active (gold card absent from hand)
+let cardOrder = [0, 1, 2]; // IDs of cards currently in hand
+let dragState = null;
+let animState = 'IDLE'; // IDLE | DRAGGING | RETURNING | PLAYING | TRANSITIONING
+
+const hand = document.getElementById('hand');
+const scene = document.getElementById('scene');
+const dragBlurOverlay = document.getElementById('dragBlurOverlay');
+const perspectiveContainer = document.getElementById('perspectiveContainer');
+const flyOverlay = document.getElementById('flyOverlay');
+const hintText = document.getElementById('hintText');
+const activeLabel = document.getElementById('activeLabel');
+
+/* ═══════════════════════════════════════════════
+   CARD HTML + BUILD
+   ═══════════════════════════════════════════════ */
+function createCardHTML(c) {
+  return `<div class="card-inner">
+    <div class="card-title"><h3>${c.title}</h3></div>
+    <div class="card-art"><div class="card-art-inner"><div class="card-art-icon">${c.icon}</div></div></div>
+    <div class="type-bar">${c.typeLeft} <span class="type-sep">\u2014</span> ${c.typeRight}</div>
+    <div class="card-textbox"><p>${c.text}</p></div>
+    <div class="accent-strip"></div>
+  </div>`;
+}
+
+function buildCards() {
+  hand.innerHTML = '';
+  cardOrder.forEach((cardId) => {
+    const c = CARDS[cardId];
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.accent = c.accent;
+    el.dataset.cardId = cardId;
+    el.innerHTML = createCardHTML(c);
+    hand.appendChild(el);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   FAN GEOMETRY
+   ═══════════════════════════════════════════════ */
+function fanX(slot, total) {
+  return (slot - (total - 1) / 2) * OVERLAP_SPACING;
+}
+function fanAngle(slot, total) {
+  const step = total > 1 ? FAN_SPREAD / (total - 1) : 0;
+  return total > 1 ? -FAN_SPREAD / 2 + step * slot : 0;
+}
+function fanArcY(angle) {
+  const rad = (angle * Math.PI) / 180;
+  return HOLD_RADIUS - HOLD_RADIUS * Math.cos(rad);
+}
+function getRestPosition(slot, total) {
+  const cx = fanX(slot, total);
+  const angle = fanAngle(slot, total);
+  const arcY = fanArcY(angle);
+  return {
+    px: HAND_W / 2 + cx - CARD_W / 2,
+    py: HAND_H - CARD_H + SINK_BELOW + arcY,
+    angle,
+  };
+}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════ */
+function layoutCards() {
+  const cardEls = hand.querySelectorAll('.card');
+  const total = cardOrder.length;
+  const dragCardId = dragState ? dragState.cardId : -1;
+  const elMap = {};
+  cardEls.forEach(el => { elMap[parseInt(el.dataset.cardId)] = el; });
+
+  cardOrder.forEach((cardId, slot) => {
+    const el = elMap[cardId];
+    if (!el || cardId === dragCardId) return;
+    const isHovered = el.classList.contains('hover-active');
+    const pos = getRestPosition(slot, total);
+    const lift = isHovered ? -HOVER_LIFT : 0;
+    el.style.transform = `translate(${pos.px}px, ${pos.py + lift}px) rotate(${pos.angle}deg)`;
+    el.style.transformOrigin = 'center bottom';
+    el.style.zIndex = isHovered ? 20 : (slot + 2);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   SLOT DETECTION + PROXIMITY
+   ═══════════════════════════════════════════════ */
+function getSlotForX(mouseXInHand) {
+  const total = cardOrder.length;
+  let closest = 0, minDist = Infinity;
+  for (let i = 0; i < total; i++) {
+    const slotCenterX = HAND_W / 2 + fanX(i, total);
+    const d = Math.abs(mouseXInHand - slotCenterX);
+    if (d < minDist) { minDist = d; closest = i; }
+  }
+  return closest;
+}
+
+function getCardCenter(el) {
+  const rect = el.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+}
+function getViewportCenter() {
+  return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+}
+function getMaxDistance() {
+  const vc = getViewportCenter();
+  const handBottom = window.innerHeight - 40;
+  return Math.sqrt(vc.x * vc.x + (handBottom - vc.y) * (handBottom - vc.y)) * 0.8;
+}
+function calcProximity(cardEl) {
+  const cc = getCardCenter(cardEl);
+  const vc = getViewportCenter();
+  const dist = Math.sqrt((cc.x - vc.x) ** 2 + (cc.y - vc.y) ** 2);
+  return Math.max(0, Math.min(1, 1 - dist / getMaxDistance()));
+}
+function isInPlayZone(cardEl) {
+  const cc = getCardCenter(cardEl);
+  const vc = getViewportCenter();
+  return Math.abs(cc.x - vc.x) <= PLAY_ZONE_HALF_W && Math.abs(cc.y - vc.y) <= PLAY_ZONE_HALF_H;
+}
+
+/* ═══════════════════════════════════════════════
+   PROXIMITY FEEDBACK
+   ═══════════════════════════════════════════════ */
+function applyProximityFeedback(cardEl, proximity) {
+  const cardData = CARDS[parseInt(cardEl.dataset.cardId)];
+  const inner = cardEl.querySelector('.card-inner');
+  const blurVal = proximity * MAX_BLUR;
+  const overlayVal = proximity * MAX_OVERLAY_OPACITY;
+  dragBlurOverlay.style.backdropFilter = `blur(${blurVal}px)`;
+  dragBlurOverlay.style.webkitBackdropFilter = `blur(${blurVal}px)`;
+  dragBlurOverlay.style.background = `rgba(0,0,0,${overlayVal})`;
+  const glowSize = proximity * MAX_GLOW_SIZE;
+  inner.style.boxShadow = `0 0 ${glowSize}px ${cardData.accentColor}`;
+  const muted = hexToRGB(cardData.accentMuted);
+  const vivid = hexToRGB(cardData.accentColor);
+  const r = Math.round(muted.r + (vivid.r - muted.r) * proximity);
+  const g = Math.round(muted.g + (vivid.g - muted.g) * proximity);
+  const b = Math.round(muted.b + (vivid.b - muted.b) * proximity);
+  inner.style.borderColor = `rgb(${r},${g},${b})`;
+}
+
+function resetProximityFeedback(cardEl) {
+  const cardData = CARDS[parseInt(cardEl.dataset.cardId)];
+  const inner = cardEl.querySelector('.card-inner');
+  dragBlurOverlay.style.transition = 'backdrop-filter 0.3s, background 0.3s';
+  dragBlurOverlay.style.backdropFilter = 'blur(0px)';
+  dragBlurOverlay.style.webkitBackdropFilter = 'blur(0px)';
+  dragBlurOverlay.style.background = 'rgba(0,0,0,0)';
+  setTimeout(() => { dragBlurOverlay.style.transition = ''; }, 350);
+  inner.style.transition = 'box-shadow 0.3s, border-color 0.3s';
+  inner.style.boxShadow = '0 0 0px transparent';
+  inner.style.borderColor = cardData.accentMuted;
+  setTimeout(() => { inner.style.transition = ''; }, 350);
+}
+
+function hexToRGB(hex) {
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  };
+}
+
+/* ═══════════════════════════════════════════════
+   DRAG HANDLERS
+   ═══════════════════════════════════════════════ */
+function onPointerDown(e) {
+  if (animState !== 'IDLE') return;
+  const cardEl = e.target.closest('.card');
+  if (!cardEl) return;
+  e.preventDefault();
+  cardEl.setPointerCapture(e.pointerId);
+  const cardId = parseInt(cardEl.dataset.cardId);
+  const cardRect = cardEl.getBoundingClientRect();
+  dragState = {
+    cardId, el: cardEl,
+    currentSlot: cardOrder.indexOf(cardId),
+    grabX: e.clientX - cardRect.left,
+    grabY: e.clientY - cardRect.top,
+    startClientX: e.clientX,
+    startClientY: e.clientY,
+    hasMoved: false,
+  };
+  animState = 'DRAGGING';
+  cardEl.classList.add('dragging');
+  cardEl.classList.remove('hover-active');
+  cardEl.style.zIndex = 100;
+  cardEl.style.transition = 'none';
+  cardEl.style.transformOrigin = 'center center';
+}
+
+function onPointerMove(e) {
+  if (!dragState || animState !== 'DRAGGING') return;
+  e.preventDefault();
+  const dx = e.clientX - dragState.startClientX;
+  const dy = e.clientY - dragState.startClientY;
+  if (!dragState.hasMoved && Math.abs(dx) + Math.abs(dy) < 5) return;
+  dragState.hasMoved = true;
+  const handRect = hand.getBoundingClientRect();
+  const cardLeftInHand = e.clientX - dragState.grabX - handRect.left;
+  const cardTopInHand = e.clientY - dragState.grabY - handRect.top;
+  const dragAngle = Math.max(-12, Math.min(12, dx * 0.03));
+  dragState.el.style.transform = `translate(${cardLeftInHand}px, ${cardTopInHand}px) rotate(${dragAngle}deg)`;
+  const proximity = calcProximity(dragState.el);
+  applyProximityFeedback(dragState.el, proximity);
+  const mouseInHandX = e.clientX - handRect.left;
+  const newSlot = getSlotForX(mouseInHandX);
+  if (newSlot !== dragState.currentSlot) {
+    const idx = cardOrder.indexOf(dragState.cardId);
+    cardOrder.splice(idx, 1);
+    cardOrder.splice(newSlot, 0, dragState.cardId);
+    dragState.currentSlot = newSlot;
+    layoutCards();
+  }
+}
+
+function onPointerUp(e) {
+  if (!dragState || animState !== 'DRAGGING') return;
+  const el = dragState.el;
+  const cardId = dragState.cardId;
+  const wasMoved = dragState.hasMoved;
+  if (!wasMoved) {
+    el.classList.remove('dragging');
+    el.style.transition = '';
+    el.style.transformOrigin = 'center bottom';
+    el.style.zIndex = '';
+    dragState = null;
+    animState = 'IDLE';
+    layoutCards();
+    return;
+  }
+  if (isInPlayZone(el)) {
+    animState = 'PLAYING';
+    el.classList.remove('dragging');
+    el.classList.add('playing');
+    dragState = null;
+    playCard(el, cardId);
+  } else {
+    animState = 'RETURNING';
+    resetProximityFeedback(el);
+    el.classList.remove('dragging');
+    el.style.transition = '';
+    el.style.transformOrigin = 'center bottom';
+    el.style.zIndex = '';
+    dragState = null;
+    layoutCards();
+    setTimeout(() => { animState = 'IDLE'; }, 350);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   PLAY CARD ANIMATION (center → wriggle → expand)
+   ═══════════════════════════════════════════════ */
+function playCard(cardEl, cardId) {
+  const cardData = CARDS[cardId];
+  const sceneRect = scene.getBoundingClientRect();
+  const cardRect = cardEl.getBoundingClientRect();
+
+  // Calculate scale to exactly fill viewport (not overshoot)
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const expandScale = Math.max(vw / CARD_W, vh / CARD_H);
+
+  const currentProximity = calcProximity(cardEl);
+  const startBlur = currentProximity * MAX_BLUR;
+  const startOverlay = currentProximity * MAX_OVERLAY_OPACITY;
+  const startGlow = currentProximity * MAX_GLOW_SIZE;
+  const endBlur = MAX_BLUR + 8;
+  const endOverlay = MAX_OVERLAY_OPACITY + 0.25;
+  const endGlow = MAX_GLOW_SIZE + 40;
+
+  dragBlurOverlay.style.transition = 'none';
+  hand.style.pointerEvents = 'none';
+
+  // Reparent card to isolation container
+  const cardSceneLeft = cardRect.left - sceneRect.left;
+  const cardSceneTop = cardRect.top - sceneRect.top;
+  perspectiveContainer.appendChild(cardEl);
+  gsap.set(cardEl, { clearProps: 'transform' });
+  gsap.set(cardEl, { x: cardSceneLeft, y: cardSceneTop, rotation: 0, scale: 1 });
+  cardEl.style.transition = 'none';
+  cardEl.style.zIndex = 200;
+
+  const inner = cardEl.querySelector('.card-inner');
+
+  // Center position: card's top-left when centered in viewport
+  // Account for the card being in the scene coordinate space
+  const centerX = (vw - CARD_W) / 2 - sceneRect.left;
+  const centerY = (vh - CARD_H) / 2 - sceneRect.top;
+
+  // Slide other cards down
+  hand.querySelectorAll('.card').forEach(c => {
+    if (c === cardEl) return;
+    gsap.to(c, { y: '+=200', opacity: 0, duration: 0.4, ease: 'power2.out' });
+  });
+
+  // Fade out current page
+  const currentPage = document.querySelector('.spire-page.active');
+  if (currentPage) {
+    gsap.to(currentPage, { opacity: 0, duration: 0.3, ease: 'power2.out' });
+  }
+
+  const tl = gsap.timeline();
+
+  // ── PHASE 1: Center (0→500ms) ──
+  tl.to(cardEl, {
+    x: centerX, y: centerY, rotation: 0,
+    duration: 0.5, ease: 'power3.out',
+  });
+
+  // ── PHASE 2: Wriggle (500ms→1500ms) ──
+  const WRIGGLE_DURATION = 1.0;
+  const wriggleState = { progress: 0 };
+  tl.to(wriggleState, {
+    progress: 1, duration: WRIGGLE_DURATION, ease: 'power2.in',
+    onUpdate: function() {
+      const p = wriggleState.progress;
+      const amplitude = p * 8;
+      const frequency = 3 + p * 7;
+      const time = this.time();
+      const wobble = Math.sin(time * frequency) * amplitude;
+      const jitterY = Math.sin(time * frequency * 1.3) * p * 2.5;
+      const jitterX = Math.cos(time * frequency * 0.9) * p * 1.2;
+      gsap.set(cardEl, { x: centerX + jitterX, y: centerY + jitterY, rotation: wobble });
+      const blurVal = startBlur + p * (endBlur - startBlur);
+      const overlayVal = startOverlay + p * (endOverlay - startOverlay);
+      dragBlurOverlay.style.backdropFilter = `blur(${blurVal}px)`;
+      dragBlurOverlay.style.webkitBackdropFilter = `blur(${blurVal}px)`;
+      dragBlurOverlay.style.background = `rgba(0,0,0,${overlayVal})`;
+      const glowSize = startGlow + p * (endGlow - startGlow);
+      inner.style.boxShadow = `0 0 ${glowSize}px ${cardData.accentColor}`;
+      inner.style.borderColor = cardData.accentColor;
+    }
+  });
+
+  // ── PHASE 3: Expand to fill viewport (1500ms→2000ms) ──
+  tl.to(cardEl, {
+    scale: expandScale, rotation: 0, x: centerX, y: centerY,
+    duration: 0.5, ease: 'power3.out',
+  });
+  tl.to(inner, { boxShadow: '0 0 0px transparent', duration: 0.15 }, '-=0.3');
+  tl.to(dragBlurOverlay, {
+    backdropFilter: 'blur(0px)', background: 'rgba(0,0,0,0)', duration: 0.2,
+  }, '-=0.25');
+
+  // ── PHASE 4: Card stays at full screen. Fade out decorative elements ──
+  // Fade out border, type bar, textbox, accent strip — leave title + art visible
+  const typeBar = cardEl.querySelector('.type-bar');
+  const textbox = cardEl.querySelector('.card-textbox');
+  const accentStrip = cardEl.querySelector('.accent-strip');
+
+  tl.to([typeBar, textbox, accentStrip], {
+    opacity: 0, duration: 0.15, ease: 'power1.out',
+  });
+  // Fade border to transparent
+  tl.to(inner, {
+    borderColor: 'transparent', duration: 0.15, ease: 'power1.out',
+  }, '<');
+
+  // ── PHASE 5: Brief pause — title + art hover in place (~200ms) ──
+  tl.to({}, { duration: 0.2 });
+
+  // ── PHASE 6: Reparent title + art to fly overlay, fly to page targets ──
+  tl.call(() => {
+    beginPageTransition(cardEl, cardId, cardData);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE TRANSITION (fly title/art → page fade-in)
+   ═══════════════════════════════════════════════ */
+function beginPageTransition(cardEl, cardId, cardData) {
+  animState = 'TRANSITIONING';
+
+  const targetPage = document.getElementById(cardData.pageId);
+  const isHome = cardData.pageId === 'page-home';
+
+  // ── Step 1: Measure card element positions at current scale ──
+  const titleEl = cardEl.querySelector('.card-title h3');
+  const artEl = cardEl.querySelector('.card-art-inner');
+  const titleRect = titleEl.getBoundingClientRect();
+  const artRect = artEl.getBoundingClientRect();
+
+  // ── Step 2: Make target page measurable ──
+  targetPage.classList.add('measuring');
+  targetPage.scrollTop = 0;
+
+  const targetTitle = isHome
+    ? targetPage.querySelector('.hero-section h1')
+    : targetPage.querySelector('.project-hero-title');
+  const targetImage = isHome
+    ? null
+    : targetPage.querySelector('.work-image');
+
+  const targetTitleRect = targetTitle.getBoundingClientRect();
+  const targetImageRect = targetImage ? targetImage.getBoundingClientRect() : null;
+  const targetFontSize = parseFloat(getComputedStyle(targetTitle).fontSize);
+
+  targetPage.classList.remove('measuring');
+
+  // ── Step 3: Create flying clones positioned exactly over the scaled card elements ──
+  const titleClone = titleEl.cloneNode(true);
+  const artClone = artEl.cloneNode(true);
+
+  Object.assign(titleClone.style, {
+    position: 'fixed',
+    left: titleRect.left + 'px',
+    top: titleRect.top + 'px',
+    width: titleRect.width + 'px',
+    height: titleRect.height + 'px',
+    margin: '0', padding: '0',
+    fontFamily: "'Cinzel', serif",
+    fontWeight: '700',
+    fontSize: titleRect.height * 0.7 + 'px',
+    color: '#2a2418',
+    lineHeight: '1.15',
+    letterSpacing: '0.3px',
+    zIndex: '501',
+    pointerEvents: 'none',
+    whiteSpace: 'nowrap',
+  });
+
+  Object.assign(artClone.style, {
+    position: 'fixed',
+    left: artRect.left + 'px',
+    top: artRect.top + 'px',
+    width: artRect.width + 'px',
+    height: artRect.height + 'px',
+    borderRadius: '8px',
+    zIndex: '501',
+    pointerEvents: 'none',
+  });
+
+  flyOverlay.appendChild(titleClone);
+  flyOverlay.appendChild(artClone);
+
+  // ── Step 4: Hide the card (background matches scene, so invisible swap) ──
+  cardEl.style.opacity = '0';
+  // Defer removal so it doesn't flash
+  requestAnimationFrame(() => {
+    cardEl.remove();
+    perspectiveContainer.innerHTML = '';
+  });
+
+  // ── Step 5: Fly title + art to target positions ──
+  const flyTl = gsap.timeline();
+
+  flyTl.to(titleClone, {
+    left: targetTitleRect.left,
+    top: targetTitleRect.top,
+    width: targetTitleRect.width,
+    height: targetTitleRect.height,
+    fontSize: targetFontSize,
+    duration: FLY_DURATION,
+    ease: 'power3.out',
+  });
+
+  if (targetImageRect) {
+    flyTl.to(artClone, {
+      left: targetImageRect.left,
+      top: targetImageRect.top,
+      width: targetImageRect.width,
+      height: targetImageRect.height,
+      duration: FLY_DURATION,
+      ease: 'power3.out',
+    }, '<');
+  } else {
+    flyTl.to(artClone, {
+      opacity: 0, duration: 0.3, ease: 'power2.out',
+    }, '<');
+  }
+
+  // ── Step 6: Page fades in during fly ──
+  flyTl.call(() => {
+    document.querySelectorAll('.spire-page.active').forEach(p => {
+      p.classList.remove('active');
+      p.classList.remove('transitioning');
+    });
+    targetPage.style.opacity = '0';
+    targetPage.classList.add('active');
+    targetPage.classList.add('transitioning');
+
+    if (targetTitle) targetTitle.style.opacity = '0';
+    if (targetImage) targetImage.style.opacity = '0';
+  }, [], '-=0.35');
+
+  flyTl.to(targetPage, {
+    opacity: 1, duration: 0.4, ease: 'power2.out',
+  }, '-=0.25');
+
+  // ── Step 7: Swap clones for real elements, rebuild hand ──
+  flyTl.call(() => {
+    if (targetTitle) targetTitle.style.opacity = '1';
+    if (targetImage) targetImage.style.opacity = '1';
+    flyOverlay.innerHTML = '';
+
+    activePageCardId = cardId;
+    activeLabel.textContent = `Active: ${cardData.title}`;
+    targetPage.classList.remove('transitioning');
+
+    // Rebuild hand
+    hand.innerHTML = '';
+    cardOrder = CARDS.filter(c => c.id !== activePageCardId).map(c => c.id);
+    buildCards();
+    hand.style.pointerEvents = '';
+
+    const cardEls = hand.querySelectorAll('.card');
+    const total = cardOrder.length;
+    cardOrder.forEach((cid, slot) => {
+      const el = [...cardEls].find(e => parseInt(e.dataset.cardId) === cid);
+      if (!el) return;
+      const pos = getRestPosition(slot, total);
+      el.style.transition = 'none';
+      el.style.transformOrigin = 'center bottom';
+      gsap.set(el, { x: pos.px, y: pos.py + 300, rotation: pos.angle, opacity: 0 });
+    });
+
+    requestAnimationFrame(() => {
+      cardOrder.forEach((cid, slot) => {
+        const el = [...cardEls].find(e => parseInt(e.dataset.cardId) === cid);
+        if (!el) return;
+        const pos = getRestPosition(slot, total);
+        gsap.to(el, {
+          x: pos.px, y: pos.py, rotation: pos.angle, opacity: 1,
+          duration: 0.55, delay: slot * 0.12, ease: 'power2.out',
+          onComplete: () => { el.style.transition = ''; }
+        });
+      });
+    });
+
+    animState = 'IDLE';
+    hintText.textContent = 'Drag a card into the play zone to navigate';
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   EVENT LISTENERS
+   ═══════════════════════════════════════════════ */
+scene.addEventListener('pointerdown', onPointerDown);
+scene.addEventListener('pointermove', onPointerMove);
+scene.addEventListener('pointerup', onPointerUp);
+scene.addEventListener('pointerleave', (e) => {
+  if (animState === 'DRAGGING') onPointerUp(e);
+});
+
+scene.addEventListener('pointerover', (e) => {
+  if (animState !== 'IDLE') return;
+  const cardEl = e.target.closest('.card');
+  hand.querySelectorAll('.card').forEach(c => {
+    if (c !== cardEl) c.classList.remove('hover-active');
+  });
+  if (cardEl && !cardEl.classList.contains('dragging')) {
+    cardEl.classList.add('hover-active');
+    layoutCards();
+  }
+}, true);
+
+scene.addEventListener('pointerout', (e) => {
+  if (animState !== 'IDLE') return;
+  const cardEl = e.target.closest('.card');
+  if (cardEl) {
+    cardEl.classList.remove('hover-active');
+    layoutCards();
+  }
+}, true);
+
+scene.addEventListener('dragstart', e => e.preventDefault());
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
+buildCards();
+layoutCards();
+</script>
+</body>
+</html>
