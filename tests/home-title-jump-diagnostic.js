@@ -207,17 +207,21 @@ async function run() {
   // Summary table
   console.log('\n=== Hero h1 Position Over Time ===');
   console.log(
-    'elapsed  | h1.top     | h1.opacity | h1.transform             | badge.top  | badge.opacity | body.top   | body.opacity | clone.top  | scrollY'
+    'elapsed  | h1.top     | h1.height  | h1.opacity | h1.transform             | badge.top  | badge.opacity | body.top   | body.opacity | clone.top  | scrollY'
   );
-  console.log('-'.repeat(160));
+  console.log('-'.repeat(175));
 
   var prevH1Top = null;
+  var prevH1Height = null;
   var jumpCount = 0;
   var maxJump = 0;
+  var heightJumpCount = 0;
+  var maxHeightJump = 0;
 
   for (var i = 0; i < samples.length; i++) {
     var s = samples[i];
     var h1t = s.h1 ? s.h1.top.toFixed(1) : '-';
+    var h1h = s.h1 ? s.h1.height.toFixed(1) : '-';
     var h1o = s.h1 ? s.h1.opacity : '-';
     var h1tr = s.h1 ? s.h1.transform : '-';
     var bt = s.badge ? s.badge.top.toFixed(1) : '-';
@@ -227,20 +231,29 @@ async function run() {
     var ct = s.clone ? s.clone.top.toFixed(1) : '-';
 
     var h1Top = s.h1 ? s.h1.top : null;
+    var h1Height = s.h1 ? s.h1.height : null;
     var h1Visible = s.h1 && parseFloat(s.h1.opacity) > 0 && s.h1.top > 0;
     var marker = '';
     // Only track jumps when h1 is visible (ignore 0→real when page activates)
     if (prevH1Top !== null && h1Top !== null && h1Visible && Math.abs(h1Top - prevH1Top) > JUMP_THRESHOLD) {
       var delta = h1Top - prevH1Top;
-      marker = ' *** JUMP: ' + delta.toFixed(1) + 'px ***';
+      marker = ' *** TOP JUMP: ' + delta.toFixed(1) + 'px ***';
       jumpCount++;
       if (Math.abs(delta) > Math.abs(maxJump)) maxJump = delta;
     }
+    if (prevH1Height !== null && h1Height !== null && h1Visible && Math.abs(h1Height - prevH1Height) > JUMP_THRESHOLD) {
+      var hDelta = h1Height - prevH1Height;
+      marker += ' *** HEIGHT JUMP: ' + hDelta.toFixed(1) + 'px ***';
+      heightJumpCount++;
+      if (Math.abs(hDelta) > Math.abs(maxHeightJump)) maxHeightJump = hDelta;
+    }
     if (h1Visible && h1Top !== null) prevH1Top = h1Top;
+    if (h1Visible && h1Height !== null) prevH1Height = h1Height;
 
     console.log(
       String(s.elapsedMs).padStart(6) + 'ms | ' +
       String(h1t).padStart(9) + ' | ' +
+      String(h1h).padStart(9) + ' | ' +
       String(h1o).padStart(10) + ' | ' +
       String(h1tr).padEnd(24) + ' | ' +
       String(bt).padStart(9) + ' | ' +
@@ -306,15 +319,21 @@ async function run() {
 
   // Result
   console.log('\n=== Result ===');
-  if (jumpCount === 0) {
+  var totalJumps = jumpCount + heightJumpCount;
+  if (totalJumps === 0) {
     console.log('PASS: No title jumps detected (threshold: ' + JUMP_THRESHOLD + 'px)');
   } else {
-    console.log('FAIL: ' + jumpCount + ' jump(s) detected. Max jump: ' + maxJump.toFixed(1) + 'px');
+    if (jumpCount > 0) {
+      console.log('FAIL: ' + jumpCount + ' top jump(s) detected. Max top jump: ' + maxJump.toFixed(1) + 'px');
+    }
+    if (heightJumpCount > 0) {
+      console.log('FAIL: ' + heightJumpCount + ' height jump(s) detected. Max height jump: ' + maxHeightJump.toFixed(1) + 'px');
+    }
   }
 
   console.log('\nScreenshots saved to tests/diag-home-*.png');
   await browser.close();
-  process.exit(jumpCount > 0 ? 1 : 0);
+  process.exit(totalJumps > 0 ? 1 : 0);
 }
 
 run().catch(function(err) {

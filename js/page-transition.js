@@ -208,7 +208,9 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   });
 
   var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
-  var targetFontSize = targetTitle ? parseFloat(getComputedStyle(targetTitle).fontSize) : 32;
+  var targetCs = targetTitle ? getComputedStyle(targetTitle) : null;
+  var targetFontSize = targetCs ? parseFloat(targetCs.fontSize) : 32;
+  var targetLineHeight = targetCs ? targetCs.lineHeight : null;
 
   targetPage.classList.remove('measuring');
 
@@ -243,6 +245,7 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
       width: targetTitleRect.width,
       height: targetTitleRect.height,
       fontSize: targetFontSize,
+      lineHeight: targetLineHeight || undefined,
       duration: FLY_DURATION,
       ease: 'power3.out',
     });
@@ -327,7 +330,9 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
       var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
       var targetImageRect = targetImage ? targetImage.getBoundingClientRect() : null;
-      var targetFontSize = targetTitle ? parseFloat(getComputedStyle(targetTitle).fontSize) : 32;
+      var targetCs = targetTitle ? getComputedStyle(targetTitle) : null;
+      var targetFontSize = targetCs ? parseFloat(targetCs.fontSize) : 32;
+      var targetLineHeight = targetCs ? targetCs.lineHeight : null;
 
       wrapper.classList.remove('measuring');
 
@@ -358,6 +363,7 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
           width: targetTitleRect.width,
           height: targetTitleRect.height,
           fontSize: targetFontSize,
+          lineHeight: targetLineHeight || undefined,
           duration: FLY_DURATION,
           ease: 'power3.out',
         });

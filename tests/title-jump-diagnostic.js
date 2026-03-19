@@ -12,6 +12,7 @@ const { chromium } = require('playwright');
 
 const BASE_URL = 'http://localhost:8080';
 const CARD_ID = parseInt(process.argv[2]) || 1; // default Coffin-Likker, pass 0/1/2 as arg
+const JUMP_THRESHOLD = 2; // px — anything above this is a visible jump
 
 async function measureAllHeroElements(page, label) {
   return await page.evaluate((lbl) => {
@@ -149,13 +150,20 @@ async function run() {
 
   // Summary table
   console.log('\n=== Title Position Over Time ===');
-  console.log('elapsed  | title.top  | title.transform          | badge.top | desc.top  | desc.transform           | desc.reveal | desc.visible');
-  console.log('-'.repeat(140));
+  console.log('elapsed  | title.top  | title.h    | title.transform          | badge.top | desc.top  | desc.transform           | desc.reveal | desc.visible');
+  console.log('-'.repeat(155));
 
   var prevTitleTop = null;
+  var prevTitleHeight = null;
+  var jumpCount = 0;
+  var maxJump = 0;
+  var heightJumpCount = 0;
+  var maxHeightJump = 0;
+
   for (var i = 0; i < samples.length; i++) {
     var s = samples[i];
     var tt = s.title ? s.title.top.toFixed(1) : '-';
+    var th = s.title ? s.title.height.toFixed(1) : '-';
     var ttrans = s.title ? s.title.transform : '-';
     var bt = s.badge ? s.badge.top.toFixed(1) : '-';
     var dt = s.desc ? s.desc.top.toFixed(1) : '-';
@@ -164,15 +172,28 @@ async function run() {
     var dvis = s.desc ? s.desc.hasVisible : '-';
 
     var titleTop = s.title ? s.title.top : null;
+    var titleHeight = s.title ? s.title.height : null;
+    var titleVisible = s.title && parseFloat(s.title.opacity) > 0 && s.title.top > 0;
     var marker = '';
-    if (prevTitleTop !== null && titleTop !== null && Math.abs(titleTop - prevTitleTop) > 0.5) {
-      marker = ' *** JUMP: ' + (titleTop - prevTitleTop).toFixed(1) + 'px ***';
+    if (prevTitleTop !== null && titleTop !== null && titleVisible && Math.abs(titleTop - prevTitleTop) > JUMP_THRESHOLD) {
+      var delta = titleTop - prevTitleTop;
+      marker = ' *** TOP JUMP: ' + delta.toFixed(1) + 'px ***';
+      jumpCount++;
+      if (Math.abs(delta) > Math.abs(maxJump)) maxJump = delta;
     }
-    if (titleTop !== null) prevTitleTop = titleTop;
+    if (prevTitleHeight !== null && titleHeight !== null && titleVisible && Math.abs(titleHeight - prevTitleHeight) > JUMP_THRESHOLD) {
+      var hDelta = titleHeight - prevTitleHeight;
+      marker += ' *** HEIGHT JUMP: ' + hDelta.toFixed(1) + 'px ***';
+      heightJumpCount++;
+      if (Math.abs(hDelta) > Math.abs(maxHeightJump)) maxHeightJump = hDelta;
+    }
+    if (titleVisible && titleTop !== null) prevTitleTop = titleTop;
+    if (titleVisible && titleHeight !== null) prevTitleHeight = titleHeight;
 
     console.log(
       String(s.elapsedMs).padStart(6) + 'ms | ' +
       String(tt).padStart(9) + ' | ' +
+      String(th).padStart(9) + ' | ' +
       String(ttrans).padEnd(24) + ' | ' +
       String(bt).padStart(9) + ' | ' +
       String(dt).padStart(9) + ' | ' +
@@ -211,8 +232,23 @@ async function run() {
       ', angle=' + angle.toFixed(1) + '°');
   }
 
+  // Result
+  console.log('\n=== Result ===');
+  var totalJumps = jumpCount + heightJumpCount;
+  if (totalJumps === 0) {
+    console.log('PASS: No title jumps detected (threshold: ' + JUMP_THRESHOLD + 'px)');
+  } else {
+    if (jumpCount > 0) {
+      console.log('FAIL: ' + jumpCount + ' top jump(s) detected. Max top jump: ' + maxJump.toFixed(1) + 'px');
+    }
+    if (heightJumpCount > 0) {
+      console.log('FAIL: ' + heightJumpCount + ' height jump(s) detected. Max height jump: ' + maxHeightJump.toFixed(1) + 'px');
+    }
+  }
+
   console.log('\nScreenshots saved to tests/diag-ck-*.png');
   await browser.close();
+  process.exit(totalJumps > 0 ? 1 : 0);
 }
 
 run().catch(function(err) {
