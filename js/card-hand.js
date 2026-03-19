@@ -4,8 +4,8 @@
 var CARDS = [
   {
     id: 0, accent: 'red',
-    title: 'Logifuture',
-    typeLeft: 'Casino Games', typeRight: 'Game Developer',
+    title: 'Casino Games',
+    typeLeft: 'Logifuture', typeRight: 'Game Developer',
     icon: '\u2666',
     text: 'Developed casino game features across web and mobile platforms, shipping live products to players worldwide.',
     accentColor: '#c83830', accentMuted: '#8a5a5a',
@@ -14,8 +14,8 @@ var CARDS = [
   },
   {
     id: 1, accent: 'purple',
-    title: 'Coffin-Likker',
-    typeLeft: 'Project', typeRight: 'Solo Developer',
+    title: 'Muk (Working Title)',
+    typeLeft: 'Coffin-Likker', typeRight: 'Solo Developer',
     icon: '\u2620',
     text: 'Stealth-horror project focused on visibility, AI behavior, and environmental tension. Set in the bayou.',
     accentColor: '#6a4cba', accentMuted: '#6a5a8a',
@@ -24,8 +24,8 @@ var CARDS = [
   },
   {
     id: 2, accent: 'green',
-    title: 'Lost Satellite Studios',
-    typeLeft: 'EoD', typeRight: 'Tech Designer',
+    title: 'Eve of Destruction',
+    typeLeft: 'Lost Satellite Studios', typeRight: 'Tech Designer',
     icon: '\u263E',
     text: 'Combat, enemies and movement for a narrative-driven metroidvania in Godot.',
     accentColor: '#28885a', accentMuted: '#5a8a6a',
@@ -322,7 +322,8 @@ function onPointerMove(e) {
   var handRect = handContainer.getBoundingClientRect();
   var cardLeftInHand = e.clientX - dragState.grabX - handRect.left;
   var cardTopInHand = e.clientY - dragState.grabY - handRect.top;
-  var dragAngle = Math.max(-12, Math.min(12, dx * 0.03));
+  var handCenterX = handRect.left + HAND_W / 2;
+  var dragAngle = Math.max(-12, Math.min(12, (e.clientX - handCenterX) * 0.03));
   dragState.el.style.transform = 'translate(' + cardLeftInHand + 'px, ' + cardTopInHand + 'px) rotate(' + dragAngle + 'deg)';
   var proximity = calcProximity(dragState.el);
   applyProximityFeedback(dragState.el, proximity);

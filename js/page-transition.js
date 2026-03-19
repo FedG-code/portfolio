@@ -328,6 +328,20 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
       // and title stays pinned after clone lands (no slide-up re-animation)
       if (targetTitle) targetTitle.classList.remove('reveal');
 
+      // Also neutralize .reveal on the image's ancestor so the image is
+      // instantly visible at handoff — prevents the ~0.6s gap where the
+      // clone is gone but the .reveal parent is still opacity:0.
+      if (targetImage) {
+        var imgRevealParent = targetImage.closest('.reveal');
+        if (imgRevealParent) imgRevealParent.classList.remove('reveal');
+      }
+
+      // Reset both window and container scroll before measuring so
+      // getBoundingClientRect returns coordinates at the top of the page.
+      // Safe because the home page is already faded to opacity 0 by now.
+      window.scrollTo(0, 0);
+      pageContainer.scrollTop = 0;
+
       var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
       var targetImageRect = targetImage ? targetImage.getBoundingClientRect() : null;
       var targetCs = targetTitle ? getComputedStyle(targetTitle) : null;
@@ -400,8 +414,13 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
         wrapper.classList.add('transitioning');
         pageContainer.style.opacity = '1';
 
-        if (targetTitle) targetTitle.style.opacity = '0';
-        if (targetImage) targetImage.style.opacity = '0';
+        // Re-init text destruction while wrapper is still opacity 0 so the
+        // heavy DOM mutations (SplitText char/word re-wrapping) are invisible.
+        // Title and image stay visible within the wrapper — they fade in
+        // naturally with the wrapper's opacity, covered by the fly clones.
+        if (window.TextDestruction) {
+          TextDestruction.onThemeChange();
+        }
       }, [], '-=0.35');
 
       flyTl.to(wrapper, {
@@ -410,17 +429,8 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
       // Swap clones for real elements + rebuild hand
       flyTl.call(function() {
-        // Re-init text destruction BEFORE showing title so SplitText
-        // char wrapping (inline-block) doesn't cause visible letter shift
-        if (window.TextDestruction) {
-          TextDestruction.onThemeChange();
-        }
-
-        if (targetTitle) targetTitle.style.opacity = '1';
-        if (targetImage) targetImage.style.opacity = '1';
         flyOverlay.innerHTML = '';
         wrapper.classList.remove('transitioning');
-        pageContainer.scrollTop = 0;
 
         // Re-observe reveals on fetched content
         var newReveals = wrapper.querySelectorAll('.reveal');
