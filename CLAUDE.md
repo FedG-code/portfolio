@@ -14,6 +14,10 @@ css/
 js/
   shared.js             - Scroll reveal + theme switcher with localStorage persistence
   destruction.js        - Text destruction system (plane mode shatter + sequential reform)
+  card-hand.js          - Card hand system (fan layout, drag, proximity detection, play zone)
+  page-transition.js    - Card play animation + SPA page transitions (fly clones, page fade-in)
+css/
+  cards.css             - Card and hand container styles (base card 220×320, theme overrides)
 ```
 
 ## Key Details
@@ -44,6 +48,14 @@ js/
   - **Mobile-gated constants**: `_isMob` (viewport ≤768 OR touch+coarse) gates performance-sensitive values. Desktop is completely unchanged. Mobile overrides: `MAX_SHATTERED` 150 (vs 300), `REFORM_PAUSE` 1.0s (vs 0.8s), `CHAR_STAGGER` 0.035s (vs 0.055s), `WORD_EXTRA_STAGGER` 0.03s (vs 0.05s), `MAX_VELOCITY` 350 (vs 500), `MAX_ROTATION` 360° (vs 720°). Color flash tween is skipped on mobile. Impact coalescing on mobile batches same-frame `onProjectileAt()` calls via RAF.
   - **Impact throttle**: `IMPACT_THROTTLE` in `plane.js` is 80ms on mobile, 0ms on desktop. The scroll speed gate (`SCROLL_SPEED_THRESHOLD`) was removed — it unnecessarily limited desktop destruction.
   - **Design fallback**: If optimisation doesn't resolve plane mode scroll+fire lag, the fallback is to **disable page scrolling while plane mode is active** (e.g. CSS `overflow: hidden` on `<html>` when `.plane-active`). This eliminates scroll-triggered cache invalidation and the compound scroll+destruction cost entirely.
+- **Card-hand system** (`js/card-hand.js`, `js/page-transition.js`, `css/cards.css`): Cards are held in a fan layout at the bottom of the viewport. Dragging a card into the play zone triggers a page transition.
+  - **Card constants**: `CARD_W` = 220, `CARD_H` = 320, `HAND_W` = 700, `PLAY_ZONE_HALF_W` = 385, `PLAY_ZONE_HALF_H` = 289
+  - **Play animation phases**: center (0.5s) → wriggle (1.0s, increasing amplitude) → expand to fill viewport (0.5s) → decompose card elements → fly title/art clones to target page positions → page fade-in → rebuild hand
+  - **Expand scaling**: Uses `Math.min(vw / CARD_W, vh / CARD_H)` ("contain" behavior) so the card never exceeds viewport bounds. No `devicePixelRatio` multiplication needed — `window.innerWidth`/`innerHeight` return CSS pixels, which is what GSAP operates in.
+  - **Proximity effects**: As a dragged card approaches the viewport center, a blur overlay and card glow intensify. Calculated via distance from card center to viewport center.
+  - **SPA navigation**: `page-transition.js` fetches project pages via `fetch()`, caches them, and injects content into `#pageContainer` without full page reload. Title and art elements fly from the expanded card position to their target positions on the new page.
+  - **Title matching convention**: Card titles (in `card-hand.js` CARDS array) must match the project page `<h1 class="project-hero-title">` text exactly. Descriptive subtitles (e.g. "Casino Games", "Eve of Destruction") go in `.project-hero-badge`. Project title font styling (italic, weight, line-height) matches card title styling so the flying clone transition is seamless.
+  - **Known issue — clone fly alignment**: The card title is `text-align: center` but the project page title is left-aligned. During the fly animation, the clone inherits center alignment from the card. For shorter titles (e.g. "Coffin-Likker"), the text visibly snaps from center to left when the clone is swapped for the real title. Longer titles (e.g. "Lost Satellite Studios") mask this. Fix options: left-align the clone and offset its start position, center the page title, or left-align the card title.
 - **Project pages**: Shared template - nav, theme switcher, back link, project hero, repeatable sub-project sections, footer
 
 ## Serving Locally
@@ -109,6 +121,33 @@ Seven scenarios:
 - **figure8_scroll_fire**: Simultaneous scrolling + destruction across the full page height (figure-8 Lissajous pattern). Tests scroll-triggered cache invalidation, overlapping scatter+reform across viewport changes, and compound scroll+destruction cost. Thresholds: maxFrameMs > 60, p95 > 35, avg > 25, droppedFrames > 40%.
 - **sustained_annihilation**: Destroys all text in #about every 0.3s for 6 cycles using a 60px impact grid. Measures overlapping scatter+reform waves at extreme frequency. Thresholds: overlap maxFrameMs > 70, p95 > 40, avg > 25, droppedFrames > 40%.
 
+### Card Expansion Bounds Tests
+
+Verify that the expanded card stays within the viewport at multiple sizes. These tests use Playwright to trigger the card play animation and check for overflow.
+
+**Approach:**
+1. Open the page in Playwright at a specific viewport size
+2. Trigger card expansion via JS: call `playCard()` on a card element, or simulate dragging a card into the play zone
+3. Wait for the expand phase (~2s into the animation timeline)
+4. Check `document.documentElement.scrollWidth <= window.innerWidth` and `document.documentElement.scrollHeight <= window.innerHeight` — if either is false, the card overflows
+5. Take a screenshot at the expanded state for visual verification
+6. Repeat at different viewport sizes: 1920×1080 (desktop), 1024×768 (tablet), 375×812 (mobile portrait), 812×375 (mobile landscape)
+
+**Test script pattern** (to be implemented in `tests/card-bounds-test.js`):
+```js
+// For each viewport size:
+// 1. page.setViewportSize({ width, height })
+// 2. page.goto('http://localhost:8080')
+// 3. page.evaluate(() => { /* trigger playCard on first card */ })
+// 4. page.waitForTimeout(2000) // wait for expand phase
+// 5. const overflow = await page.evaluate(() => ({
+//      hOverflow: document.documentElement.scrollWidth > window.innerWidth,
+//      vOverflow: document.documentElement.scrollHeight > window.innerHeight
+//    }))
+// 6. assert no overflow
+// 7. page.screenshot({ path: `card-expand-${width}x${height}.png` })
+```
+
 ### Playwright Tips
 - **Scrolling to sections**: Use `npx playwright-cli eval "() => document.querySelector('#work').scrollIntoView()"` to scroll to a specific element before taking a screenshot.
 - **Expanding work cards**: Work cards use `.expanded` class toggled by JS. To expand a card for screenshots, use `npx playwright-cli eval "() => document.querySelector('.work-card').classList.add('expanded')"` then wait ~2s for the `max-height` transition before screenshotting. Use `.querySelectorAll('.work-card')[N]` to target a specific card by index.
@@ -126,3 +165,4 @@ Seven scenarios:
 
 ## Preferences
 - **Use CLAUDE.md for persistent notes**, not the auto-memory directory. If something needs to be remembered across sessions, add it here.
+- **Be surgical with file reads** — always use `offset` and `limit` parameters to read only the lines you need. Avoid re-reading entire files when you only need a few lines. This keeps context usage low and avoids hitting the token limit or triggering auto-compaction in long sessions.

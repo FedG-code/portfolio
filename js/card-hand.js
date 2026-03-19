@@ -10,6 +10,7 @@ var CARDS = [
     text: 'Developed casino game features across web and mobile platforms, shipping live products to players worldwide.',
     accentColor: '#c83830', accentMuted: '#8a5a5a',
     pageUrl: 'logifuture.html',
+    artImage: 'assets/spin+.gif',
   },
   {
     id: 1, accent: 'purple',
@@ -19,15 +20,17 @@ var CARDS = [
     text: 'Stealth-horror project focused on visibility, AI behavior, and environmental tension. Set in the bayou.',
     accentColor: '#6a4cba', accentMuted: '#6a5a8a',
     pageUrl: 'coffin-likker.html',
+    artImage: 'assets/visionsystem.gif',
   },
   {
     id: 2, accent: 'green',
-    title: 'Lost Satellite',
+    title: 'Lost Satellite Studios',
     typeLeft: 'EoD', typeRight: 'Tech Designer',
     icon: '\u263E',
     text: 'Combat, enemies and movement for a narrative-driven metroidvania in Godot.',
     accentColor: '#28885a', accentMuted: '#5a8a6a',
     pageUrl: 'lost-satellite.html',
+    artImage: 'assets/ult+bossfightgif.gif',
   },
   {
     id: 3, accent: 'gold',
@@ -37,6 +40,7 @@ var CARDS = [
     text: 'Return to the main page. Overview of all projects and contact information.',
     accentColor: '#e8a44a', accentMuted: '#8a7a5a',
     pageUrl: null,
+    artImage: null,
   },
 ];
 
@@ -76,13 +80,48 @@ var flyOverlay = document.getElementById('flyOverlay');
    CARD HTML + BUILD
    ═══════════════════════════════════════════════ */
 function createCardHTML(c) {
+  if (c.id === 3) {
+    return '<div class="card-inner card-inner--home">' +
+      '<div class="card-art card-art--home"><div class="card-art-inner">' +
+        '<h3 class="card-art-title">' +
+          '<span class="serif-line"><em>Never</em> shipped a</span>' +
+          '<span class="serif-line">boring product.</span>' +
+        '</h3>' +
+      '</div></div>' +
+    '</div>';
+  }
+
+  var artContent = c.artImage
+    ? '<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="card-art-img" alt="' + c.title + '" data-gif="' + c.artImage + '">'
+    : '<span class="card-art-icon">' + c.icon + '</span>';
+
   return '<div class="card-inner">' +
     '<div class="card-title"><h3>' + c.title + '</h3></div>' +
-    '<div class="card-art"><div class="card-art-inner"><span class="card-art-icon">' + c.icon + '</span></div></div>' +
+    '<div class="card-art"><div class="card-art-inner">' + artContent + '</div></div>' +
     '<div class="type-bar">' + c.typeLeft + ' \u00B7 ' + c.typeRight + '</div>' +
     '<div class="card-textbox"><p>' + c.text + '</p></div>' +
     '<div class="accent-strip"></div>' +
   '</div>';
+}
+
+function freezeGif(img) {
+  if (img._freezing) return;
+  img._freezing = true;
+  var offscreen = new Image();
+  offscreen.onload = function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = offscreen.naturalWidth;
+    canvas.height = offscreen.naturalHeight;
+    canvas.getContext('2d').drawImage(offscreen, 0, 0);
+    try { img.src = canvas.toDataURL('image/png'); }
+    catch(e) { img.src = img.dataset.gif; }
+    img._freezing = false;
+  };
+  offscreen.onerror = function() {
+    img.src = img.dataset.gif;
+    img._freezing = false;
+  };
+  offscreen.src = img.dataset.gif;
 }
 
 function buildCards() {
@@ -96,6 +135,10 @@ function buildCards() {
     el.style.transformOrigin = 'center bottom';
     el.innerHTML = createCardHTML(c);
     handContainer.appendChild(el);
+
+    // Freeze GIF to first frame (off-screen load, no event listener needed)
+    var img = el.querySelector('.card-art-img');
+    if (img) { freezeGif(img); }
   });
 }
 
@@ -172,13 +215,16 @@ function getMaxDistance() {
   var handBottom = window.innerHeight - 40;
   return Math.sqrt(vc.x * vc.x + (handBottom - vc.y) * (handBottom - vc.y)) * 0.8;
 }
+var PROXIMITY_DEAD_ZONE = 0.35; // blur stays at 0 until card is 35% of the way to center
 function calcProximity(cardEl) {
   var cc = getCardCenter(cardEl);
   var vc = getViewportCenter();
   var dx = cc.x - vc.x;
   var dy = cc.y - vc.y;
   var dist = Math.sqrt(dx * dx + dy * dy);
-  return Math.max(0, Math.min(1, 1 - dist / getMaxDistance()));
+  var raw = Math.max(0, Math.min(1, 1 - dist / getMaxDistance()));
+  if (raw <= PROXIMITY_DEAD_ZONE) return 0;
+  return (raw - PROXIMITY_DEAD_ZONE) / (1 - PROXIMITY_DEAD_ZONE);
 }
 function isInPlayZone(cardEl) {
   var cc = getCardCenter(cardEl);
@@ -255,6 +301,10 @@ function onPointerDown(e) {
   cardEl.style.transition = 'none';
   cardEl.style.transformOrigin = 'center center';
 
+  // Unfreeze GIF while dragging
+  var img = cardEl.querySelector('.card-art-img');
+  if (img && img.dataset.gif) { img.src = img.dataset.gif; }
+
   // Prefetch the page this card points to
   var cardData = CARDS[cardId];
   if (cardData.pageUrl && window.prefetchPage) {
@@ -292,7 +342,11 @@ function onPointerUp(e) {
   var el = dragState.el;
   var cardId = dragState.cardId;
   var wasMoved = dragState.hasMoved;
+  // Re-freeze GIF when card is released back to hand
+  var img = el.querySelector('.card-art-img');
+
   if (!wasMoved) {
+    if (img && img.dataset.gif) { freezeGif(img); }
     el.classList.remove('dragging');
     el.style.transition = '';
     el.style.transformOrigin = 'center bottom';
@@ -309,6 +363,7 @@ function onPointerUp(e) {
     dragState = null;
     playCard(el, cardId);
   } else {
+    if (img && img.dataset.gif) { freezeGif(img); }
     animState = 'RETURNING';
     resetProximityFeedback(el);
     el.classList.remove('dragging');

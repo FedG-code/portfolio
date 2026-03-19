@@ -40,10 +40,10 @@
 
 .project-hero-title {
   font-family: var(--font-serif);
+  font-style: italic;
   font-size: clamp(2.5rem, 6vw, 4.5rem);
   font-weight: 400;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.2;
   margin-bottom: 1rem;
 }
 
@@ -229,7 +229,7 @@
 }
 
 /* ========== NEON THEME OVERRIDES ========== */
-[data-theme="neon"] .project-hero-title { font-weight: 700; }
+[data-theme="neon"] .project-hero-title { font-weight: 600; font-style: normal; }
 [data-theme="neon"] .project-text h4 { font-weight: 600; }
 [data-theme="neon"] .project-hero-badge { border-radius: 6px; }
 [data-theme="neon"] .wip-badge { border-radius: 6px; }

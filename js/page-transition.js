@@ -55,7 +55,7 @@ function playCard(cardEl, cardId) {
 
   var vw = window.innerWidth;
   var vh = window.innerHeight;
-  var expandScale = Math.max(vw / CARD_W, vh / CARD_H);
+  var expandScale = Math.min(vw / CARD_W, vh / CARD_H);
 
   var currentProximity = calcProximity(cardEl);
   var startBlur = currentProximity * MAX_BLUR;
@@ -73,6 +73,7 @@ function playCard(cardEl, cardId) {
   var cardTop = cardRect.top;
   perspectiveContainer.appendChild(cardEl);
   gsap.set(cardEl, { clearProps: 'transform' });
+  cardEl.style.transformOrigin = 'center center';
   gsap.set(cardEl, { x: cardLeft, y: cardTop, rotation: 0, scale: 1 });
   cardEl.style.transition = 'none';
   cardEl.style.zIndex = 200;
@@ -143,17 +144,19 @@ function playCard(cardEl, cardId) {
     backdropFilter: 'blur(0px)', background: 'rgba(0,0,0,0)', duration: 0.2,
   }, '-=0.25');
 
-  // Phase 4: Decompose — fade decorative elements
-  var typeBar = cardEl.querySelector('.type-bar');
-  var textbox = cardEl.querySelector('.card-textbox');
-  var accentStrip = cardEl.querySelector('.accent-strip');
+  // Phase 4: Decompose — fade decorative elements (guarded for Home card)
+  var decomposeEls = [
+    cardEl.querySelector('.type-bar'),
+    cardEl.querySelector('.card-textbox'),
+    cardEl.querySelector('.accent-strip'),
+  ].filter(Boolean);
 
-  tl.to([typeBar, textbox, accentStrip], {
-    opacity: 0, duration: 0.15, ease: 'power1.out',
-  });
-  tl.to(inner, {
-    borderColor: 'transparent', duration: 0.15, ease: 'power1.out',
-  }, '<');
+  if (decomposeEls.length) {
+    tl.to(decomposeEls, { opacity: 0, duration: 0.15, ease: 'power1.out' });
+    tl.to(inner, { borderColor: 'transparent', duration: 0.15, ease: 'power1.out' }, '<');
+  } else {
+    tl.to(inner, { borderColor: 'transparent', duration: 0.15, ease: 'power1.out' });
+  }
 
   // Phase 5: Brief pause
   tl.to({}, { duration: 0.2 });
@@ -174,9 +177,9 @@ function beginPageTransition(cardEl, cardId, cardData) {
   var pageContainer = document.getElementById('pageContainer');
 
   // Step 1: Measure card element positions at current scale
-  var titleEl = cardEl.querySelector('.card-title h3');
+  var titleEl = cardEl.querySelector('.card-title h3') || cardEl.querySelector('.card-art-title');
   var artEl = cardEl.querySelector('.card-art-inner');
-  var titleRect = titleEl.getBoundingClientRect();
+  var titleRect = titleEl ? titleEl.getBoundingClientRect() : null;
   var artRect = artEl.getBoundingClientRect();
 
   if (isHome) {
@@ -194,19 +197,29 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   targetPage.scrollTop = 0;
 
   var targetTitle = targetPage.querySelector('.hero h1');
-  var targetTitleRect = targetTitle.getBoundingClientRect();
-  var targetFontSize = parseFloat(getComputedStyle(targetTitle).fontSize);
+
+  // Pin all hero animated elements: disable fadeUp animations so they sit at
+  // final positions (otherwise they replay opacity:0 + translateY(24px) → visible)
+  var heroAnimated = targetPage.querySelectorAll('.hero h1, .hero-badge, .hero-body');
+  heroAnimated.forEach(function(el) {
+    el.style.animation = 'none';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  });
+
+  var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
+  var targetFontSize = targetTitle ? parseFloat(getComputedStyle(targetTitle).fontSize) : 32;
 
   targetPage.classList.remove('measuring');
 
   // Create flying clones
-  var titleClone = titleEl.cloneNode(true);
+  var titleClone = titleEl ? titleEl.cloneNode(true) : null;
   var artClone = artEl.cloneNode(true);
 
-  applyCloneStyles(titleClone, titleRect, targetFontSize);
+  if (titleClone) applyCloneStyles(titleClone, titleRect, titleEl);
   applyArtCloneStyles(artClone, artRect);
 
-  flyOverlay.appendChild(titleClone);
+  if (titleClone) flyOverlay.appendChild(titleClone);
   flyOverlay.appendChild(artClone);
 
   // Hide card
@@ -222,21 +235,23 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
 
   var flyTl = gsap.timeline();
 
-  // Fly title to hero h1
-  flyTl.to(titleClone, {
-    left: targetTitleRect.left,
-    top: targetTitleRect.top,
-    width: targetTitleRect.width,
-    height: targetTitleRect.height,
-    fontSize: targetFontSize,
-    duration: FLY_DURATION,
-    ease: 'power3.out',
-  });
+  // Fly title to hero h1 (skip if Home card has no title)
+  if (titleClone) {
+    flyTl.to(titleClone, {
+      left: targetTitleRect.left,
+      top: targetTitleRect.top,
+      width: targetTitleRect.width,
+      height: targetTitleRect.height,
+      fontSize: targetFontSize,
+      duration: FLY_DURATION,
+      ease: 'power3.out',
+    });
+  }
 
   // Fade out art (no image target on home)
   flyTl.to(artClone, {
     opacity: 0, duration: 0.3, ease: 'power2.out',
-  }, '<');
+  }, titleClone ? '<' : '>');
 
   // Page fade-in
   flyTl.call(function() {
@@ -261,11 +276,12 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
     targetPage.classList.remove('transitioning');
     window.scrollTo(0, 0);
 
-    // Re-observe reveals
+    // Re-observe reveals (don't reset already-visible ones — avoids snap-to-invisible)
     var newReveals = targetPage.querySelectorAll('.reveal');
     newReveals.forEach(function(el) {
-      el.classList.remove('visible');
-      if (window.revealObserver) window.revealObserver.observe(el);
+      if (!el.classList.contains('visible')) {
+        if (window.revealObserver) window.revealObserver.observe(el);
+      }
     });
 
     rebuildHand(cardId);
@@ -305,6 +321,10 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
       var targetTitle = wrapper.querySelector('.project-hero-title');
       var targetImage = wrapper.querySelector('.work-image');
 
+      // Remove .reveal so measurement isn't offset by translateY(24px)
+      // and title stays pinned after clone lands (no slide-up re-animation)
+      if (targetTitle) targetTitle.classList.remove('reveal');
+
       var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
       var targetImageRect = targetImage ? targetImage.getBoundingClientRect() : null;
       var targetFontSize = targetTitle ? parseFloat(getComputedStyle(targetTitle).fontSize) : 32;
@@ -315,7 +335,7 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
       var titleClone = titleEl.cloneNode(true);
       var artClone = artEl.cloneNode(true);
 
-      applyCloneStyles(titleClone, titleRect, targetFontSize);
+      applyCloneStyles(titleClone, titleRect, titleEl);
       applyArtCloneStyles(artClone, artRect);
 
       flyOverlay.appendChild(titleClone);
@@ -384,6 +404,12 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
       // Swap clones for real elements + rebuild hand
       flyTl.call(function() {
+        // Re-init text destruction BEFORE showing title so SplitText
+        // char wrapping (inline-block) doesn't cause visible letter shift
+        if (window.TextDestruction) {
+          TextDestruction.onThemeChange();
+        }
+
         if (targetTitle) targetTitle.style.opacity = '1';
         if (targetImage) targetImage.style.opacity = '1';
         flyOverlay.innerHTML = '';
@@ -396,11 +422,6 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
           if (window.revealObserver) window.revealObserver.observe(el);
         });
 
-        // Re-init text destruction for new content
-        if (window.TextDestruction) {
-          setTimeout(function() { TextDestruction.onThemeChange(); }, 100);
-        }
-
         rebuildHand(cardId);
       });
     });
@@ -410,23 +431,34 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 /* ═══════════════════════════════════════════════
    CLONE HELPERS
    ═══════════════════════════════════════════════ */
-function applyCloneStyles(titleClone, titleRect) {
+function applyCloneStyles(titleClone, titleRect, sourceEl) {
+  var cs = getComputedStyle(sourceEl);
+  var padL = parseFloat(cs.paddingLeft) || 0;
+  var padR = parseFloat(cs.paddingRight) || 0;
+  var padT = parseFloat(cs.paddingTop) || 0;
+  var padB = parseFloat(cs.paddingBottom) || 0;
+  // Derive scale from visual vs natural size (card may be scaled via transform)
+  var naturalH = sourceEl.offsetHeight;
+  var visualH = titleRect.height;
+  var scale = naturalH > 0 ? visualH / naturalH : 1;
+  var scaledFontSize = parseFloat(cs.fontSize) * scale;
+  var scaledLineHeight = parseFloat(cs.lineHeight) * scale;
   titleClone.style.position = 'fixed';
-  titleClone.style.left = titleRect.left + 'px';
-  titleClone.style.top = titleRect.top + 'px';
-  titleClone.style.width = titleRect.width + 'px';
-  titleClone.style.height = titleRect.height + 'px';
+  titleClone.style.left = (titleRect.left + padL * scale) + 'px';
+  titleClone.style.top = (titleRect.top + padT * scale) + 'px';
+  titleClone.style.width = (titleRect.width - (padL + padR) * scale) + 'px';
+  titleClone.style.height = (titleRect.height - (padT + padB) * scale) + 'px';
   titleClone.style.margin = '0';
   titleClone.style.padding = '0';
   titleClone.style.fontFamily = 'var(--font-serif)';
-  titleClone.style.fontWeight = '400';
-  titleClone.style.fontSize = (titleRect.height * 0.7) + 'px';
+  titleClone.style.fontWeight = cs.fontWeight;
+  titleClone.style.fontStyle = cs.fontStyle;
+  titleClone.style.fontSize = scaledFontSize + 'px';
+  titleClone.style.letterSpacing = cs.letterSpacing;
   titleClone.style.color = 'var(--text-primary)';
-  titleClone.style.lineHeight = '1.15';
-  titleClone.style.letterSpacing = '0.3px';
+  titleClone.style.lineHeight = scaledLineHeight + 'px';
   titleClone.style.zIndex = '501';
   titleClone.style.pointerEvents = 'none';
-  titleClone.style.whiteSpace = 'nowrap';
 }
 
 function applyArtCloneStyles(artClone, artRect) {

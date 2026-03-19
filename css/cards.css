@@ -143,6 +143,57 @@
   opacity: 0.12;
   display: inline-block;
 }
+.card-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Home card — art fills entire card edge-to-edge */
+.card-inner--home {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, #f0e4c8, #e8d8b8 50%, #f0e4c8);
+}
+.card-art--home {
+  flex: 1;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+}
+.card-art--home .card-art-inner {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  padding-bottom: 25%;
+}
+.card-art-title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  padding: 0 14px;
+  text-align: left;
+  margin: 0;
+}
+.card-art-title .serif-line {
+  display: block;
+}
+.card-art-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+.card-art-blurb {
+  font-family: var(--font-body);
+  font-size: 7px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  padding: 6px 10px 12px;
+  text-align: left;
+}
 
 .type-bar {
   position: relative;
@@ -201,6 +252,10 @@
 [data-theme="slate"] .card[data-accent="green"]  .card-art-inner { background: linear-gradient(145deg, #c4dcd4, #b8d0c8 50%, #c4dcd4); }
 [data-theme="slate"] .card[data-accent="gold"]   .card-art-inner { background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8); }
 
+[data-theme="slate"] .card-inner.card-inner--home {
+  background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8);
+}
+
 [data-theme="slate"] .type-bar {
   border-radius: 4px;
 }
@@ -215,6 +270,13 @@
   background: #131318;
   border: 1.5px solid var(--border);
   border-radius: 8px;
+}
+
+[data-theme="neon"] .card-inner.card-inner--home {
+  background: #0a0a0c;
+}
+[data-theme="neon"] .card-art--home .card-art-inner {
+  background: #0a0a0c;
 }
 
 [data-theme="neon"] .card-title h3 {
@@ -247,6 +309,16 @@
 }
 
 [data-theme="neon"] .card-textbox p {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+[data-theme="neon"] .card-art-title {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 600;
+}
+[data-theme="neon"] .card-art-blurb {
   font-family: var(--font-mono);
   color: var(--text-muted);
 }
