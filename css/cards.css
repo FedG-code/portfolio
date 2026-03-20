@@ -50,6 +50,12 @@
   max-width: 700px;
   pointer-events: none;
 }
+@media (max-width: 768px) {
+  .hand-container {
+    height: 260px;
+    max-width: 400px;
+  }
+}
 
 /* ========== PERSPECTIVE + FLY OVERLAY ========== */
 .perspective-container {
@@ -78,6 +84,12 @@
   user-select: none;
   -webkit-user-select: none;
   pointer-events: auto;
+}
+@media (max-width: 768px) {
+  .card {
+    width: 132px;
+    height: 192px;
+  }
 }
 .card.dragging {
   cursor: grabbing;
@@ -238,6 +250,21 @@
 .card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #e85d26, transparent); opacity: 0.3; }
 .card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #6a4cba, transparent); opacity: 0.3; }
 .card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #28885a, transparent); opacity: 0.3; }
+
+/* ========== MOBILE CARD SCALING ========== */
+@media (max-width: 768px) {
+  .card-inner { border-radius: 9px; }
+  .card-title { padding: 5px 6px 3px; }
+  .card-title h3 { font-size: 9px; }
+  .card-art { margin: 0 4px; height: 93px; border-radius: 4px; }
+  .card-art-icon { font-size: 28px; }
+  .type-bar { margin: -8px 5px 0; padding: 2px 5px; font-size: 6px; }
+  .card-textbox { margin: 3px 0 0; padding: 4px 6px; min-height: 40px; }
+  .card-textbox p { font-size: 6px; }
+  .card-art-title { font-size: 13px; padding: 0 8px; }
+  .card-art-blurb { font-size: 5px; padding: 3px 6px 6px; }
+  .accent-strip { height: 2px; }
+}
 .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #e8a44a, transparent); opacity: 0.3; }
 
 /* ========== SLATE THEME OVERRIDES ========== */

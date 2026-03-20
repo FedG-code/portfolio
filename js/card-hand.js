@@ -47,15 +47,17 @@ var CARDS = [
 /* ═══════════════════════════════════════════════
    CONSTANTS
    ═══════════════════════════════════════════════ */
-var HOLD_RADIUS     = 1400;
-var FAN_SPREAD      = 20;
-var OVERLAP_SPACING = 155;
-var SINK_BELOW      = 190;
-var HOVER_LIFT      = 50;
-var CARD_W          = 220;
-var CARD_H          = 320;
-var HAND_W          = 700;
-var HAND_H          = 400;
+var _isMobHand = window.innerWidth <= 768;
+
+var HOLD_RADIUS     = _isMobHand ? 900  : 1400;
+var FAN_SPREAD      = _isMobHand ? 14   : 20;
+var OVERLAP_SPACING = _isMobHand ? 90   : 155;
+var SINK_BELOW      = _isMobHand ? 130  : 190;
+var HOVER_LIFT      = _isMobHand ? 35   : 50;
+var CARD_W          = _isMobHand ? 132  : 220;
+var CARD_H          = _isMobHand ? 192  : 320;
+var HAND_W          = _isMobHand ? Math.min(window.innerWidth, 400) : 700;
+var HAND_H          = _isMobHand ? 260  : 400;
 
 var PLAY_ZONE_HALF_W    = 385;
 var PLAY_ZONE_HALF_H    = 289;
