@@ -372,3 +372,18 @@
   background: linear-gradient(90deg, transparent 5%, #c9f05960 30%, #c9f05980 50%, #c9f05960 70%, transparent 95%);
   border-radius: 8px 8px 0 0;
 }
+
+/* ========== TOUCH SUPPORT ========== */
+html.card-dragging {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+html.card-dragging body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+@media (max-width: 768px) {
+  .card {
+    touch-action: none;
+  }
+}
