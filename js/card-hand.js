@@ -59,8 +59,8 @@ var CARD_H          = _isMobHand ? 192  : 320;
 var HAND_W          = _isMobHand ? Math.min(window.innerWidth, 400) : 700;
 var HAND_H          = _isMobHand ? 260  : 400;
 
-var PLAY_ZONE_HALF_W    = 385;
-var PLAY_ZONE_HALF_H    = 289;
+var PLAY_ZONE_HALF_W    = _isMobHand ? Math.min(Math.round(window.innerWidth * 0.45), 385)  : 385;
+var PLAY_ZONE_HALF_H    = _isMobHand ? Math.min(Math.round(window.innerHeight * 0.35), 289) : 289;
 var MAX_BLUR            = 8;
 var MAX_OVERLAY_OPACITY = 0.3;
 var MAX_GLOW_SIZE       = 30;
@@ -72,6 +72,8 @@ var activePageCardId = 3; // Start with Home active (gold card absent from hand)
 var cardOrder = [0, 1, 2]; // IDs of cards currently in hand
 var dragState = null;
 var animState = 'IDLE'; // IDLE | DRAGGING | RETURNING | PLAYING | TRANSITIONING
+var _activePointerId = null;   // track first pointer to ignore second touch
+var _liftedCardId   = -1;     // card ID in tap-lifted state (-1 = none)
 
 var handContainer = document.getElementById('handContainer');
 var dragBlurOverlay = document.getElementById('dragBlurOverlay');
@@ -277,14 +279,81 @@ function hexToRGB(hex) {
 }
 
 /* ═══════════════════════════════════════════════
+   TOUCH HELPERS
+   ═══════════════════════════════════════════════ */
+function isPlaneActive() {
+  return document.documentElement.classList.contains('plane-active');
+}
+
+function findNearestCardInRange(clientX, clientY, maxDist) {
+  var cards = handContainer.querySelectorAll('.card');
+  if (!cards.length) return null;
+  var best = null, bestDist = Infinity;
+  cards.forEach(function(c) {
+    var rect = c.getBoundingClientRect();
+    var dx = Math.max(rect.left - clientX, 0, clientX - rect.right);
+    var dy = Math.max(rect.top - clientY, 0, clientY - rect.bottom);
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d < bestDist) { bestDist = d; best = c; }
+  });
+  return bestDist <= maxDist ? best : null;
+}
+
+function dismissLift() {
+  if (_liftedCardId === -1) return;
+  handContainer.querySelectorAll('.card').forEach(function(c) {
+    c.classList.remove('hover-active');
+  });
+  _liftedCardId = -1;
+  layoutCards();
+}
+
+function liftCard(cardEl, cardId) {
+  handContainer.querySelectorAll('.card').forEach(function(c) {
+    c.classList.remove('hover-active');
+  });
+  cardEl.classList.add('hover-active');
+  _liftedCardId = cardId;
+  layoutCards();
+}
+
+/* ═══════════════════════════════════════════════
    DRAG HANDLERS
    ═══════════════════════════════════════════════ */
 function onPointerDown(e) {
+  // Dismiss lifted card on outside touch
+  if (_liftedCardId !== -1 && !e.target.closest('.hand-container')) {
+    dismissLift();
+    return;
+  }
+
   if (animState !== 'IDLE') return;
+  if (isPlaneActive()) return;
+  if (_activePointerId !== null) return;
+
   var cardEl = e.target.closest('.card');
+  var isTouchEvent = e.pointerType === 'touch';
+
+  // Touch: find nearest card if not directly on one (whole hand area)
+  if (!cardEl && isTouchEvent) {
+    cardEl = findNearestCardInRange(e.clientX, e.clientY, 20);
+  }
+
   if (!cardEl) return;
   e.preventDefault();
+
+  // Store previous lift state then clear it
+  var prevLift = _liftedCardId;
+  dismissLift();
+
+  _activePointerId = e.pointerId;
   cardEl.setPointerCapture(e.pointerId);
+
+  // Lock scrolling during touch drag
+  if (isTouchEvent) {
+    document.documentElement.classList.add('card-dragging');
+  }
+
   var cardId = parseInt(cardEl.dataset.cardId);
   var cardRect = cardEl.getBoundingClientRect();
   dragState = {
@@ -295,6 +364,8 @@ function onPointerDown(e) {
     startClientX: e.clientX,
     startClientY: e.clientY,
     hasMoved: false,
+    isTouch: isTouchEvent,
+    prevLiftedCardId: prevLift,
   };
   animState = 'DRAGGING';
   cardEl.classList.add('dragging');
@@ -345,8 +416,14 @@ function onPointerUp(e) {
   var el = dragState.el;
   var cardId = dragState.cardId;
   var wasMoved = dragState.hasMoved;
-  // Re-freeze GIF when card is released back to hand
+  var isTouch = dragState.isTouch;
+  var prevLiftedCardId = dragState.prevLiftedCardId;
   var img = el.querySelector('.card-art-img');
+
+  _activePointerId = null;
+  if (isTouch) {
+    document.documentElement.classList.remove('card-dragging');
+  }
 
   if (!wasMoved) {
     if (img && img.dataset.gif) { freezeGif(img); }
@@ -356,7 +433,16 @@ function onPointerUp(e) {
     el.style.zIndex = '';
     dragState = null;
     animState = 'IDLE';
-    layoutCards();
+    // Touch: tap-to-lift toggle
+    if (isTouch) {
+      if (prevLiftedCardId === cardId) {
+        // Tapped the already-lifted card — stay unlifted
+      } else {
+        liftCard(el, cardId);
+      }
+    } else {
+      layoutCards();
+    }
     return;
   }
   if (isInPlayZone(el)) {
@@ -383,6 +469,8 @@ function onPointerUp(e) {
    HOVER HANDLERS
    ═══════════════════════════════════════════════ */
 document.body.addEventListener('pointerover', function(e) {
+  if (e.pointerType === 'touch') return;
+  if (_liftedCardId !== -1) _liftedCardId = -1; // mouse hover overrides touch lift
   if (animState !== 'IDLE') return;
   var cardEl = e.target.closest('.card');
   handContainer.querySelectorAll('.card').forEach(function(c) {
@@ -395,6 +483,7 @@ document.body.addEventListener('pointerover', function(e) {
 }, true);
 
 document.body.addEventListener('pointerout', function(e) {
+  if (e.pointerType === 'touch') return;
   if (animState !== 'IDLE') return;
   var cardEl = e.target.closest('.card');
   if (cardEl) {
@@ -406,13 +495,36 @@ document.body.addEventListener('pointerout', function(e) {
 /* ═══════════════════════════════════════════════
    EVENT LISTENERS
    ═══════════════════════════════════════════════ */
-document.body.addEventListener('pointerdown', onPointerDown);
-document.body.addEventListener('pointermove', onPointerMove);
+document.body.addEventListener('pointerdown', onPointerDown, { passive: false });
+document.body.addEventListener('pointermove', onPointerMove, { passive: false });
 document.body.addEventListener('pointerup', onPointerUp);
 document.body.addEventListener('pointerleave', function(e) {
   if (animState === 'DRAGGING') onPointerUp(e);
 });
+document.body.addEventListener('pointercancel', function(e) {
+  if (dragState && dragState.el) {
+    var img = dragState.el.querySelector('.card-art-img');
+    if (img && img.dataset.gif) { freezeGif(img); }
+    resetProximityFeedback(dragState.el);
+    dragState.el.classList.remove('dragging');
+    dragState.el.style.transition = '';
+    dragState.el.style.transformOrigin = 'center bottom';
+    dragState.el.style.zIndex = '';
+  }
+  dragState = null;
+  _activePointerId = null;
+  document.documentElement.classList.remove('card-dragging');
+  if (animState === 'DRAGGING') {
+    animState = 'IDLE';
+    layoutCards();
+  }
+});
 document.body.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+// Dismiss lifted card on page scroll
+window.addEventListener('scroll', function() {
+  if (_liftedCardId !== -1) dismissLift();
+}, { passive: true });
 
 /* ═══════════════════════════════════════════════
    THEME CHANGE CALLBACK

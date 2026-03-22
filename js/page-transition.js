@@ -526,5 +526,7 @@ function rebuildHand(activeCardIdNew) {
     });
   });
 
+  _liftedCardId = -1;
+  _activePointerId = null;
   animState = 'IDLE';
 }
