@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Editorial Bold Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Inconsolata:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #FAF8F4;
+    --bg-alt: #F0EDE6;
+    --text: #1A1A1A;
+    --text-muted: #6B6560;
+    --accent: #C84B31;
+    --accent-light: #E8D5CE;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'Inconsolata', monospace;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .nav-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+  }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-decoration: none;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    text-transform: lowercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 8rem 3rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -20%; right: -10%;
+    width: 55vw; height: 55vw;
+    border-radius: 50%;
+    background: var(--accent-light);
+    opacity: 0.4;
+    z-index: 0;
+  }
+  .hero-inner {
+    position: relative; z-index: 1;
+    max-width: 820px;
+  }
+  .hero-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 2rem;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-desc {
+    font-size: 1.15rem;
+    font-weight: 300;
+    color: var(--text-muted);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+  }
+  .hero-meta {
+    display: flex; gap: 3rem;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    padding-top: 2rem;
+  }
+  .meta-item label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+  .meta-item span {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  /* ABOUT */
+  .about {
+    padding: 6rem 3rem;
+    background: var(--bg-alt);
+  }
+  .about-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+  .about-heading {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+  .about-text {
+    font-weight: 300;
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-size: 1rem;
+  }
+  .about-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 2rem;
+  }
+  .skill {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: var(--bg);
+    color: var(--text-muted);
+  }
+  .skill:nth-child(odd) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .about-sidebar-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    margin-top: 2rem;
+  }
+  .about-sidebar-title:first-child { margin-top: 0; }
+  .about-sidebar-value {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* CONTACT */
+  .contact {
+    padding: 8rem 3rem;
+    text-align: center;
+  }
+  .contact h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 1.5rem;
+  }
+  .contact-sub {
+    color: var(--text-muted);
+    font-weight: 300;
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+  }
+  .contact-btns {
+    display: flex; gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 0.8rem 1.8rem;
+    border: 1px solid var(--text);
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn.primary:hover {
+    background: #a33d27;
+    border-color: #a33d27;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 2rem 3rem;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* COLOR SWATCHES — for reference */
+  .swatches {
+    position: fixed; bottom: 1rem; right: 1rem;
+    display: flex; gap: 0.25rem; z-index: 200;
+    padding: 0.5rem;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .swatch {
+    width: 24px; height: 24px; border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  /* NOTE BANNER */
+  .mockup-note {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    background: var(--accent);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-align: center;
+    padding: 0.4rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-note">
+  MOCKUP — "Editorial Bold" direction. One of many possible directions. Bricolage Grotesque + Plus Jakarta Sans + Inconsolata.
+</div>
+
+<nav>
+  <div class="nav-name">Federico.</div>
+  <ul class="nav-links">
+    <li><a href="#">work</a></li>
+    <li><a href="#">about</a></li>
+    <li><a href="#">contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Open to opportunities</div>
+    <h1><em>Never</em> shipped a<br>boring product.</h1>
+    <p class="hero-desc">
+      Developer with three years of experience shipping web and gaming products.
+      I have a passion for design and champion high standards of polish.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-item">
+        <label>Based in</label>
+        <span>London, UK</span>
+      </div>
+      <div class="meta-item">
+        <label>Currently</label>
+        <span>Logifuture</span>
+      </div>
+      <div class="meta-item">
+        <label>Side project</label>
+        <span>Coffin-Likker</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="about">
+  <div class="about-inner">
+    <div>
+      <h2 class="about-heading">A bit about me.</h2>
+      <p class="about-text">
+        I'm a <strong>design-minded developer</strong> with three years of experience
+        across web applications and games. I like working in teams and take pride in the
+        quality of my communication. I've been closely keeping up with how AI has been
+        improving and constantly test new tools and methodologies.
+      </p>
+      <p class="about-text" style="margin-top: 1rem;">
+        Outside of work I chase my passions: I build games, I exercise and I do stand-up.
+        How games shape behaviour is something I keep coming back to.
+      </p>
+      <div class="skills-grid">
+        <span class="skill">JavaScript</span>
+        <span class="skill">C#</span>
+        <span class="skill">C++</span>
+        <span class="skill">Python</span>
+        <span class="skill">Unity</span>
+        <span class="skill">Godot</span>
+        <span class="skill">GSAP</span>
+        <span class="skill">Three.js</span>
+        <span class="skill">Figma</span>
+      </div>
+    </div>
+    <div>
+      <div class="about-sidebar-title">Education</div>
+      <p class="about-sidebar-value">
+        BSc Physics & Astronomy — Queen Mary<br>
+        Game Programming — CG Spectrum
+      </p>
+      <div class="about-sidebar-title">Languages</div>
+      <p class="about-sidebar-value">
+        English & Italian (fluent)<br>
+        French (conversational)
+      </p>
+      <div class="about-sidebar-title">Off the clock</div>
+      <p class="about-sidebar-value">
+        Sports climber. Stand-up comedian.<br>
+        Interviewed Deep Rock Galactic's design director about positive community design.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="contact">
+  <h2>Like what you see?<br>Get in touch.</h2>
+  <p class="contact-sub">Looking for a challenging role where I can put my diverse skillset to work.</p>
+  <div class="contact-btns">
+    <a href="#" class="btn primary">Email me</a>
+    <a href="#" class="btn">GitHub</a>
+    <a href="#" class="btn">LinkedIn</a>
+  </div>
+</section>
+
+<footer>Federico Giovannini &copy; 2026</footer>
+
+<div class="swatches">
+  <div class="swatch" style="background: #FAF8F4;" title="bg"></div>
+  <div class="swatch" style="background: #F0EDE6;" title="bg-alt"></div>
+  <div class="swatch" style="background: #1A1A1A;" title="text"></div>
+  <div class="swatch" style="background: #6B6560;" title="muted"></div>
+  <div class="swatch" style="background: #C84B31;" title="accent"></div>
+  <div class="swatch" style="background: #E8D5CE;" title="accent-light"></div>
+</div>
+
+</body>
+</html>
