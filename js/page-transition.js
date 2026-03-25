@@ -301,21 +301,30 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
   // Wait for content
   pageCache[cardData.pageUrl].then(function(content) {
     if (!content) {
-      // Fetch failed — fallback
+      // Fetch failed — restore UI so the user isn't stuck
       console.error('Failed to load page:', cardData.pageUrl);
-      animState = 'IDLE';
+      cardEl.remove();
+      perspectiveContainer.innerHTML = '';
+      dragBlurOverlay.style.backdropFilter = '';
+      dragBlurOverlay.style.webkitBackdropFilter = '';
+      dragBlurOverlay.style.background = '';
+      // Re-show the home page if it was faded
+      var homePage = document.getElementById('page-home');
+      if (homePage) {
+        homePage.classList.add('active');
+        homePage.style.opacity = '';
+      }
+      pageContainer.style.opacity = '';
+      rebuildHand(null);
       return;
     }
 
-    // Inject content
-    pageContainer.innerHTML = content;
-    pageContainer.className = 'page-container';
-    pageContainer.style.opacity = '0';
-
-    // Add measuring class for layout
+    // Inject content into wrapper directly (avoid double innerHTML round-trip)
     var wrapper = document.createElement('div');
     wrapper.className = 'spa-page measuring';
-    wrapper.innerHTML = pageContainer.innerHTML;
+    wrapper.innerHTML = content;
+    pageContainer.className = 'page-container';
+    pageContainer.style.opacity = '0';
     pageContainer.innerHTML = '';
     pageContainer.appendChild(wrapper);
 

@@ -586,11 +586,12 @@
       if (isMobile()) {
         if (isTouchDragging) {
           var normY = touchScreenY / window.innerHeight;
+          var progress;
           if (normY > SCROLL_DOWN_THRESHOLD) {
-            var progress = (normY - SCROLL_DOWN_THRESHOLD) / (1 - SCROLL_DOWN_THRESHOLD);
+            progress = (normY - SCROLL_DOWN_THRESHOLD) / (1 - SCROLL_DOWN_THRESHOLD);
             scrollVelocity = MAX_SCROLL_SPEED * progress * progress;
           } else if (normY < SCROLL_UP_THRESHOLD) {
-            var progress = (SCROLL_UP_THRESHOLD - normY) / SCROLL_UP_THRESHOLD;
+            progress = (SCROLL_UP_THRESHOLD - normY) / SCROLL_UP_THRESHOLD;
             scrollVelocity = -MAX_SCROLL_SPEED * progress * progress;
           } else {
             scrollVelocity *= SCROLL_DECAY;
