@@ -4,8 +4,15 @@ on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
 
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   claude-review:
+    # Skip fork PRs — secrets and OIDC tokens are unavailable on pull_request from forks.
+    # Maintainers can still trigger Claude on fork PRs via @claude mention (see claude.yml).
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
