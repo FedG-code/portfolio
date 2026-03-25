@@ -1,0 +1,385 @@
+/* ========================================================================
+   BOLD THEME — shared.css additions
+   Add this block after the [data-theme="neon"] section in shared.css.
+   Also add the Google Fonts import to <head> (see notes at bottom).
+   ======================================================================== */
+
+[data-theme="bold"] {
+  --bg: #FAFAF7;
+  --bg-warm: #F0EDE5;
+  --bg-card: #FFFFFF;
+  --border: #E0DCD4;
+  --border-hover: #C8C3B8;
+  --text-primary: #1A1714;
+  --text-secondary: #7A7570;
+  --text-muted: #9A9590;
+  --accent: #FF6123;
+  --accent-soft: rgba(255, 97, 35, 0.10);
+  --accent-mid: rgba(255, 97, 35, 0.30);
+  --pop: #FF6123;
+  --pop-soft: rgba(255, 97, 35, 0.08);
+  --cream: #FAFAF7;
+  --accent-glow: rgba(255, 97, 35, 0.25);
+  --font-serif: 'Archivo Black', sans-serif;
+  --font-body: 'Archivo', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 0px;
+  --radius-sm: 0px;
+}
+
+/* ── Nav ── */
+[data-theme="bold"] nav {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 1.25rem 0;
+  box-shadow: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  width: 100%;
+  max-width: none;
+}
+
+[data-theme="bold"] .nav-inner {
+  justify-content: space-between;
+}
+
+[data-theme="bold"] .nav-logo {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+[data-theme="bold"] .nav-links a {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border-radius: 0;
+  color: var(--text-muted);
+}
+[data-theme="bold"] .nav-links a:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+/* ── Hero ── */
+[data-theme="bold"] .hero {
+  overflow: hidden;
+  position: relative;
+}
+
+[data-theme="bold"] .hero::after {
+  content: '';
+  position: absolute;
+  right: -8vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52vw;
+  height: 52vw;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-theme="bold"] .hero .container {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="bold"] .doodle { display: none; }
+
+[data-theme="bold"] .hero h1 {
+  font-weight: 400;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-size: clamp(3.5rem, 7vw, 6.5rem);
+  line-height: 1;
+}
+[data-theme="bold"] .hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+[data-theme="bold"] .hero-badge {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[data-theme="bold"] .hero-desc {
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--text-secondary);
+}
+
+[data-theme="bold"] .hero-tidbits {
+  border-top: 2px solid var(--text-primary);
+  padding-top: 1.5rem;
+  gap: 3rem;
+}
+
+[data-theme="bold"] .tidbit {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+[data-theme="bold"] .tidbit-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+[data-theme="bold"] .tidbit-value {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* ── Section Labels & Headings ── */
+[data-theme="bold"] .section-heading {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-style: normal;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+}
+
+[data-theme="bold"] .section-label {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* ── About Section — Dark Zone ── */
+[data-theme="bold"] #about {
+  background: #1A1714;
+  color: #F5F2ED;
+}
+
+[data-theme="bold"] #about .section-heading {
+  color: #F5F2ED;
+}
+[data-theme="bold"] #about .section-label {
+  color: var(--text-muted);
+}
+
+[data-theme="bold"] #about .about-prose {
+  color: #9A9590;
+}
+[data-theme="bold"] #about .about-prose strong {
+  color: #F5F2ED;
+  font-weight: 600;
+}
+[data-theme="bold"] #about .about-prose a {
+  color: var(--accent);
+}
+
+[data-theme="bold"] .about-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+}
+
+[data-theme="bold"] .about-box-title {
+  color: var(--accent);
+}
+
+[data-theme="bold"] .about-box-text {
+  color: #9A9590;
+}
+
+[data-theme="bold"] .chip {
+  background: rgba(255, 97, 35, 0.12);
+  border: 1px solid rgba(255, 97, 35, 0.25);
+  border-radius: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+[data-theme="bold"] .chip:hover {
+  background: rgba(255, 97, 35, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Work Cards ── */
+[data-theme="bold"] .work-card {
+  border-radius: 0;
+}
+[data-theme="bold"] .work-card.expanded {
+  box-shadow: 0 40px 100px rgba(255, 97, 35, 0.2);
+}
+[data-theme="bold"] .work-pill {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+[data-theme="bold"] .work-details h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-style: normal;
+}
+[data-theme="bold"] .work-icon {
+  border-radius: 0;
+}
+
+/* ── Approach Cards ── */
+[data-theme="bold"] .approach-card {
+  border-radius: 0;
+}
+[data-theme="bold"] .approach-card h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* ── Contact — Orange Zone ── */
+[data-theme="bold"] .contact {
+  background: var(--accent);
+  color: white;
+}
+
+[data-theme="bold"] .contact-heading {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-style: normal;
+  color: white;
+}
+[data-theme="bold"] .contact-heading em {
+  font-style: normal;
+  color: white;
+}
+
+[data-theme="bold"] .contact-sub {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="bold"] .contact .btn {
+  border-radius: 0;
+  border: 2px solid white;
+  color: white;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[data-theme="bold"] .contact .btn:hover {
+  background: white;
+  color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+[data-theme="bold"] .contact .btn.primary {
+  background: white;
+  color: var(--accent);
+  border-color: white;
+}
+[data-theme="bold"] .contact .btn.primary:hover {
+  background: transparent;
+  color: white;
+  box-shadow: none;
+}
+
+/* ── Buttons (General) ── */
+[data-theme="bold"] .btn {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[data-theme="bold"] .btn:hover {
+  box-shadow: none;
+  transform: none;
+}
+[data-theme="bold"] .btn.primary:hover {
+  background: #e55520;
+  box-shadow: none;
+}
+
+/* ── Theme Switcher & Plane Toggle ── */
+[data-theme="bold"] .theme-switcher {
+  border-radius: 0;
+}
+[data-theme="bold"] .plane-toggle {
+  border-radius: 0;
+}
+[data-theme="bold"] .plane-toggle.attractor {
+  border-radius: 0;
+}
+
+/* ── Footer ── */
+[data-theme="bold"] footer {
+  font-family: var(--font-mono);
+}
+
+/* ── Hide neon grid bg / doodles ── */
+[data-theme="bold"] .hero::before { display: none; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  [data-theme="bold"] .hero::after {
+    width: 65vw;
+    height: 65vw;
+    right: -15vw;
+  }
+}
+
+@media (max-width: 600px) {
+  [data-theme="bold"] nav {
+    position: static;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  [data-theme="bold"] .theme-switcher {
+    top: 0.75rem;
+  }
+  [data-theme="bold"] .hero::after {
+    width: 80vw;
+    height: 80vw;
+    right: -25vw;
+    top: 60%;
+    opacity: 0.7;
+  }
+}
+
+
+/* ========================================================================
+   NOTES
+   ========================================================================
+   1. Add this Google Fonts link to <head> (alongside the existing ones):
+      <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+   2. The theme is implemented as [data-theme="bold"] — NOT as :root default.
+      To make it the default, update the <html> tag to data-theme="bold" and
+      add 'bold' to the themes array in shared.js.
+
+   3. The #about dark bg and .contact orange bg work without negative margins
+      because sections are direct children of .spa-page (full-width already).
+      The .container inside each section constrains the content.
+
+   4. The accent circle uses ::after on .hero with overflow:hidden to clip at
+      the viewport edge. No HTML changes needed. The hero::before (neon grid)
+      is hidden via display:none for this theme.
+   ======================================================================== */

@@ -1,0 +1,404 @@
+/* ═══════════════════════════════════════════════════════
+   RETRO THEME — shared.css overrides
+   
+   Google Fonts <link> to add to <head>:
+   <link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bitter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+   ═══════════════════════════════════════════════════════ */
+
+[data-theme="retro"] {
+  --bg: #FDF6EC;
+  --bg-warm: #F5EED8;
+  --bg-card: #FDF6EC;
+  --border: #D4CBBA;
+  --border-hover: #B8AD99;
+  --text-primary: #1A1A16;
+  --text-secondary: #6D6A5E;
+  --text-muted: #9E9888;
+  --accent: #D94230;
+  --accent-soft: #D9423018;
+  --accent-mid: #D9423040;
+  --pop: #1A5C52;
+  --pop-soft: #1A5C5215;
+  --cream: #FDF6EC;
+  --accent-glow: #E8A82535;
+  --font-serif: 'Shrikhand', cursive;
+  --font-body: 'Bitter', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+/* ══════════ NAV ══════════ */
+/* Hidden by default (card-hand nav) but style in case it shows */
+[data-theme="retro"] nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid #1A1A16;
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 1rem 0;
+  box-shadow: none;
+  width: 100%;
+  max-width: none;
+}
+
+[data-theme="retro"] .nav-inner {
+  justify-content: space-between;
+}
+
+[data-theme="retro"] .nav-logo {
+  font-family: 'Shrikhand', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+[data-theme="retro"] .nav-links a {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  border-radius: 0;
+}
+
+[data-theme="retro"] .nav-links a:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+/* ══════════ HERO — Split layout ══════════ */
+[data-theme="retro"] .hero {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  min-height: 100vh;
+  overflow: hidden;
+  padding-top: 0;
+}
+
+/* Hide coral/neon decorative elements */
+[data-theme="retro"] .doodle { display: none; }
+[data-theme="retro"] .hero::before { display: none; }
+
+/* Signature element — mustard circle, bottom-left of hero */
+[data-theme="retro"] .hero::after {
+  content: '';
+  position: absolute;
+  bottom: -8vw; left: -6vw;
+  width: 28vw; height: 28vw;
+  border: 4px solid #E8A825;
+  border-radius: 50%;
+  opacity: 0.14;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="retro"] .hero .container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 5rem;
+  padding-bottom: 4rem;
+  position: relative;
+  max-width: none;
+}
+
+[data-theme="retro"] .hero-badge {
+  border-radius: 0;
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  transform: rotate(-2deg);
+  font-family: 'IBM Plex Mono', monospace;
+}
+[data-theme="retro"] .hero-badge::before {
+  content: '●';
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  animation: none;
+  font-size: 0.45rem;
+}
+
+[data-theme="retro"] .hero h1 {
+  font-family: 'Shrikhand', cursive;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: -0.01em;
+  position: relative;
+  z-index: 1;
+}
+[data-theme="retro"] .hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+  position: relative;
+  display: inline-block;
+}
+[data-theme="retro"] .hero h1 em::after {
+  content: '';
+  position: absolute;
+  bottom: 0.04em; left: 0; right: 0;
+  height: 0.13em;
+  background: #E8A825;
+}
+
+[data-theme="retro"] .hero-body {
+  display: block; /* Tidbits are in the panel, not here */
+}
+
+[data-theme="retro"] .hero-tidbits {
+  display: none; /* Moved to teal panel */
+}
+
+[data-theme="retro"] .hero-desc {
+  font-family: 'Bitter', serif;
+  font-weight: 300;
+}
+
+/* ══════════ TEAL PANEL ══════════
+   NOTE: The teal panel requires HTML modification — 
+   a .hero-panel div wrapping tidbit items, placed as a 
+   sibling to .container inside .hero. See index-preview.html.
+   
+   If HTML changes aren't possible, the tidbits can stay in 
+   their current position with alternate styling — uncomment
+   the fallback block below and remove the .hero-tidbits display:none above.
+*/
+
+/* FALLBACK — tidbits stay in hero-body, styled as teal cards:
+[data-theme="retro"] .hero-tidbits {
+  display: flex;
+}
+[data-theme="retro"] .tidbit {
+  background: #1A5C52;
+  border-color: #1A5C52;
+  border-radius: 0;
+  color: #F0EBE0;
+}
+[data-theme="retro"] .tidbit-label {
+  color: #E8A825;
+}
+[data-theme="retro"] .tidbit-value {
+  color: #F0EBE0;
+}
+*/
+
+/* ══════════ SECTIONS ══════════ */
+[data-theme="retro"] .section-label {
+  color: #E8A825;
+}
+
+[data-theme="retro"] .section-heading {
+  font-family: 'Shrikhand', cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* ══════════ ABOUT — deep teal bg ══════════ */
+[data-theme="retro"] #about {
+  background: #0F3E37;
+  color: #F0EBE0;
+}
+
+[data-theme="retro"] .section-heading {
+  color: #F0EBE0;
+}
+
+[data-theme="retro"] .about-prose {
+  color: rgba(240,235,224,0.7);
+}
+[data-theme="retro"] .about-prose strong {
+  color: #F0EBE0;
+}
+[data-theme="retro"] .about-prose a {
+  color: #E8A825;
+}
+
+[data-theme="retro"] .about-box {
+  background: rgba(255,255,255,0.04);
+  border: none;
+  border-left: 3px solid #E8A825;
+  border-radius: 0;
+}
+
+[data-theme="retro"] .about-box-title {
+  color: #E8A825;
+}
+
+[data-theme="retro"] .about-box-text {
+  color: rgba(240,235,224,0.8);
+}
+
+[data-theme="retro"] .chip {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0;
+  color: rgba(240,235,224,0.7);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+}
+[data-theme="retro"] .chip:hover {
+  border-color: #E8A825;
+  color: #F0EBE0;
+}
+
+/* ══════════ WORK CARDS (expandable) ══════════ */
+[data-theme="retro"] .work-card {
+  border-radius: var(--radius);
+}
+
+[data-theme="retro"] .work-icon.orange {
+  background: #D9423018;
+}
+
+[data-theme="retro"] .work-pill {
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+[data-theme="retro"] .work-details h4 {
+  font-family: 'Shrikhand', cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+[data-theme="retro"] .work-image-placeholder.warm {
+  background: linear-gradient(135deg, #F5EED8 0%, #EDE5C8 100%);
+}
+[data-theme="retro"] .work-image-placeholder.cool {
+  background: linear-gradient(135deg, #D4E8E2 0%, #C4DCD6 100%);
+}
+[data-theme="retro"] .work-image-placeholder.fresh {
+  background: linear-gradient(135deg, #E8E4C8 0%, #DCD8B8 100%);
+}
+
+/* ══════════ APPROACH CARDS ══════════ */
+[data-theme="retro"] .approach-card {
+  border-radius: var(--radius);
+}
+[data-theme="retro"] .approach-card h3 {
+  font-family: 'Shrikhand', cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* ══════════ CONTACT — cream bg ══════════ */
+[data-theme="retro"] .contact {
+  background: var(--bg);
+}
+
+[data-theme="retro"] .contact-heading {
+  font-family: 'Shrikhand', cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+[data-theme="retro"] .contact-heading em {
+  font-style: normal;
+  color: #1A5C52;
+}
+
+/* ══════════ BUTTONS ══════════ */
+[data-theme="retro"] .btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  border-radius: 0;
+  border: 2px solid #1A5C52;
+  color: #1A5C52;
+  background: transparent;
+}
+[data-theme="retro"] .btn:hover {
+  background: #1A5C52;
+  color: #F0EBE0;
+  box-shadow: none;
+  transform: none;
+}
+[data-theme="retro"] .btn.primary {
+  background: #D94230;
+  border-color: #D94230;
+  color: white;
+}
+[data-theme="retro"] .btn.primary:hover {
+  background: #b83525;
+  border-color: #b83525;
+  box-shadow: none;
+}
+
+/* ══════════ TIDBIT ══════════ */
+[data-theme="retro"] .tidbit {
+  border-radius: 0;
+  background: #1A5C52;
+  border-color: #1A5C52;
+  color: #F0EBE0;
+}
+[data-theme="retro"] .tidbit-label {
+  color: #E8A825;
+}
+[data-theme="retro"] .tidbit-value {
+  color: #F0EBE0;
+}
+
+/* ══════════ FOOTER ══════════ */
+[data-theme="retro"] footer {
+  background: #1A5C52;
+  border-top: none;
+}
+[data-theme="retro"] footer span {
+  color: rgba(240,235,224,0.5);
+}
+
+/* ══════════ THEME SWITCHER ══════════ */
+[data-theme="retro"] .theme-switcher {
+  border-radius: 0;
+  border: 2px solid #1A5C52;
+  background: var(--bg);
+  color: #1A5C52;
+}
+[data-theme="retro"] .theme-switcher:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ══════════ PLANE TOGGLE ══════════ */
+[data-theme="retro"] .plane-toggle {
+  border-radius: 0;
+  background: var(--bg);
+  border: 2px solid #1A5C52;
+  color: #1A5C52;
+}
+[data-theme="retro"] .plane-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+[data-theme="retro"] .plane-toggle.attractor {
+  border-radius: 0;
+  background: var(--bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+[data-theme="retro"] .plane-toggle.attractor:hover {
+  background: #D9423018;
+}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media (max-width: 900px) {
+  [data-theme="retro"] .hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  [data-theme="retro"] nav {
+    position: static;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  [data-theme="retro"] .theme-switcher {
+    top: 0.75rem;
+  }
+}

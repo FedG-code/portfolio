@@ -1,0 +1,124 @@
+/* ========================================================================
+   BOLD THEME — cards.css additions
+   Add this block after the [data-theme="neon"] section in cards.css.
+   ======================================================================== */
+
+/* ── Card Inner — fully opaque ── */
+[data-theme="bold"] .card-inner {
+  background: #FFFFFF;
+  border: 1.5px solid #E0DCD4;
+  border-radius: 8px;
+}
+
+/* ── Card Title ── */
+[data-theme="bold"] .card-title {
+  background: #FFFFFF;
+}
+[data-theme="bold"] .card-title h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-style: normal;
+  font-size: 12.5px;
+}
+
+/* ── Card Art — unified warm, fully opaque ── */
+[data-theme="bold"] .card-art {
+  border-radius: 0;
+}
+[data-theme="bold"] .card-art-inner {
+  background: #F0EDE5 !important;
+}
+
+/* Override all per-card accent art colours */
+[data-theme="bold"] .card[data-accent="red"]    .card-art-inner,
+[data-theme="bold"] .card[data-accent="purple"] .card-art-inner,
+[data-theme="bold"] .card[data-accent="green"]  .card-art-inner,
+[data-theme="bold"] .card[data-accent="gold"]   .card-art-inner {
+  background: #F0EDE5 !important;
+}
+
+/* ── Card art icon — accent orange tint ── */
+[data-theme="bold"] .card-art-icon {
+  color: #FF6123;
+  opacity: 0.15;
+}
+
+/* ── Type Bar — chip-styled, fully opaque ── */
+[data-theme="bold"] .type-bar {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.2px;
+  border-radius: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #FDEEE6;
+  border: 1px solid #F5C8A8;
+  color: #FF6123;
+}
+
+/* ── Card Textbox — fully opaque ── */
+[data-theme="bold"] .card-textbox {
+  background: #FFFFFF;
+}
+[data-theme="bold"] .card-textbox p {
+  font-family: var(--font-body);
+  font-weight: 300;
+}
+
+/* ── Remove accent strips ── */
+[data-theme="bold"] .accent-strip {
+  display: none;
+}
+
+/* ── Home Card — mini index page ── */
+[data-theme="bold"] .card-inner.card-inner--home {
+  background: #FAFAF7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+[data-theme="bold"] .card-art--home {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="bold"] .card-art--home .card-art-inner {
+  background: #FAFAF7 !important;
+}
+
+/* Accent circle — mirrors the hero */
+[data-theme="bold"] .card-art--home .card-art-inner::after {
+  content: '';
+  position: absolute;
+  right: -30%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 65%;
+  height: 0;
+  padding-bottom: 65%;
+  border-radius: 50%;
+  background: #FF6123;
+  pointer-events: none;
+}
+
+/* ── Home Card Art Title ── */
+[data-theme="bold"] .card-art-title {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+[data-theme="bold"] .card-art-title em {
+  font-style: normal;
+  color: #FF6123;
+}
+
+/* ── Home Card Blurb ── */
+[data-theme="bold"] .card-art-blurb {
+  font-family: var(--font-body);
+  position: relative;
+  z-index: 1;
+}
