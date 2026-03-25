@@ -124,7 +124,11 @@ function rebuildCharCache(eager) {
     if (visible) visibleParents.add(parent);
   }
 
-  // Async chunked rebuild on mobile — only for eager warm-ups, not on-demand lookups
+  // Async chunked rebuild on mobile — only for eager warm-ups, not on-demand lookups.
+  // During async rebuild, the old charRectCache remains live for hit detection.
+  // Hits may use slightly stale positions until the rebuild finishes and swaps in
+  // asyncCacheBuffer. This is intentional: a few stale rects are preferable to
+  // blocking the main thread with a synchronous full rebuild on mobile.
   if (eager && _isMob && allChars.length > CACHE_CHUNK_SIZE) {
     asyncCacheBuffer = [];
     asyncCacheIndex = 0;
