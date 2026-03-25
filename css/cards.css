@@ -267,31 +267,6 @@
 }
 .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #e8a44a, transparent); opacity: 0.3; }
 
-/* ========== SLATE THEME OVERRIDES ========== */
-[data-theme="slate"] .card-inner {
-  background: var(--bg-card);
-  border: 2.5px solid var(--border);
-  border-radius: 12px;
-}
-
-[data-theme="slate"] .card[data-accent="red"]    .card-art-inner { background: linear-gradient(145deg, #e0d0cc, #d4c4be 50%, #e0d0cc); }
-[data-theme="slate"] .card[data-accent="purple"] .card-art-inner { background: linear-gradient(145deg, #d0cce0, #c4bed8 50%, #d0cce0); }
-[data-theme="slate"] .card[data-accent="green"]  .card-art-inner { background: linear-gradient(145deg, #c4dcd4, #b8d0c8 50%, #c4dcd4); }
-[data-theme="slate"] .card[data-accent="gold"]   .card-art-inner { background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8); }
-
-[data-theme="slate"] .card-inner.card-inner--home {
-  background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8);
-}
-
-[data-theme="slate"] .type-bar {
-  border-radius: 4px;
-}
-
-[data-theme="slate"] .card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #d4614e, transparent); }
-[data-theme="slate"] .card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #6a7cba, transparent); }
-[data-theme="slate"] .card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #1a8a7d, transparent); }
-[data-theme="slate"] .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #c4944a, transparent); }
-
 /* ========== NEON THEME OVERRIDES ========== */
 [data-theme="neon"] .card-inner {
   background: #131318;
@@ -385,5 +360,533 @@ html.card-dragging body {
 @media (max-width: 768px) {
   .card {
     touch-action: none;
+  }
+}
+/* ========================================================================
+   BOLD THEME — cards.css additions
+   Add this block after the [data-theme="neon"] section in cards.css.
+   ======================================================================== */
+
+/* ── Card Inner — fully opaque ── */
+[data-theme="bold"] .card-inner {
+  background: #FFFFFF;
+  border: 1.5px solid #E0DCD4;
+  border-radius: 8px;
+}
+
+/* ── Card Title ── */
+[data-theme="bold"] .card-title {
+  background: #FFFFFF;
+}
+[data-theme="bold"] .card-title h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-style: normal;
+  font-size: 12.5px;
+}
+
+/* ── Card Art — unified warm, fully opaque ── */
+[data-theme="bold"] .card-art {
+  border-radius: 0;
+}
+[data-theme="bold"] .card-art-inner {
+  background: #F0EDE5 !important;
+}
+
+/* Override all per-card accent art colours */
+[data-theme="bold"] .card[data-accent="red"]    .card-art-inner,
+[data-theme="bold"] .card[data-accent="purple"] .card-art-inner,
+[data-theme="bold"] .card[data-accent="green"]  .card-art-inner,
+[data-theme="bold"] .card[data-accent="gold"]   .card-art-inner {
+  background: #F0EDE5 !important;
+}
+
+/* ── Card art icon — accent orange tint ── */
+[data-theme="bold"] .card-art-icon {
+  color: #FF6123;
+  opacity: 0.15;
+}
+
+/* ── Type Bar — chip-styled, fully opaque ── */
+[data-theme="bold"] .type-bar {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.2px;
+  border-radius: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #FDEEE6;
+  border: 1px solid #F5C8A8;
+  color: #FF6123;
+}
+
+/* ── Card Textbox — fully opaque ── */
+[data-theme="bold"] .card-textbox {
+  background: #FFFFFF;
+}
+[data-theme="bold"] .card-textbox p {
+  font-family: var(--font-body);
+  font-weight: 300;
+}
+
+/* ── Remove accent strips ── */
+[data-theme="bold"] .accent-strip {
+  display: none;
+}
+
+/* ── Home Card — mini index page ── */
+[data-theme="bold"] .card-inner.card-inner--home {
+  background: #FAFAF7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+[data-theme="bold"] .card-art--home {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="bold"] .card-art--home .card-art-inner {
+  background: #FAFAF7 !important;
+}
+
+/* Accent circle — mirrors the hero */
+[data-theme="bold"] .card-art--home .card-art-inner::after {
+  content: '';
+  position: absolute;
+  right: -30%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 65%;
+  height: 0;
+  padding-bottom: 65%;
+  border-radius: 50%;
+  background: #FF6123;
+  pointer-events: none;
+}
+
+/* ── Home Card Art Title ── */
+[data-theme="bold"] .card-art-title {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+[data-theme="bold"] .card-art-title em {
+  font-style: normal;
+  color: #FF6123;
+}
+
+/* ── Home Card Blurb ── */
+[data-theme="bold"] .card-art-blurb {
+  font-family: var(--font-body);
+  position: relative;
+  z-index: 1;
+}
+/* ========== CINEMATIC THEME — CARD HAND OVERRIDES ========== */
+
+[data-theme="cinematic"] .card-inner {
+  background: #161616;
+  border: 1.5px solid #222222;
+  border-radius: 8px;
+}
+
+[data-theme="cinematic"] .card-inner.card-inner--home {
+  background: #0e0e0e;
+}
+[data-theme="cinematic"] .card-art--home .card-art-inner {
+  background: #0e0e0e;
+}
+
+[data-theme="cinematic"] .card-title h3 {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+[data-theme="cinematic"] .card-art {
+  border-radius: 4px;
+}
+[data-theme="cinematic"] .card-art-inner {
+  background: #0e0e0e !important;
+  border: 1px solid #222222;
+}
+[data-theme="cinematic"] .card-art-icon {
+  color: var(--accent);
+  opacity: 0.15;
+}
+
+/* Override per-card accent backgrounds with unified dark */
+[data-theme="cinematic"] .card[data-accent="red"]    .card-art-inner { background: #0e0e0e !important; }
+[data-theme="cinematic"] .card[data-accent="purple"] .card-art-inner { background: #0e0e0e !important; }
+[data-theme="cinematic"] .card[data-accent="green"]  .card-art-inner { background: #0e0e0e !important; }
+[data-theme="cinematic"] .card[data-accent="gold"]   .card-art-inner { background: #0e0e0e !important; }
+
+[data-theme="cinematic"] .type-bar {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  border-radius: 3px;
+  background: #161616;
+  border: 1px solid rgba(214, 0, 28, 0.25);
+  color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme="cinematic"] .card-textbox p {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+[data-theme="cinematic"] .card-art-title {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: #E8E6E1;
+}
+[data-theme="cinematic"] .card-art-title em {
+  font-style: normal;
+  color: var(--accent);
+}
+[data-theme="cinematic"] .card-art-blurb {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* Accent strips: red glow, unified */
+[data-theme="cinematic"] .accent-strip {
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: var(--accent) !important;
+  opacity: 0.4;
+  border-radius: 0;
+}
+
+/* Top glow line — red */
+[data-theme="cinematic"] .card-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  z-index: 10;
+  background: linear-gradient(90deg, transparent 5%, rgba(214,0,28,0.35) 30%, rgba(214,0,28,0.5) 50%, rgba(214,0,28,0.35) 70%, transparent 95%);
+  border-radius: 8px 8px 0 0;
+}
+
+/* Home card: mini scanline effect */
+[data-theme="cinematic"] .card-inner--home::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.015) 2px,
+    rgba(255,255,255,0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 8px;
+}
+
+/* Home card title needs z-index to sit above scanlines */
+[data-theme="cinematic"] .card-art-title {
+  position: relative;
+  z-index: 3;
+}
+[data-theme="cinematic"] .card-art-blurb {
+  position: relative;
+  z-index: 3;
+}
+/* ══════════════════════════════════════════════════════════
+   BRUTALIST TYPOGRAPHIC THEME — cards.css overrides
+   All card backgrounds fully opaque hardcoded hex.
+   ══════════════════════════════════════════════════════════ */
+
+[data-theme="brutalist"] .card-inner {
+  background: #E8E4DC;
+  border: 2px solid #0C0C0C;
+  border-radius: 4px;
+}
+
+[data-theme="brutalist"] .card-inner.card-inner--home {
+  background: #D9D4CA;
+}
+
+/* ── Title ── */
+[data-theme="brutalist"] .card-title h3 {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #0C0C0C;
+}
+
+/* ── Art ── */
+[data-theme="brutalist"] .card-art {
+  border-radius: 0;
+}
+
+[data-theme="brutalist"] .card-art-inner {
+  border: 1px solid #0C0C0C;
+}
+
+/* Unified warm grey art backgrounds — overrides per-card accents */
+[data-theme="brutalist"] .card[data-accent="red"]    .card-art-inner { background: #D9D4CA !important; }
+[data-theme="brutalist"] .card[data-accent="purple"] .card-art-inner { background: #D9D4CA !important; }
+[data-theme="brutalist"] .card[data-accent="green"]  .card-art-inner { background: #D9D4CA !important; }
+[data-theme="brutalist"] .card[data-accent="gold"]   .card-art-inner { background: #D9D4CA !important; }
+
+[data-theme="brutalist"] .card-art-icon {
+  color: #0C0C0C;
+}
+
+/* ── Type Bar ── */
+[data-theme="brutalist"] .type-bar {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  border-radius: 0;
+  background: #E8E4DC;
+  border: 1px solid #0C0C0C;
+  color: #5C584F;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Textbox ── */
+[data-theme="brutalist"] .card-textbox p {
+  font-family: 'Literata', Georgia, serif;
+  font-size: 8.5px;
+  color: #5C584F;
+}
+
+/* ── Home Card ── */
+[data-theme="brutalist"] .card-art--home .card-art-inner {
+  background: #D9D4CA !important;
+  position: relative;
+}
+
+[data-theme="brutalist"] .card-art-title {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-size: 18px;
+  color: #0C0C0C;
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="brutalist"] .card-art-title em {
+  font-style: normal;
+  color: #0C0C0C;
+}
+
+[data-theme="brutalist"] .card-art-blurb {
+  font-family: 'Literata', Georgia, serif;
+  color: #5C584F;
+}
+
+/* Blue status stripe on home card — echoes the index status bar */
+[data-theme="brutalist"] .card-inner--home::after {
+  content: 'OPEN TO OPPORTUNITIES';
+  position: absolute;
+  bottom: 22%;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 3px 10px;
+  background: #0038FF;
+  color: white;
+  font-family: 'Space Mono', monospace;
+  font-size: 5.5px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ── Accent Strips: all electric blue ── */
+[data-theme="brutalist"] .card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
+[data-theme="brutalist"] .card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
+[data-theme="brutalist"] .card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
+[data-theme="brutalist"] .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  [data-theme="brutalist"] .card-inner { border-radius: 3px; }
+  [data-theme="brutalist"] .card-title h3 { font-size: 7.5px; }
+  [data-theme="brutalist"] .card-art-title { font-size: 12px; }
+  [data-theme="brutalist"] .type-bar { font-size: 5.5px; }
+  [data-theme="brutalist"] .card-inner--home::after { font-size: 4px; padding: 2px 6px; }
+}
+/* ═══════════════════════════════════════════════════════
+   RETRO THEME — cards.css overrides
+   
+   All card backgrounds are fully opaque hardcoded hex.
+   Every colour traces back to the index page:
+   
+   #FDF6EC  = card bg, type bar bg (hero cream)
+   #1A5C52  = card art bg (hero panel teal)
+   #0F3E37  = home card panel stripe (about deep-teal)
+   #E8A825  = accent strips, top glow, icon tint (mustard)
+   #D94230  = "Never" on home card (red accent)
+   #D4CBBA  = borders (page border)
+   #1A1A16  = title text (primary text)
+   #6D6A5E  = type bar text, textbox text (muted text)
+   ═══════════════════════════════════════════════════════ */
+
+/* ══════════ CARD INNER ══════════ */
+[data-theme="retro"] .card-inner {
+  background: #FDF6EC;
+  border: 2px solid #D4CBBA;
+  border-radius: 10px;
+}
+
+/* ══════════ CARD TITLE — Shrikhand ══════════ */
+[data-theme="retro"] .card-title h3 {
+  font-family: 'Shrikhand', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12.5px;
+  color: #1A1A16;
+}
+
+/* ══════════ CARD ART — unified teal ══════════ */
+[data-theme="retro"] .card-art {
+  border-radius: 4px;
+}
+[data-theme="retro"] .card-art-inner {
+  border: none;
+}
+[data-theme="retro"] .card[data-accent="red"]    .card-art-inner { background: #1A5C52 !important; }
+[data-theme="retro"] .card[data-accent="purple"] .card-art-inner { background: #1A5C52 !important; }
+[data-theme="retro"] .card[data-accent="green"]  .card-art-inner { background: #1A5C52 !important; }
+[data-theme="retro"] .card[data-accent="gold"]   .card-art-inner { background: #1A5C52 !important; }
+
+[data-theme="retro"] .card-art-icon {
+  color: #E8A825;
+  opacity: 0.15;
+}
+
+/* ══════════ TYPE BAR — mono, sharp edges ══════════ */
+[data-theme="retro"] .type-bar {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background: #FDF6EC;
+  border: 1.5px solid #D4CBBA;
+  border-radius: 0;
+  color: #6D6A5E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ══════════ TEXTBOX — Bitter body ══════════ */
+[data-theme="retro"] .card-textbox p {
+  font-family: 'Bitter', serif;
+  font-weight: 300;
+  font-size: 8.5px;
+  color: #6D6A5E;
+}
+
+/* ══════════ NO ACCENT STRIPS ══════════ */
+[data-theme="retro"] .accent-strip {
+  display: none;
+}
+
+/* ══════════ NO TOP GLOW LINE ══════════ */
+[data-theme="retro"] .card-inner::before {
+  display: none;
+}
+
+/* ══════════ HOME CARD ══════════ */
+[data-theme="retro"] .card-inner.card-inner--home {
+  background: #FDF6EC;
+  border: 2px solid #D4CBBA;
+}
+
+[data-theme="retro"] .card-art--home .card-art-inner {
+  background: #FDF6EC !important;
+  position: relative;
+}
+
+/* Mini teal panel on right side — echoes the split hero layout */
+[data-theme="retro"] .card-art--home .card-art-inner::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 28%;
+  background: #1A5C52;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Mini decorative circle — echoes hero mustard circle */
+[data-theme="retro"] .card-art--home .card-art-inner::before {
+  content: '';
+  position: absolute;
+  bottom: 10%; left: 5%;
+  width: 45px; height: 45px;
+  border: 2px solid #E8A825;
+  border-radius: 50%;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="retro"] .card-art-title {
+  font-family: 'Shrikhand', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  color: #1A1A16;
+  position: relative;
+  z-index: 1;
+}
+[data-theme="retro"] .card-art-title em {
+  font-style: normal;
+  color: #D94230;
+  position: relative;
+  display: inline-block;
+}
+[data-theme="retro"] .card-art-title em::after {
+  content: '';
+  position: absolute;
+  bottom: 0.02em; left: 0; right: 0;
+  height: 0.13em;
+  background: #E8A825;
+}
+[data-theme="retro"] .card-art-blurb {
+  font-family: 'Bitter', serif;
+  color: #6D6A5E;
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════ MOBILE ADJUSTMENTS ══════════ */
+@media (max-width: 768px) {
+  [data-theme="retro"] .card-inner { border-radius: 7px; }
+  [data-theme="retro"] .card-inner::before { border-radius: 7px 7px 0 0; }
+  [data-theme="retro"] .card-art-title { font-size: 12px; }
+  [data-theme="retro"] .type-bar { font-size: 5.5px; }
+  [data-theme="retro"] .card-art--home .card-art-inner::before {
+    width: 28px; height: 28px;
   }
 }

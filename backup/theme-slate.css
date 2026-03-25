@@ -1,0 +1,53 @@
+/* Archived slate theme — removed 2026-03-25. Contains shared.css, cards.css, and project.css blocks. */
+
+/* === shared.css === */
+[data-theme="slate"] {
+  --bg: #eef1f3;
+  --bg-warm: #e2e6ea;
+  --bg-card: #f8fafb;
+  --border: #cbd2d9;
+  --border-hover: #a8b2bc;
+  --text-primary: #161b22;
+  --text-secondary: #4d5c6b;
+  --text-muted: #8895a3;
+  --accent: #1a8a7d;
+  --accent-soft: #1a8a7d12;
+  --accent-mid: #1a8a7d30;
+  --pop: #d4614e;
+  --pop-soft: #d4614e12;
+  --cream: #f5f8f9;
+  --accent-glow: #1a8a7d30;
+}
+
+[data-theme="slate"] .btn:hover { box-shadow: 0 4px 16px #1a8a7d20; }
+[data-theme="slate"] .btn.primary:hover { background: #157a6e; box-shadow: 0 8px 30px #1a8a7d40; }
+
+/* === cards.css === */
+[data-theme="slate"] .card-inner {
+  background: var(--bg-card);
+  border: 2.5px solid var(--border);
+  border-radius: 12px;
+}
+
+[data-theme="slate"] .card[data-accent="red"]    .card-art-inner { background: linear-gradient(145deg, #e0d0cc, #d4c4be 50%, #e0d0cc); }
+[data-theme="slate"] .card[data-accent="purple"] .card-art-inner { background: linear-gradient(145deg, #d0cce0, #c4bed8 50%, #d0cce0); }
+[data-theme="slate"] .card[data-accent="green"]  .card-art-inner { background: linear-gradient(145deg, #c4dcd4, #b8d0c8 50%, #c4dcd4); }
+[data-theme="slate"] .card[data-accent="gold"]   .card-art-inner { background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8); }
+
+[data-theme="slate"] .card-inner.card-inner--home {
+  background: linear-gradient(145deg, #dcd8c8, #d0ccbc 50%, #dcd8c8);
+}
+
+[data-theme="slate"] .type-bar {
+  border-radius: 4px;
+}
+
+[data-theme="slate"] .card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #d4614e, transparent); }
+[data-theme="slate"] .card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #6a7cba, transparent); }
+[data-theme="slate"] .card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #1a8a7d, transparent); }
+[data-theme="slate"] .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #c4944a, transparent); }
+
+/* === project.css === */
+[data-theme="slate"] .work-image-placeholder.warm { background: linear-gradient(135deg, #e8f4f2 0%, #d0ebe7 100%); }
+[data-theme="slate"] .work-image-placeholder.cool { background: linear-gradient(135deg, #eef1f6 0%, #dce2ec 100%); }
+[data-theme="slate"] .work-image-placeholder.fresh { background: linear-gradient(135deg, #e6f3f1 0%, #ccebe6 100%); }
