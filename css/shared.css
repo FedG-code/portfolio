@@ -1532,6 +1532,11 @@ footer span {
   --radius-sm: 0px;
 }
 
+[data-theme="brutalist"] .hero-default { display: none; }
+[data-theme="brutalist"] .about-default { display: none; }
+[data-theme="brutalist"] .hero-brutalist { display: block; }
+[data-theme="brutalist"] .about-brutalist { display: block; }
+
 [data-theme="brutalist"] .status-bar {
   display: flex;
   justify-content: space-between;
@@ -2187,6 +2192,7 @@ footer span {
   font-style: normal;
   color: #1A5C52;
 }
+[data-theme="retro"] .contact-heading .teal { color: #1A5C52; }
 
 /* Buttons */
 [data-theme="retro"] .btn {
