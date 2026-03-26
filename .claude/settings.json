@@ -11,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const inp=JSON.parse(d).tool_input;if(inp.offset==null||inp.limit==null){console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'deny',permissionDecisionReason:'BLOCKED: Use offset and limit parameters with Read. Grep for line numbers first, then read only the section you need (max 80 lines).'}}))}})\"",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const inp=JSON.parse(d).tool_input;const p=(inp.file_path||'').toLowerCase();const imgExts=['.png','.jpg','.jpeg','.gif','.svg','.webp','.ico','.bmp','.pdf'];if(imgExts.some(e=>p.endsWith(e)))process.exit(0);if(inp.offset==null||inp.limit==null){try{const lines=require('fs').readFileSync(inp.file_path,'utf8').split('\\n').length;if(lines>500){console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'suggest',permissionDecisionReason:'SUGGESTION: This file has '+lines+' lines. Consider using offset and limit parameters to read only the section you need (max 80 lines). Grep for line numbers first.'}}))}}catch(e){}}})\"",
             "timeout": 5
           }
         ]

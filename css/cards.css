@@ -616,13 +616,13 @@ html.card-dragging body {
    ══════════════════════════════════════════════════════════ */
 
 [data-theme="brutalist"] .card-inner {
-  background: #E8E4DC;
+  background: #FFFFFF;
   border: 2px solid #0C0C0C;
   border-radius: 4px;
 }
 
 [data-theme="brutalist"] .card-inner.card-inner--home {
-  background: #D9D4CA;
+  background: #FFFFFF;
 }
 
 /* ── Title ── */
@@ -645,11 +645,11 @@ html.card-dragging body {
   border: 1px solid #0C0C0C;
 }
 
-/* Unified warm grey art backgrounds — overrides per-card accents */
-[data-theme="brutalist"] .card[data-accent="red"]    .card-art-inner { background: #D9D4CA !important; }
-[data-theme="brutalist"] .card[data-accent="purple"] .card-art-inner { background: #D9D4CA !important; }
-[data-theme="brutalist"] .card[data-accent="green"]  .card-art-inner { background: #D9D4CA !important; }
-[data-theme="brutalist"] .card[data-accent="gold"]   .card-art-inner { background: #D9D4CA !important; }
+/* Unified white art backgrounds — overrides per-card accents */
+[data-theme="brutalist"] .card[data-accent="red"]    .card-art-inner { background: #FFFFFF !important; }
+[data-theme="brutalist"] .card[data-accent="purple"] .card-art-inner { background: #FFFFFF !important; }
+[data-theme="brutalist"] .card[data-accent="green"]  .card-art-inner { background: #FFFFFF !important; }
+[data-theme="brutalist"] .card[data-accent="gold"]   .card-art-inner { background: #FFFFFF !important; }
 
 [data-theme="brutalist"] .card-art-icon {
   color: #0C0C0C;
@@ -676,7 +676,7 @@ html.card-dragging body {
 
 /* ── Home Card ── */
 [data-theme="brutalist"] .card-art--home .card-art-inner {
-  background: #D9D4CA !important;
+  background: #FFFFFF !important;
   position: relative;
 }
 
@@ -721,11 +721,8 @@ html.card-dragging body {
   text-align: center;
 }
 
-/* ── Accent Strips: all electric blue ── */
-[data-theme="brutalist"] .card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
-[data-theme="brutalist"] .card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
-[data-theme="brutalist"] .card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
-[data-theme="brutalist"] .card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #0038FF, transparent) !important; opacity: 0.4; }
+/* ── Accent Strips: hidden in brutalist ── */
+[data-theme="brutalist"] .accent-strip { display: none !important; }
 
 /* ── Mobile ── */
 @media (max-width: 768px) {

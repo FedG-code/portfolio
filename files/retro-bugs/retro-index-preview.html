@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="retro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro Theme — Index Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bitter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   RETRO THEME — STANDALONE PREVIEW
+   All styles self-contained for review.
+   Palette: cream #FDF6EC · teal #1A5C52 · deep-teal #0F3E37
+   mustard #E8A825 · red #D94230 · text #1A1A16
+   Fonts: Shrikhand (display) · Bitter (body) · IBM Plex Mono (mono)
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #FDF6EC;
+  --bg-teal: #1A5C52;
+  --bg-teal-deep: #0F3E37;
+  --mustard: #E8A825;
+  --text: #1A1A16;
+  --text-muted: #6D6A5E;
+  --text-on-dark: #F0EBE0;
+  --accent: #D94230;
+  --border: #D4CBBA;
+  --font-display: 'Shrikhand', cursive;
+  --font-body: 'Bitter', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 3.5rem);
+}
+
+/* ══════════ HERO — Split layout ══════════ */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-main {
+  padding: 5rem clamp(1.5rem, 5vw, 3.5rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+/* Decorative circle — hero left, bottom-left */
+.hero-main::after {
+  content: '';
+  position: absolute;
+  bottom: -8vw; left: -6vw;
+  width: 28vw; height: 28vw;
+  border: 4px solid var(--mustard);
+  border-radius: 50%;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  padding: 0.3rem 0.85rem;
+  transform: rotate(-2deg);
+  width: fit-content;
+  margin-bottom: 2.5rem;
+}
+.hero-badge::before {
+  content: '●';
+  font-size: 0.45rem;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+h1 em {
+  font-style: normal; /* Shrikhand has no italic; use color instead */
+  color: var(--accent);
+  position: relative;
+  display: inline-block;
+}
+h1 em::after {
+  content: '';
+  position: absolute;
+  bottom: 0.04em; left: 0; right: 0;
+  height: 0.13em;
+  background: var(--mustard);
+}
+.serif-line { display: block; }
+
+.hero-desc {
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  max-width: 460px;
+  line-height: 1.85;
+  position: relative;
+  z-index: 1;
+}
+
+/* Right teal panel */
+.hero-panel {
+  background: var(--bg-teal);
+  color: var(--text-on-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 4rem 2.5rem;
+  position: relative;
+}
+
+/* Faded circle decoration in panel */
+.hero-panel::before {
+  content: '';
+  position: absolute;
+  top: 3rem; right: 2rem;
+  width: 120px; height: 120px;
+  border: 3px solid rgba(232,168,37,0.18);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Diagonal mustard stripe across panel */
+.hero-panel::after {
+  content: '';
+  position: absolute;
+  top: -20%; left: -40%;
+  width: 200%; height: 30px;
+  background: var(--mustard);
+  opacity: 0.07;
+  transform: rotate(-35deg);
+  pointer-events: none;
+}
+
+.tidbit {
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+.tidbit:last-child { margin-bottom: 0; }
+.tidbit-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mustard);
+  display: block;
+  margin-bottom: 0.15rem;
+}
+.tidbit-value {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* ══════════ ABOUT — deep teal section ══════════ */
+#about {
+  background: var(--bg-teal-deep);
+  color: var(--text-on-dark);
+  padding: 5rem 0;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mustard);
+  margin-bottom: 0.75rem;
+}
+
+.section-heading {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  margin-bottom: 2.5rem;
+  color: var(--text-on-dark);
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.about-prose {
+  font-weight: 300;
+  font-size: 0.95rem;
+  line-height: 1.9;
+  color: rgba(240,235,224,0.7);
+}
+.about-prose strong { color: var(--text-on-dark); font-weight: 600; }
+.about-prose p + p { margin-top: 1.25rem; }
+.about-prose a {
+  color: var(--mustard);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.about-sidebar { display: flex; flex-direction: column; gap: 2rem; }
+
+.about-box {
+  padding: 1.4rem 1.5rem;
+  background: rgba(255,255,255,0.04);
+  border-left: 3px solid var(--mustard);
+}
+
+.about-box-title {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mustard);
+  margin-bottom: 0.5rem;
+}
+
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(240,235,224,0.7);
+  transition: border-color 0.2s, color 0.2s;
+}
+.chip:hover {
+  border-color: var(--mustard);
+  color: var(--text-on-dark);
+}
+
+.about-box-text {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: rgba(240,235,224,0.8);
+}
+
+/* ══════════ CONTACT — cream section ══════════ */
+.contact {
+  padding: 5rem 0;
+  text-align: center;
+  background: var(--bg);
+}
+
+.contact-heading {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+.contact-heading .teal { color: var(--bg-teal); }
+
+.contact-sub {
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 2.5rem;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-btns {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-decoration: none;
+  padding: 0.7rem 1.6rem;
+  border: 2px solid var(--bg-teal);
+  color: var(--bg-teal);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--bg-teal);
+  color: var(--text-on-dark);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.btn.primary:hover {
+  background: #b83525;
+  border-color: #b83525;
+}
+
+/* ══════════ FOOTER ══════════ */
+footer {
+  background: var(--bg-teal);
+  color: rgba(240,235,224,0.5);
+  padding: 1.2rem 3rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-align: center;
+}
+
+/* ══════════ THEME SWITCHER (preview placeholder) ══════════ */
+.theme-switcher {
+  position: fixed;
+  top: 1rem;
+  right: 1.5rem;
+  z-index: 99;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.85rem;
+  border: 2px solid var(--bg-teal);
+  background: var(--bg);
+  color: var(--bg-teal);
+  cursor: default;
+}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-panel { padding: 2.5rem clamp(1.5rem, 5vw, 3.5rem); flex-direction: row; flex-wrap: wrap; gap: 2rem; }
+  .tidbit { margin-bottom: 0; }
+  .about-content { grid-template-columns: 1fr; gap: 2.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Theme switcher placeholder -->
+<button class="theme-switcher">Retro</button>
+
+<!-- HERO — Split layout -->
+<section class="hero">
+  <div class="hero-main">
+    <div class="hero-badge">Open to opportunities</div>
+    <h1>
+      <span class="serif-line"><em>Never</em> shipped a</span>
+      <span class="serif-line">boring product.</span>
+    </h1>
+    <p class="hero-desc">
+      Developer with three years of experience shipping a variety of web and gaming products.
+      I have a passion for design and champion high standards of polish.
+    </p>
+  </div>
+  <div class="hero-panel">
+    <div class="tidbit">
+      <p class="tidbit-label">Based in</p>
+      <p class="tidbit-value">London, UK</p>
+    </div>
+    <div class="tidbit">
+      <p class="tidbit-label">Currently</p>
+      <p class="tidbit-value">Logifuture</p>
+    </div>
+    <div class="tidbit">
+      <p class="tidbit-label">Side project</p>
+      <p class="tidbit-value">Coffin-Likker</p>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT — deep teal -->
+<section id="about">
+  <div class="container">
+    <p class="section-label">02 - About</p>
+    <h2 class="section-heading">A bit about me.</h2>
+
+    <div class="about-content">
+      <div class="about-prose">
+        <p>
+          I'm a <strong>design-minded developer</strong> with three years of experience
+          across web applications and games. I like working in teams and take pride in the quality of my communication.
+          I've been closely keeping up with how AI has been improving and constantly test new tools and methodologies.
+          Fun fact: I built this whole website over the weekend, letting Claude handle the code whilst I focused on
+          structure, content and visuals.
+        </p>
+        <p>
+          Outside of work I chase my passions: I build games, I exercise and I do stand-up. I also
+          <a href="#" target="_blank">interviewed Deep Rock Galactic's design director</a>
+          about how the game was designed to foster positivity among players.
+          How games shape behaviour is something I keep coming back to.
+        </p>
+      </div>
+      <div class="about-sidebar">
+        <div class="about-box">
+          <p class="about-box-title">Languages</p>
+          <div class="chip-grid">
+            <span class="chip">JavaScript</span>
+            <span class="chip">C#</span>
+            <span class="chip">C++</span>
+            <span class="chip">Python</span>
+            <span class="chip">GDScript</span>
+          </div>
+        </div>
+        <div class="about-box">
+          <p class="about-box-title">Tools & Frameworks</p>
+          <div class="chip-grid">
+            <span class="chip">Node.js</span>
+            <span class="chip">PixiJS</span>
+            <span class="chip">GSAP</span>
+            <span class="chip">Unity</span>
+            <span class="chip">Godot</span>
+            <span class="chip">Three.js</span>
+            <span class="chip">Figma</span>
+            <span class="chip">Miro</span>
+          </div>
+        </div>
+        <div class="about-box">
+          <p class="about-box-title">Education</p>
+          <p class="about-box-text">
+            BSc Physics & Astronomy — Queen Mary<br>
+            Game Programming — CG Spectrum
+          </p>
+        </div>
+        <div class="about-box">
+          <p class="about-box-title">Bonus Stats</p>
+          <p class="about-box-text">
+            Fluent in English & Italian. Conversational French.<br>
+            Sports climber. Stand-up comedian.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT — cream -->
+<section class="contact" style="padding-bottom: 220px;">
+  <div class="container">
+    <h2 class="contact-heading">Like what you see?<br><span class="teal">Get in touch.</span></h2>
+    <p class="contact-sub">
+      Looking for a challenging role where I can put to use my diverse skillset.
+    </p>
+    <div class="contact-btns">
+      <a href="#" class="btn primary">Email me</a>
+      <a href="#" class="btn">GitHub</a>
+      <a href="#" class="btn">LinkedIn</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>Federico Giovannini &copy; 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>
