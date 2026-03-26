@@ -919,6 +919,9 @@ footer span {
 [data-theme="bold"] .hero .container {
   position: relative;
   z-index: 1;
+  max-width: none;
+  margin: 0;
+  padding: 0 3rem;
 }
 
 [data-theme="bold"] .doodle { display: none; }
@@ -953,10 +956,18 @@ footer span {
   color: var(--text-secondary);
 }
 
+[data-theme="bold"] .hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 520px;
+}
+
 [data-theme="bold"] .hero-tidbits {
   border-top: 2px solid var(--text-primary);
   padding-top: 1.5rem;
   gap: 3rem;
+  justify-content: flex-start;
 }
 
 [data-theme="bold"] .tidbit {
