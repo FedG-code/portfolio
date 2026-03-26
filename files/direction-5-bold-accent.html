@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 5 — Bold Accent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #FAFAF7;
+    --bg-dark: #1A1714;
+    --text: #1A1714;
+    --text-on-dark: #F5F2ED;
+    --text-muted: #7A7570;
+    --text-muted-dark: #9A9590;
+    --accent: #FF6123;
+    --accent-light: rgba(255, 97, 35, 0.1);
+    --font-display: 'Archivo Black', sans-serif;
+    --font-body: 'Archivo', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockup-note {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    background: var(--accent);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-align: center;
+    padding: 0.4rem;
+  }
+
+  /* NAV */
+  nav {
+    padding: 1.5rem 3rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .nav-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-decoration: none;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* HERO — massive type, accent color is the star */
+  .hero {
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Giant accent circle — responsive */
+  .hero-circle {
+    position: absolute;
+    right: -8vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52vw;
+    height: 52vw;
+    border-radius: 50%;
+    background: var(--accent);
+    z-index: 0;
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+  }
+  .hero-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 7vw, 6.5rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+  h1 .line-accent {
+    color: var(--accent);
+  }
+  .hero-desc {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text-muted);
+    max-width: 420px;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+  }
+  .hero-meta {
+    display: flex; gap: 3rem;
+    border-top: 2px solid var(--text);
+    padding-top: 1.5rem;
+  }
+  .meta-item label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+  .meta-item span {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  /* ABOUT — dark section, orange details */
+  .about {
+    background: var(--bg-dark);
+    color: var(--text-on-dark);
+    padding: 5rem 3rem;
+  }
+  .about-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .about-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 1.5rem;
+  }
+  .about-heading {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+  }
+  .about-top-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--text-muted-dark);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .about-cols {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 5rem;
+    align-items: start;
+  }
+  .about-prose {
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--text-muted-dark);
+  }
+  .about-prose strong {
+    color: var(--text-on-dark);
+    font-weight: 600;
+  }
+  .about-prose p + p { margin-top: 1.2rem; }
+  .skills-strip {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .skill-chip {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    padding: 0.35rem 0.7rem;
+    background: rgba(255,97,35,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(255,97,35,0.25);
+  }
+  .about-sidebar {
+    display: flex; flex-direction: column; gap: 2rem;
+  }
+  .sidebar-block-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .sidebar-block-value {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text-muted-dark);
+  }
+
+  /* CONTACT — accent bg */
+  .contact {
+    background: var(--accent);
+    color: white;
+    padding: 5rem 3rem;
+    text-align: center;
+  }
+  .contact h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .contact-sub {
+    font-weight: 300;
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    opacity: 0.85;
+  }
+  .contact-btns { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.75rem 1.8rem;
+    border: 2px solid white;
+    color: white;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: white; color: var(--accent); }
+  .btn.primary { background: white; color: var(--accent); }
+  .btn.primary:hover { background: transparent; color: white; }
+
+  footer {
+    padding: 1.5rem 3rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .swatches {
+    position: fixed; bottom: 1rem; right: 1rem;
+    display: flex; gap: 0.25rem; z-index: 200;
+    padding: 0.5rem; background: white; border: 1px solid rgba(0,0,0,0.1);
+  }
+  .swatch { width: 24px; height: 24px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.08); }
+</style>
+</head>
+<body>
+
+<div class="mockup-note">
+  DIRECTION 5 — "Bold Accent." Trent Polack energy. Archivo Black + Archivo + IBM Plex Mono. Hot orange on cream → dark → full orange.
+</div>
+
+<nav>
+  <div class="nav-name">Federico Giovannini</div>
+  <ul class="nav-links">
+    <li><a href="#">work</a></li>
+    <li><a href="#">about</a></li>
+    <li><a href="#">contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-circle"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">Open to opportunities</div>
+    <h1><span class="line-accent">Never</span> shipped a boring product.</h1>
+    <p class="hero-desc">
+      Developer with three years of experience shipping a variety of web and gaming products. I have a passion for design and champion high standards of polish.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-item">
+        <label>Based in</label>
+        <span>London, UK</span>
+      </div>
+      <div class="meta-item">
+        <label>Currently</label>
+        <span>Logifuture</span>
+      </div>
+      <div class="meta-item">
+        <label>Side project</label>
+        <span>Coffin-Likker</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="about">
+  <div class="about-inner">
+    <div class="about-top">
+      <h2 class="about-heading">A bit about me.</h2>
+      <span class="about-top-label">Background</span>
+    </div>
+    <div class="about-cols">
+      <div>
+        <div class="about-prose">
+          <p>
+            I'm a <strong>design-minded developer</strong> with three years of experience across web applications and games. I like working in teams and take pride in the quality of my communication. I've been closely keeping up with how AI has been improving and constantly test new tools and methodologies.
+          </p>
+          <p>
+            Outside of work I chase my passions: I build games, I exercise and I do stand-up. How games shape behaviour is something I keep coming back to.
+          </p>
+        </div>
+        <div class="skills-strip">
+          <span class="skill-chip">JavaScript</span>
+          <span class="skill-chip">C#</span>
+          <span class="skill-chip">C++</span>
+          <span class="skill-chip">Python</span>
+          <span class="skill-chip">GDScript</span>
+          <span class="skill-chip">Unity</span>
+          <span class="skill-chip">Godot</span>
+          <span class="skill-chip">GSAP</span>
+          <span class="skill-chip">Three.js</span>
+          <span class="skill-chip">PixiJS</span>
+          <span class="skill-chip">Node.js</span>
+          <span class="skill-chip">Figma</span>
+        </div>
+      </div>
+      <div class="about-sidebar">
+        <div>
+          <div class="sidebar-block-label">Education</div>
+          <div class="sidebar-block-value">
+            BSc Physics & Astronomy — Queen Mary<br>
+            Game Programming — CG Spectrum
+          </div>
+        </div>
+        <div>
+          <div class="sidebar-block-label">Languages</div>
+          <div class="sidebar-block-value">
+            English & Italian (fluent)<br>
+            French (conversational)
+          </div>
+        </div>
+        <div>
+          <div class="sidebar-block-label">Off the clock</div>
+          <div class="sidebar-block-value">
+            Sports climber. Stand-up comedian. Interviewed Deep Rock Galactic's design director about positive community design.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="contact">
+  <h2>Like what you see?<br>Get in touch.</h2>
+  <p class="contact-sub">Looking for a challenging role where I can put my diverse skillset to work.</p>
+  <div class="contact-btns">
+    <a href="#" class="btn primary">Email me</a>
+    <a href="#" class="btn">GitHub</a>
+    <a href="#" class="btn">LinkedIn</a>
+  </div>
+</section>
+
+<footer>Federico Giovannini &copy; 2026</footer>
+
+<div class="swatches">
+  <div class="swatch" style="background: #FAFAF7;" title="bg"></div>
+  <div class="swatch" style="background: #1A1714;" title="dark"></div>
+  <div class="swatch" style="background: #FF6123;" title="accent"></div>
+  <div class="swatch" style="background: #7A7570;" title="muted"></div>
+</div>
+
+</body>
+</html>
