@@ -1,17 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="coral">
+<html lang="en" data-theme="bold">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Muk (Working Title)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Bold (default) -->
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Cinematic -->
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Commit+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Brutalist -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
+<!-- Retro -->
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bitter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/project.css">
 <script>
   var t = localStorage.getItem('portfolio-theme');
+  if (t === 'coral' || t === 'slate') { t = 'bold'; localStorage.setItem('portfolio-theme', 'bold'); }
   if (t) document.documentElement.setAttribute('data-theme', t);
 </script>
 </head>
@@ -19,20 +27,8 @@
 
 <div id="plane-canvas"></div>
 
-<!-- NAV -->
-<nav>
-  <div class="container nav-inner">
-    <a href="index.html" class="nav-logo">Federico</a>
-    <ul class="nav-links">
-      <li><a href="index.html#work">Work</a></li>
-      <li><a href="index.html#about">About</a></li>
-      <li><a href="index.html#contact">Contact</a></li>
-    </ul>
-  </div>
-</nav>
-
 <!-- THEME SWITCHER -->
-<button class="theme-switcher" id="themeSwitcher">Slate</button>
+<button class="theme-switcher" id="themeSwitcher">Cinematic</button>
 
 <!-- PROJECT NAV -->
 <div class="container">

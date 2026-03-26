@@ -114,10 +114,6 @@
 .work-image-placeholder.cool { background: linear-gradient(135deg, #edf2ff 0%, #dbe4ff 100%); }
 .work-image-placeholder.fresh { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
 
-[data-theme="slate"] .work-image-placeholder.warm { background: linear-gradient(135deg, #e8f4f2 0%, #d0ebe7 100%); }
-[data-theme="slate"] .work-image-placeholder.cool { background: linear-gradient(135deg, #eef1f6 0%, #dce2ec 100%); }
-[data-theme="slate"] .work-image-placeholder.fresh { background: linear-gradient(135deg, #e6f3f1 0%, #ccebe6 100%); }
-
 .work-image {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -251,4 +247,166 @@
 @media (max-width: 480px) {
   .project-images-duo { max-width: 100%; }
   .project-images-duo .work-image { max-height: 300px; }
+}
+/* ========================================================================
+   BOLD THEME — project.css additions
+   Add this block after the [data-theme="neon"] section in project.css.
+   ======================================================================== */
+
+[data-theme="bold"] .project-hero-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="bold"] .project-text h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-style: normal;
+}
+
+[data-theme="bold"] .project-hero-badge {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+[data-theme="bold"] .wip-badge {
+  border-radius: 0;
+}
+
+[data-theme="bold"] .project-link {
+  border-radius: 0;
+}
+
+[data-theme="bold"] .work-image-placeholder.warm {
+  background: linear-gradient(135deg, #fef0e7 0%, #fde1cb 100%);
+}
+[data-theme="bold"] .work-image-placeholder.cool {
+  background: linear-gradient(135deg, #edf2ff 0%, #dbe4ff 100%);
+}
+[data-theme="bold"] .work-image-placeholder.fresh {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+/* ========== CINEMATIC THEME — PROJECT PAGE OVERRIDES ========== */
+
+[data-theme="cinematic"] .project-hero-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+}
+
+[data-theme="cinematic"] .project-text h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: normal;
+}
+
+[data-theme="cinematic"] .project-hero-badge {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+[data-theme="cinematic"] .wip-badge {
+  border-radius: 0;
+}
+
+[data-theme="cinematic"] .project-link {
+  border-radius: 0;
+}
+
+/* Image placeholders */
+[data-theme="cinematic"] .work-image-placeholder.warm {
+  background: radial-gradient(circle at 30% 40%, rgba(214,0,28,0.1) 0%, transparent 50%), #161616;
+}
+[data-theme="cinematic"] .work-image-placeholder.cool {
+  background: radial-gradient(circle at 30% 40%, rgba(100,120,180,0.1) 0%, transparent 50%), #161616;
+}
+[data-theme="cinematic"] .work-image-placeholder.fresh {
+  background: radial-gradient(circle at 30% 40%, rgba(80,180,120,0.1) 0%, transparent 50%), #161616;
+}
+/* ══════════════════════════════════════════════════════════
+   BRUTALIST TYPOGRAPHIC THEME — project.css overrides
+   ══════════════════════════════════════════════════════════ */
+
+[data-theme="brutalist"] .project-hero-title {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="brutalist"] .project-text h4 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-style: normal;
+}
+
+[data-theme="brutalist"] .project-hero-badge {
+  border-radius: 0;
+  border: 2px solid var(--accent);
+  font-family: var(--font-mono);
+}
+
+[data-theme="brutalist"] .wip-badge {
+  border-radius: 0;
+}
+
+[data-theme="brutalist"] .project-link {
+  border-radius: 0;
+}
+
+[data-theme="brutalist"] .work-image-placeholder {
+  border: 1px solid var(--border);
+}
+
+[data-theme="brutalist"] .work-image-placeholder.warm { background: #DDD8CE; }
+[data-theme="brutalist"] .work-image-placeholder.cool { background: #D0D4DC; }
+[data-theme="brutalist"] .work-image-placeholder.fresh { background: #CED8D0; }
+/* ═══════════════════════════════════════════════════════
+   RETRO THEME — project.css overrides
+   ═══════════════════════════════════════════════════════ */
+
+[data-theme="retro"] .project-hero-title {
+  font-family: 'Shrikhand', cursive;
+  font-style: normal;
+  font-weight: 400;
+}
+
+[data-theme="retro"] .project-text h4 {
+  font-family: 'Shrikhand', cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+[data-theme="retro"] .project-hero-badge {
+  border-radius: 0;
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+[data-theme="retro"] .wip-badge {
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+[data-theme="retro"] .project-link {
+  border-radius: 0;
+}
+
+/* Image placeholders — warm cream + teal tints */
+[data-theme="retro"] .work-image-placeholder.warm {
+  background: linear-gradient(135deg, #F5EED8 0%, #EDE5C8 100%);
+}
+[data-theme="retro"] .work-image-placeholder.cool {
+  background: linear-gradient(135deg, #D4E8E2 0%, #C4DCD6 100%);
+}
+[data-theme="retro"] .work-image-placeholder.fresh {
+  background: linear-gradient(135deg, #E8E4C8 0%, #DCD8B8 100%);
 }

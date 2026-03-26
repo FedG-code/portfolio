@@ -1,0 +1,121 @@
+/* Archived nav styles — removed 2026-03-25. Nav replaced by card-hand navigation. */
+
+/* === Base nav styles (shared.css lines 171-217) === */
+nav {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.6rem 0.6rem 0.6rem 1.5rem;
+  box-shadow: 0 4px 20px #1a181408;
+  backdrop-filter: blur(16px);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-logo {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--accent);
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.25rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  transition: all 0.25s;
+}
+
+.nav-links a:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* === Neon nav overrides (shared.css lines 828-886) === */
+[data-theme="neon"] nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: #0a0a0ccc;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.25rem 0;
+  box-shadow: none;
+  width: 100%;
+  max-width: none;
+}
+
+[data-theme="neon"] .nav-inner {
+  justify-content: space-between;
+}
+
+[data-theme="neon"] .nav-logo {
+  font-family: 'Space Mono', monospace;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  margin-left: 1px;
+}
+
+[data-theme="neon"] .nav-links a {
+  position: relative;
+  border-radius: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-theme="neon"] .nav-links a:hover {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+[data-theme="neon"] .nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 0.3s var(--ease-out);
+}
+
+[data-theme="neon"] .nav-links a:hover::after {
+  width: 100%;
+}
+
+/* === Mobile nav (shared.css lines 1011-1018) === */
+.nav-links { display: none; }
+nav { padding: 0.6rem 1.25rem; }
+nav.scroll-hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
+[data-theme="neon"] nav {
+  position: static;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

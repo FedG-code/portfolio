@@ -1,0 +1,25 @@
+/* Archived coral theme — was the :root default. Removed 2026-03-25. */
+:root {
+  --bg: #f5f0e8;
+  --bg-warm: #ebe5d9;
+  --bg-card: #ffffff;
+  --border: #d6cebf;
+  --border-hover: #b8ad99;
+  --text-primary: #1a1814;
+  --text-secondary: #6b6459;
+  --text-muted: #a39e93;
+  --accent: #e85d26;
+  --accent-soft: #e85d2618;
+  --accent-mid: #e85d2640;
+  --pop: #2d5ce6;
+  --pop-soft: #2d5ce615;
+  --cream: #faf7f2;
+  --accent-glow: #e85d2635;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --radius: 20px;
+  --radius-sm: 12px;
+}

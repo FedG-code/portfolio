@@ -13,9 +13,19 @@ reveals.forEach(el => observer.observe(el));
 
 // Theme switcher
 const themeSwitcher = document.getElementById('themeSwitcher');
-const themes = ['coral', 'slate', 'neon'];
-let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'coral');
+const themes = ['bold', 'cinematic', 'brutalist', 'retro', 'neon'];
+let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'bold');
 if (currentIndex === -1) currentIndex = 0;
+
+// Migrate removed themes
+(function() {
+  var stored = localStorage.getItem('portfolio-theme');
+  if (stored === 'coral' || stored === 'slate') {
+    localStorage.setItem('portfolio-theme', 'bold');
+    document.documentElement.setAttribute('data-theme', 'bold');
+    currentIndex = 0;
+  }
+})();
 
 // Update button label to show the *other* theme
 const updateLabel = () => {
@@ -34,53 +44,3 @@ themeSwitcher.addEventListener('click', () => {
   if (window._cardHandOnThemeChange) window._cardHandOnThemeChange();
 });
 
-// Mobile auto-hide nav & theme switcher on scroll
-(function () {
-  var nav = document.querySelector('nav');
-  var switcher = document.getElementById('themeSwitcher');
-  if (!nav || !switcher) return;
-
-  var lastY = window.scrollY;
-  var ticking = false;
-
-  function getPlaneToggle() {
-    return document.querySelector('.plane-toggle');
-  }
-
-  function onScroll() {
-    var planeToggle = getPlaneToggle();
-    if (window.innerWidth > 600) {
-      nav.classList.remove('scroll-hidden');
-      switcher.classList.remove('scroll-hidden');
-      if (planeToggle) planeToggle.classList.remove('scroll-hidden');
-      lastY = window.scrollY;
-      ticking = false;
-      return;
-    }
-
-    var y = window.scrollY;
-    var threshold = document.documentElement.scrollHeight * 0.1;
-
-    if (y > lastY && y > threshold) {
-      nav.classList.add('scroll-hidden');
-      switcher.classList.add('scroll-hidden');
-      if (planeToggle && !document.documentElement.classList.contains('plane-active')) {
-        planeToggle.classList.add('scroll-hidden');
-      }
-    } else if (y < lastY) {
-      nav.classList.remove('scroll-hidden');
-      switcher.classList.remove('scroll-hidden');
-      if (planeToggle) planeToggle.classList.remove('scroll-hidden');
-    }
-
-    lastY = y;
-    ticking = false;
-  }
-
-  window.addEventListener('scroll', function () {
-    if (!ticking) {
-      requestAnimationFrame(onScroll);
-      ticking = true;
-    }
-  }, { passive: true });
-})();

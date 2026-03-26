@@ -21,21 +21,31 @@ css/
 ```
 
 ## Key Details
-- **Fonts**: Two Google Fonts `<link>` tags in every page's `<head>`:
-  1. DM Sans, Instrument Serif, JetBrains Mono (used by coral & slate)
-  2. Sora, Space Mono (used by neon)
+- **Fonts**: Google Fonts `<link>` tags in every page's `<head>` load all theme fonts:
+  - Bold: Archivo Black, Archivo, IBM Plex Mono
+  - Cinematic: Syne, Commit Mono
+  - Brutalist: Space Mono, Literata
+  - Retro: Shrikhand, Bitter, IBM Plex Mono
+  - Neon: Sora, Space Mono
   - Font CSS variables (`--font-serif`, `--font-body`, `--font-mono`) are redefined per theme in `shared.css`
-- **Theme system**: Three themes cycle via button: `coral → slate → neon → coral`
-  - `data-theme` attribute on `<html>` controls the active theme (`coral` default)
-  - Each theme defines its own CSS variable block in `shared.css` (`:root` for coral, `[data-theme="slate"]`, `[data-theme="neon"]`)
+- **Theme system**: Five themes cycle via button: `bold → cinematic → brutalist → retro → neon → bold`
+  - `data-theme` attribute on `<html>` controls the active theme (`bold` default)
+  - Each theme defines its own CSS variable block in `shared.css` (`:root` for bold, `[data-theme="cinematic"]`, etc.)
   - Theme-specific overrides (hardcoded colours, border-radius, font weights, etc.) go in `[data-theme="<name>"]` selector blocks after the variable blocks
-  - `js/shared.js` has `const themes = ['coral', 'slate', 'neon']` — the switcher button cycles through and persists to `localStorage`
-  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash)
+  - `js/shared.js` has `const themes = ['bold', 'cinematic', 'brutalist', 'retro', 'neon']` — the switcher button cycles through and persists to `localStorage`
+  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash). Also migrates stored `coral`/`slate` values to `bold`.
 - **Theme design notes**:
-  - **coral**: Warm light theme. Pill-shaped nav (centred, `border-radius: 100px`). Instrument Serif headings, DM Sans body, JetBrains Mono labels. Doodle decorations in hero. Rounded corners throughout.
-  - **slate**: Cool light theme. Same layout as coral, different colour palette (teal accent). Same fonts and shapes.
-  - **neon**: Dark techy theme. Full-width fixed nav bar (no pill, `border-radius: 0`). Sora headings/body, Space Mono labels. Lime-green accent (`#c9f059`). Sharp corners (6-12px radius). Grain overlay on `body::before`. Grid pattern in hero `::before`. Doodles hidden. Nav links have underline hover effect via `::after`.
-- **Nav structure**: `<nav>` contains a `.container.nav-inner` wrapper around `.nav-logo` and `.nav-links`. The `.nav-inner` holds the flex layout. This lets neon's full-width nav align content with the page container while coral/slate's pill nav is unaffected.
+  - **bold** (default): Warm light theme. Archivo Black headings, Archivo body, IBM Plex Mono labels. Orange accent (#FF6123). Sharp corners (0px radius). Dark about section, orange contact section. Hero accent circle.
+  - **cinematic**: Dark tech-noir theme. Syne headings, system body, Commit Mono labels. Red accent (#D6001C). Scanline overlay in hero, red glow, film grain on body. Sharp corners.
+  - **brutalist**: Typographic grid theme. Space Mono headings, Literata body. Electric blue accent (#0038FF). Status bar below nav. 2-column hero grid, data-row about section. Heavy black borders (2px). Uses alternate HTML layouts (.hero-brutalist, .about-brutalist).
+  - **retro**: 1970s warm theme. Shrikhand headings, Bitter body, IBM Plex Mono labels. Red accent (#D94230) + mustard secondary (#E8A825). Split hero with teal panel. Deep teal about section. Rounded corners (10px). Uses .hero-panel HTML element.
+  - **neon**: Dark techy theme. Sora headings/body, Space Mono labels. Lime-green accent (`#c9f059`). Sharp corners (6-12px radius). Grain overlay on `body::before`. Grid pattern in hero `::before`. Doodles hidden.
+- **Nav**: Removed from all pages. Navigation is handled by the card-hand system only. Nav CSS is archived in `backup/nav-styles.css`.
+- **Alternate HTML layouts**:
+  - `.hero-default` / `.hero-brutalist` — dual-layout hero (brutalist has alternate grid)
+  - `.about-default` / `.about-brutalist` — dual-layout about (brutalist has data rows)
+  - `.hero-panel` — retro teal panel (right side of split hero)
+  - `.status-bar` — brutalist status bar (hidden by default)
 - **Work cards**: `<a>` links in `index.html` that navigate to individual project pages; hover highlight effect (accent border + lift + shadow)
 - **JS features**: Scroll reveal (IntersectionObserver), theme switcher with localStorage
 - **Text Destruction** (`js/destruction.js`): "Plane mode" feature — a paper airplane projectile shatters text on collision, then characters reform.
@@ -44,7 +54,7 @@ css/
   - **Scatter phase**: Chars fly away from impact using `physics2D` (velocity, angle, gravity) with a brief accent-colour flash, fading to `opacity: 0` over `SCATTER_DURATION` (1.2s).
   - **Reform phase** (sequential typing drop-in): After a `REFORM_PAUSE` (1.0s), chars re-enter left-to-right in DOM reading order. Each char is pre-positioned 16px above its slot (`DROP_DISTANCE`), then drops into place with `power2.out` (no bounce) over `CHAR_LAND_DURATION` (0.12s). Consecutive chars are staggered by `CHAR_STAGGER` (0.055s) with an extra `WORD_EXTRA_STAGGER` (0.05s) pause at word boundaries (detected by `parentElement` change).
   - **Lifecycle**: `TextDestruction.onThemeChange()` destroys and re-inits on theme switch. Resize is debounced to re-split text. A `charRectCache` (invalidated on scroll/resize) accelerates hit detection.
-  - **Selector list** (`DESTRUCTIBLE_SELECTOR`): targets headings, hero text, work cards, about section, chips, contact, project pages, footer — excludes nav, theme switcher, buttons.
+  - **Selector list** (`DESTRUCTIBLE_SELECTOR`): targets headings, hero text, work cards, about section, chips, contact, project pages, footer, brutalist layout elements, retro panel elements — excludes theme switcher, buttons.
   - **Mobile-gated constants**: `_isMob` (viewport ≤768 OR touch+coarse) gates performance-sensitive values. Desktop is completely unchanged. Mobile overrides: `MAX_SHATTERED` 100 (vs 300), `REFORM_PAUSE` 1.0s (vs 0.8s), `CHAR_STAGGER` 0.035s (vs 0.055s), `WORD_EXTRA_STAGGER` 0.03s (vs 0.05s), `MAX_VELOCITY` 350 (vs 500), `MAX_ROTATION` 360° (vs 720°). Color flash tween is skipped on mobile. Impact coalescing on mobile batches same-frame `onProjectileAt()` calls via RAF.
   - **Impact throttle**: `IMPACT_THROTTLE` in `plane.js` is 80ms on mobile, 0ms on desktop. The scroll speed gate (`SCROLL_SPEED_THRESHOLD`) was removed — it unnecessarily limited desktop destruction.
   - **Design fallback**: If optimisation doesn't resolve plane mode scroll+fire lag, the fallback is to **disable page scrolling while plane mode is active** (e.g. CSS `overflow: hidden` on `<html>` when `.plane-active`). This eliminates scroll-triggered cache invalidation and the compound scroll+destruction cost entirely.
@@ -57,7 +67,7 @@ css/
   - **Title matching convention**: Card titles (in `card-hand.js` CARDS array) must match the project page `<h1 class="project-hero-title">` text exactly. Descriptive subtitles (e.g. "Casino Games", "Eve of Destruction") go in `.project-hero-badge`. Project title font styling (italic, weight, line-height) matches card title styling so the flying clone transition is seamless.
   - **`.reveal` vs card handoff**: Any element that a fly clone hands off to must have `.reveal` removed from itself **and all `.reveal` ancestors** before the wrapper fades in. Otherwise the clone disappears but the real element is still `opacity: 0` (waiting for IntersectionObserver → `.visible`), causing a visible gap. This is done in `transitionToProject()` after measuring targets — currently handled for `.project-hero-title` and the first `.work-image`'s parent. **When adding new fly targets** (e.g. a second image, a badge, etc.), find the target element, call `el.closest('.reveal')`, and remove the class before the fly timeline starts.
   - **Known issue — clone fly alignment**: The card title is `text-align: center` but the project page title is left-aligned. During the fly animation, the clone inherits center alignment from the card. For shorter titles (e.g. "Coffin-Likker"), the text visibly snaps from center to left when the clone is swapped for the real title. Longer titles (e.g. "Lost Satellite Studios") mask this. Fix options: left-align the clone and offset its start position, center the page title, or left-align the card title.
-- **Project pages**: Shared template - nav, theme switcher, back link, project hero, repeatable sub-project sections, footer
+- **Project pages**: Shared template - theme switcher, back link, project hero, repeatable sub-project sections, footer
 
 ## Serving Locally
 ```
@@ -166,4 +176,4 @@ Verify that the expanded card stays within the viewport at multiple sizes. These
 
 ## Preferences
 - **Use CLAUDE.md for persistent notes**, not the auto-memory directory. If something needs to be remembered across sessions, add it here.
-- **Be surgical with file reads** — always use `offset` and `limit` parameters to read only the lines you need. Avoid re-reading entire files when you only need a few lines. This keeps context usage low and avoids hitting the token limit or triggering auto-compaction in long sessions.
+- **Be surgical with file reads** — ALWAYS use `offset` and `limit` parameters. Never read more than 80 lines at once. Use Grep to find the right line numbers first, then read only that section. This applies to subagents too — when launching Explore/Plan agents, explicitly instruct them to use offset+limit and never read whole files. Whole-file reads of `shared.css` or `index.html` waste 2-4k tokens each and cause auto-compaction.

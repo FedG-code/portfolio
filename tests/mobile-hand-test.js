@@ -1,8 +1,8 @@
 /**
- * Mobile Hand-Card Layout Test
+ * Hand-Card Layout Test
  *
  * Verifies that all cards in the hand fan are visible and fit within
- * the viewport on iPhone-sized screens (375x812).
+ * the viewport across mobile and desktop screen sizes.
  *
  * Prerequisites:
  *   - Local server running on port 8080: npx http-server -p 8080 -c-1
@@ -17,9 +17,10 @@ const { chromium } = require('playwright');
 const BASE_URL = 'http://localhost:8080';
 
 const VIEWPORTS = [
-  { name: 'iPhone SE',     width: 375, height: 667 },
-  { name: 'iPhone 14',     width: 390, height: 844 },
-  { name: 'iPhone 14 Pro Max', width: 430, height: 932 },
+  { name: 'iPhone SE',     width: 375, height: 667,  mobile: true },
+  { name: 'iPhone 14',     width: 390, height: 844,  mobile: true },
+  { name: 'iPhone 14 Pro Max', width: 430, height: 932, mobile: true },
+  { name: 'QHD Desktop',   width: 2560, height: 1440, mobile: false },
 ];
 
 async function runTest() {
@@ -30,9 +31,9 @@ async function runTest() {
   for (const vp of VIEWPORTS) {
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
-      deviceScaleFactor: 2,
-      isMobile: true,
-      hasTouch: true,
+      deviceScaleFactor: vp.mobile ? 2 : 1,
+      isMobile: vp.mobile,
+      hasTouch: vp.mobile,
     });
     const page = await context.newPage();
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
@@ -97,10 +98,10 @@ async function runTest() {
   console.log(JSON.stringify(results, null, 2));
 
   if (!allPassed) {
-    console.error('\nFAILED: Some cards overflow the viewport on mobile.');
+    console.error('\nFAILED: Some cards overflow the viewport.');
     process.exit(1);
   } else {
-    console.log('\nPASSED: All cards fit within viewport on all tested mobile sizes.');
+    console.log('\nPASSED: All cards fit within viewport on all tested sizes.');
     process.exit(0);
   }
 }
