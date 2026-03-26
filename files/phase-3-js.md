@@ -211,5 +211,6 @@ Ask the user which they prefer before acting.
 
 ## What NOT to change in this phase
 - Do NOT modify project pages (logifuture.html etc — that's Phase 4)
-- Do NOT modify CSS files (Phase 1 handled all CSS)
-- Do NOT modify index.html (Phase 2 handled all HTML)
+
+## Note on CSS and HTML changes
+Brutalist and retro themes require CSS and HTML fixes beyond what Phases 1-2 covered. `index.html` and `css/shared.css` can be updated as needed to fix theme layout issues (e.g. brutalist single-screen layout, retro panel sizing, `.contact-brutalist` variant).

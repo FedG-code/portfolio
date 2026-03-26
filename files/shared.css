@@ -1542,6 +1542,7 @@ footer span {
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
+  padding-top: 2rem; /* clear fixed status bar */
 }
 [data-theme="brutalist"] section { padding: 0; }
 [data-theme="brutalist"] .reveal { opacity: 1; transform: none; }
@@ -1549,12 +1550,16 @@ footer span {
 [data-theme="brutalist"] .hero-brutalist {
   display: grid;
   grid-template-columns: 2fr 1fr;
+  height: 100%;
+  min-height: 0;
 }
 [data-theme="brutalist"] .hero-main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 2.5rem clamp(1.5rem, 5vw, 3.5rem) 1.5rem;
+  padding: 1.5rem clamp(1.5rem, 5vw, 3.5rem) 1rem;
+  min-height: 0;
+  overflow: hidden;
 }
 [data-theme="brutalist"] .hero-main h1 {
   padding: 0;
@@ -1564,10 +1569,12 @@ footer span {
   flex-direction: column;
   justify-content: space-between;
   border-left: 2px solid var(--border);
-  padding: 2.5rem 1.5rem 1.5rem;
+  padding: 1.5rem 1.5rem 1rem;
+  min-height: 0;
+  overflow: hidden;
 }
 [data-theme="brutalist"] .sidebar-field {
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
 }
 [data-theme="brutalist"] .sidebar-field:last-child {
   margin-bottom: 0;
@@ -1591,7 +1598,10 @@ footer span {
 }
 
 [data-theme="brutalist"] .about-brutalist {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 [data-theme="brutalist"] .about-header {
   font-family: var(--font-mono);
@@ -1599,11 +1609,12 @@ footer span {
   text-transform: uppercase;
   font-size: 1.1rem;
   letter-spacing: -0.02em;
-  padding: 0.6rem clamp(1.5rem, 5vw, 3.5rem);
+  padding: 0.4rem clamp(1.5rem, 5vw, 3.5rem);
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  flex-shrink: 0;
 }
 [data-theme="brutalist"] .about-header span {
   font-size: 0.7rem;
@@ -1615,26 +1626,34 @@ footer span {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 [data-theme="brutalist"] .about-left {
-  padding: 0.8rem clamp(1.5rem, 5vw, 3.5rem);
+  padding: 0.6rem clamp(1.5rem, 5vw, 3.5rem);
   border-right: 1px solid var(--border);
+  overflow-y: auto;
+  min-height: 0;
 }
 [data-theme="brutalist"] .about-left .about-prose {
   font-family: var(--font-body);
   font-weight: 400;
-  font-size: 0.8rem;
-  line-height: 1.6;
+  font-size: 0.75rem;
+  line-height: 1.5;
   color: var(--text-secondary);
+}
+[data-theme="brutalist"] .about-left .about-prose p + p {
+  margin-top: 0.5rem;
 }
 [data-theme="brutalist"] .about-left .about-prose strong {
   color: var(--text-primary);
   font-weight: 700;
 }
 [data-theme="brutalist"] .skills-table {
-  margin-top: 0.8rem;
+  margin-top: 0.5rem;
   border-top: 1px solid var(--border);
-  padding-top: 0.8rem;
+  padding-top: 0.5rem;
 }
 [data-theme="brutalist"] .skills-table-title {
   font-family: var(--font-mono);
@@ -1642,13 +1661,13 @@ footer span {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.3rem;
 }
 [data-theme="brutalist"] .skills-mono {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--text-primary);
-  line-height: 2.2;
+  line-height: 1.8;
 }
 [data-theme="brutalist"] .skills-mono span + span::before {
   content: ' / ';
@@ -1656,13 +1675,15 @@ footer span {
 }
 [data-theme="brutalist"] .about-right {
   padding: 0;
+  overflow-y: auto;
+  min-height: 0;
 }
 [data-theme="brutalist"] .data-row {
   display: grid;
   grid-template-columns: 100px 1fr;
   gap: 1rem;
   align-items: baseline;
-  padding: 0.6rem 1.5rem;
+  padding: 0.4rem 1.5rem;
   border-bottom: 1px solid var(--border);
 }
 [data-theme="brutalist"] .data-row:last-child {
@@ -1677,8 +1698,8 @@ footer span {
 }
 [data-theme="brutalist"] .data-row-value {
   font-family: var(--font-body);
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  line-height: 1.5;
   color: var(--text-primary);
 }
 
@@ -1710,6 +1731,14 @@ footer span {
   border-bottom: 2px solid var(--border);
 }
 
+/* Cancel fadeUp animations — brutalist shows everything immediately */
+[data-theme="brutalist"] .hero h1,
+[data-theme="brutalist"] .hero-badge,
+[data-theme="brutalist"] .hero-body {
+  opacity: 1;
+  animation: none;
+}
+
 [data-theme="brutalist"] #about {
   flex: 4;
   min-height: 0;
@@ -1738,9 +1767,9 @@ footer span {
   font-style: normal;
   text-transform: uppercase;
   letter-spacing: -0.03em;
-  font-size: clamp(2.5rem, 5.5vw, 5rem);
+  font-size: clamp(2rem, 4.5vw, 4rem);
   line-height: 1.05;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   padding: 0 clamp(1.5rem, 5vw, 3.5rem) 0;
 }
 
@@ -1764,11 +1793,11 @@ footer span {
   font-family: var(--font-body);
   font-style: italic;
   font-weight: 400;
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  line-height: 1.8;
+  line-height: 1.6;
   max-width: 50ch;
-  padding: 0 clamp(1.5rem, 5vw, 3.5rem) 1rem;
+  padding: 0 clamp(1.5rem, 5vw, 3.5rem) 0.5rem;
 }
 
 [data-theme="brutalist"] .hero-tidbits {
@@ -1979,7 +2008,7 @@ footer span {
 
 [data-theme="brutalist"] .contact {
   border-top: 2px solid var(--border);
-  border-bottom: 2px solid var(--border);
+  border-bottom: none;
   padding: 0;
   text-align: left;
   flex: 0 0 auto;
@@ -1988,24 +2017,23 @@ footer span {
 [data-theme="brutalist"] .contact-brutalist {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  padding: 0.8rem clamp(1.5rem, 5vw, 3.5rem);
+  justify-content: space-between;
+  padding: 0.6rem clamp(1.5rem, 5vw, 3.5rem);
 }
 [data-theme="brutalist"] .contact-brutalist h2 {
   font-family: var(--font-mono);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  font-size: clamp(1rem, 2vw, 1.4rem);
   letter-spacing: -0.02em;
   margin: 0;
   white-space: nowrap;
 }
 [data-theme="brutalist"] .contact-brutalist p {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin: 0;
-  flex: 1;
+  display: none; /* hidden in compact bar to leave room for card hand */
+}
+[data-theme="brutalist"] .contact-brutalist .contact-btns {
+  margin-left: auto;
 }
 
 [data-theme="brutalist"] .contact-heading {
@@ -2148,8 +2176,8 @@ footer span {
     border-bottom: 1px solid var(--border);
   }
   [data-theme="brutalist"] .contact-brutalist {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 }
 
@@ -2157,6 +2185,9 @@ footer span {
   [data-theme="brutalist"] .status-bar {
     position: static;
     top: auto;
+  }
+  [data-theme="brutalist"] #page-home {
+    padding-top: 0; /* status bar is now in flow, not fixed */
   }
   [data-theme="brutalist"] .theme-switcher {
     top: 0.75rem;

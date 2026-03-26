@@ -38,7 +38,13 @@ var DESTRUCTIBLE_SELECTOR = [
   '.project-hero-title', '.project-hero-desc',
   '.project-text p', '.project-text h4',
   '.work-stat-num', '.work-stat-label',
-  'footer span'
+  'footer span',
+  // Brutalist layout elements
+  '.field-value', '.field-label',
+  '.about-header', '.skills-mono',
+  '.data-row-value', '.data-row-label',
+  // Retro panel elements
+  '.hero-panel .tidbit-value', '.hero-panel .tidbit-label'
 ].join(', ');
 
 // --- TextSplitter ---
@@ -52,7 +58,7 @@ function splitAllText() {
 
   var elements = document.querySelectorAll(DESTRUCTIBLE_SELECTOR);
   elements.forEach(function(el) {
-    if (el.closest('nav, .theme-switcher, .plane-toggle, .btn, .work-expand')) return;
+    if (el.closest('.theme-switcher, .plane-toggle, .btn, .work-expand')) return;
     if (el.offsetParent === null) return;
 
     var instance = SplitText.create(el, {

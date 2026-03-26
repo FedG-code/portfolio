@@ -366,4 +366,6 @@ If this rule isn't already in the retro CSS block from Phase 1, add it.
 ## What NOT to change in this phase
 - Do NOT modify `js/shared.js` or any JS files (theme switcher won't cycle correctly yet — that's Phase 3)
 - Do NOT modify project pages (logifuture.html etc — that's Phase 4)
-- Do NOT modify any CSS files (Phase 1 already handled all CSS)
+
+## Note on HTML changes in later phases
+Brutalist and retro themes require HTML changes beyond what this phase covers. The brutalist single-screen layout and the retro hero panel may need additional HTML tweaks (e.g. `.contact-brutalist` variant) during CSS integration. HTML is NOT frozen after this phase — treat it as a living document that can be updated alongside CSS fixes.

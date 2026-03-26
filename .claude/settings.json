@@ -3,5 +3,19 @@
     "code-review@claude-code-plugins": true,
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const inp=JSON.parse(d).tool_input;if(inp.offset==null||inp.limit==null){console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'deny',permissionDecisionReason:'BLOCKED: Use offset and limit parameters with Read. Grep for line numbers first, then read only the section you need (max 80 lines).'}}))}})\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }
