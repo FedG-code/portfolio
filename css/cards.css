@@ -380,10 +380,11 @@ html.card-dragging body {
   background: #FFFFFF;
 }
 [data-theme="bold"] .card-title h3 {
-  font-family: var(--font-body);
-  font-weight: 600;
+  font-family: var(--font-serif);
+  font-weight: 400;
   font-style: normal;
   font-size: 12.5px;
+  text-transform: uppercase;
 }
 
 /* ── Card Art — unified warm, fully opaque ── */
