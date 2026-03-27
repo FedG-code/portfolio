@@ -289,6 +289,7 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
     });
 
     rebuildHand(cardId);
+    history.pushState({ cardId: cardId }, '', 'index.html');
   });
 }
 
@@ -450,6 +451,7 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
         });
 
         rebuildHand(cardId);
+        history.pushState({ cardId: cardId }, '', cardData.pageUrl);
       });
     });
   });
@@ -541,3 +543,103 @@ function rebuildHand(activeCardIdNew) {
   _activePointerId = null;
   animState = 'IDLE';
 }
+
+/* ═══════════════════════════════════════════════
+   HISTORY API — BACK / FORWARD NAVIGATION
+   ═══════════════════════════════════════════════ */
+
+function navigateToPage(cardId) {
+  if (cardId === activePageCardId) return;
+
+  // Kill any in-flight animations
+  gsap.globalTimeline.clear();
+
+  // Clean up overlay elements
+  if (flyOverlay) flyOverlay.innerHTML = '';
+  if (perspectiveContainer) perspectiveContainer.innerHTML = '';
+  if (dragBlurOverlay) {
+    dragBlurOverlay.style.backdropFilter = '';
+    dragBlurOverlay.style.webkitBackdropFilter = '';
+    dragBlurOverlay.style.background = '';
+  }
+
+  var homePage = document.getElementById('page-home');
+  var pageContainer = document.getElementById('pageContainer');
+  var cardData = CARDS.filter(function(c) { return c.id === cardId; })[0];
+
+  if (!cardData || !cardData.pageUrl) {
+    // Navigating to Home
+    pageContainer.innerHTML = '';
+    pageContainer.style.opacity = '';
+    pageContainer.style.pointerEvents = '';
+    if (homePage) {
+      homePage.style.opacity = '';
+      homePage.classList.add('active');
+      homePage.classList.remove('transitioning');
+    }
+    // Re-observe reveals
+    if (homePage) {
+      homePage.querySelectorAll('.reveal').forEach(function(el) {
+        if (!el.classList.contains('visible') && window.revealObserver) {
+          window.revealObserver.observe(el);
+        }
+      });
+    }
+  } else {
+    // Navigating to a project page
+    if (homePage) {
+      homePage.classList.remove('active');
+      homePage.classList.remove('transitioning');
+    }
+
+    if (!pageCache[cardData.pageUrl]) {
+      prefetchPage(cardData.pageUrl);
+    }
+
+    pageCache[cardData.pageUrl].then(function(content) {
+      if (!content) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'spa-page active';
+      wrapper.innerHTML = content;
+      pageContainer.className = 'page-container';
+      pageContainer.style.opacity = '1';
+      pageContainer.innerHTML = '';
+      pageContainer.appendChild(wrapper);
+      pageContainer.style.pointerEvents = 'auto';
+
+      // Re-init text destruction for new content
+      if (window.TextDestruction) {
+        TextDestruction.onThemeChange();
+      }
+
+      // Re-observe reveals
+      wrapper.querySelectorAll('.reveal').forEach(function(el) {
+        if (window.revealObserver) window.revealObserver.observe(el);
+      });
+    });
+  }
+
+  window.scrollTo(0, 0);
+  rebuildHand(cardId);
+  animState = 'IDLE';
+}
+
+// Replace initial history entry so first page has state
+history.replaceState({ cardId: activePageCardId }, '', location.pathname);
+
+// Handle browser back/forward
+window.addEventListener('popstate', function(e) {
+  if (!e.state || typeof e.state.cardId === 'undefined') return;
+  if (animState !== 'IDLE') {
+    gsap.globalTimeline.clear();
+    if (flyOverlay) flyOverlay.innerHTML = '';
+    if (perspectiveContainer) perspectiveContainer.innerHTML = '';
+    if (dragBlurOverlay) {
+      dragBlurOverlay.style.backdropFilter = '';
+      dragBlurOverlay.style.webkitBackdropFilter = '';
+      dragBlurOverlay.style.background = '';
+    }
+    animState = 'IDLE';
+  }
+  navigateToPage(e.state.cardId);
+});
