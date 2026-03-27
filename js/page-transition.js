@@ -141,7 +141,7 @@ function playCard(cardEl, cardId) {
   });
   tl.to(inner, { boxShadow: '0 0 0px transparent', duration: 0.15 }, '-=0.3');
   tl.to(dragBlurOverlay, {
-    backdropFilter: 'blur(0px)', background: 'rgba(0,0,0,0)', duration: 0.2,
+    backdropFilter: 'blur(0px)', webkitBackdropFilter: 'blur(0px)', background: 'rgba(0,0,0,0)', duration: 0.2,
   }, '-=0.25');
 
   // Phase 4: Decompose — fade decorative elements (guarded for Home card)
