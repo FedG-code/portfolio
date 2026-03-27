@@ -147,10 +147,6 @@
   align-items: center;
   justify-content: center;
 }
-.card[data-accent="red"]    .card-art-inner { background: linear-gradient(145deg, #f5d5c8, #ecc0ae 50%, #f5d5c8); }
-.card[data-accent="purple"] .card-art-inner { background: linear-gradient(145deg, #e0d5f0, #d0c5e8 50%, #e0d5f0); }
-.card[data-accent="green"]  .card-art-inner { background: linear-gradient(145deg, #c8e8d5, #b8dcc8 50%, #c8e8d5); }
-.card[data-accent="gold"]   .card-art-inner { background: linear-gradient(145deg, #f0e4c8, #e8d8b8 50%, #f0e4c8); }
 .card-art-icon {
   font-size: 44px;
   opacity: 0.12;
@@ -248,9 +244,6 @@
   z-index: 4;
   border-radius: 0 0 14px 14px;
 }
-.card[data-accent="red"]    .accent-strip { background: linear-gradient(90deg, transparent, #e85d26, transparent); opacity: 0.3; }
-.card[data-accent="purple"] .accent-strip { background: linear-gradient(90deg, transparent, #6a4cba, transparent); opacity: 0.3; }
-.card[data-accent="green"]  .accent-strip { background: linear-gradient(90deg, transparent, #28885a, transparent); opacity: 0.3; }
 
 /* ========== MOBILE CARD SCALING ========== */
 @media (max-width: 768px) {
@@ -266,7 +259,6 @@
   .card-art-blurb { font-size: 5px; padding: 3px 6px 6px; }
   .accent-strip { height: 2px; }
 }
-.card[data-accent="gold"]   .accent-strip { background: linear-gradient(90deg, transparent, #e8a44a, transparent); opacity: 0.3; }
 
 /* ========== NEON THEME OVERRIDES ========== */
 [data-theme="neon"] .card-inner {
@@ -395,13 +387,6 @@ html.card-dragging body {
   background: #F0EDE5 !important;
 }
 
-/* Override all per-card accent art colours */
-[data-theme="bold"] .card[data-accent="red"]    .card-art-inner,
-[data-theme="bold"] .card[data-accent="purple"] .card-art-inner,
-[data-theme="bold"] .card[data-accent="green"]  .card-art-inner,
-[data-theme="bold"] .card[data-accent="gold"]   .card-art-inner {
-  background: #F0EDE5 !important;
-}
 
 /* ── Card art icon — accent orange tint ── */
 [data-theme="bold"] .card-art-icon {
@@ -525,10 +510,6 @@ html.card-dragging body {
 }
 
 /* Override per-card accent backgrounds with unified dark */
-[data-theme="cinematic"] .card[data-accent="red"]    .card-art-inner { background: #0e0e0e !important; }
-[data-theme="cinematic"] .card[data-accent="purple"] .card-art-inner { background: #0e0e0e !important; }
-[data-theme="cinematic"] .card[data-accent="green"]  .card-art-inner { background: #0e0e0e !important; }
-[data-theme="cinematic"] .card[data-accent="gold"]   .card-art-inner { background: #0e0e0e !important; }
 
 [data-theme="cinematic"] .type-bar {
   font-family: var(--font-mono);
@@ -648,10 +629,6 @@ html.card-dragging body {
 }
 
 /* Unified white art backgrounds — overrides per-card accents */
-[data-theme="brutalist"] .card[data-accent="red"]    .card-art-inner { background: #FFFFFF !important; }
-[data-theme="brutalist"] .card[data-accent="purple"] .card-art-inner { background: #FFFFFF !important; }
-[data-theme="brutalist"] .card[data-accent="green"]  .card-art-inner { background: #FFFFFF !important; }
-[data-theme="brutalist"] .card[data-accent="gold"]   .card-art-inner { background: #FFFFFF !important; }
 
 [data-theme="brutalist"] .card-art-icon {
   color: #0C0C0C;
@@ -773,10 +750,6 @@ html.card-dragging body {
 [data-theme="retro"] .card-art-inner {
   border: none;
 }
-[data-theme="retro"] .card[data-accent="red"]    .card-art-inner { background: #1A5C52 !important; }
-[data-theme="retro"] .card[data-accent="purple"] .card-art-inner { background: #1A5C52 !important; }
-[data-theme="retro"] .card[data-accent="green"]  .card-art-inner { background: #1A5C52 !important; }
-[data-theme="retro"] .card[data-accent="gold"]   .card-art-inner { background: #1A5C52 !important; }
 
 [data-theme="retro"] .card-art-icon {
   color: #E8A825;
@@ -821,7 +794,7 @@ html.card-dragging body {
   border: 2px solid #D4CBBA;
 }
 
-[data-theme="retro"] .card-art--home .card-art-inner {
+[data-theme="retro"] .card .card-art--home .card-art-inner {
   background: #FDF6EC !important;
   position: relative;
 }
