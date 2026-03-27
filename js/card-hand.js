@@ -76,6 +76,7 @@ var _activePointerId = null;   // track first pointer to ignore second touch
 var _liftedCardId   = -1;     // card ID in tap-lifted state (-1 = none)
 
 var handContainer = document.getElementById('handContainer');
+handContainer.style.transformStyle = 'preserve-3d';
 var dragBlurOverlay = document.getElementById('dragBlurOverlay');
 var perspectiveContainer = document.getElementById('perspectiveContainer');
 var flyOverlay = document.getElementById('flyOverlay');
