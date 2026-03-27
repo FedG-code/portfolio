@@ -609,7 +609,7 @@ section { padding: 7rem 0; }
 /* ========== CONTACT ========== */
 .contact {
   text-align: center;
-  padding: 6rem 0 220px;
+  padding: 6rem 0 220px; /* bottom: extra clearance for card hand */
 }
 .contact-brutalist { display: none; }
 
@@ -888,7 +888,7 @@ footer span {
 
 @media (max-width: 600px) {
   html { overflow-x: hidden; }
-  .theme-switcher.scroll-hidden, .plane-toggle.scroll-hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
   [data-theme="neon"] .theme-switcher {
     top: 0.75rem;
   }

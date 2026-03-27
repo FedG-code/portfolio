@@ -17,15 +17,6 @@ const themes = ['bold', 'cinematic', 'brutalist', 'retro', 'neon'];
 let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'bold');
 if (currentIndex === -1) currentIndex = 0;
 
-// Migrate removed themes
-(function() {
-  var stored = localStorage.getItem('portfolio-theme');
-  if (stored === 'coral' || stored === 'slate') {
-    localStorage.setItem('portfolio-theme', 'bold');
-    document.documentElement.setAttribute('data-theme', 'bold');
-    currentIndex = 0;
-  }
-})();
 
 // Update button label to show the *other* theme
 const updateLabel = () => {
