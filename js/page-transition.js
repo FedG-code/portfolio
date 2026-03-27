@@ -234,6 +234,7 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   // Clear project page content
   pageContainer.innerHTML = '';
   pageContainer.style.opacity = '';
+  pageContainer.style.pointerEvents = '';
 
   var flyTl = gsap.timeline();
 
@@ -327,6 +328,7 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
     pageContainer.style.opacity = '0';
     pageContainer.innerHTML = '';
     pageContainer.appendChild(wrapper);
+    pageContainer.style.pointerEvents = 'auto';
 
     // Wait one frame for layout
     requestAnimationFrame(function() {

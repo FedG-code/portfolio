@@ -24,6 +24,7 @@
   z-index: 5;
   overflow-y: auto;
   padding-bottom: 220px;
+  pointer-events: none;
 }
 
 /* ========== DRAG BLUR OVERLAY ========== */
