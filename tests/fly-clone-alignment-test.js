@@ -37,8 +37,8 @@ const BASE_URL = 'http://localhost:8080';
 // ── Tolerance ──────────────────────────────────────────────
 // Max pixel difference between clone final position and real target position.
 // Accounts for sub-pixel rounding and minor font metric variance.
-const POSITION_TOLERANCE = 12;
-const SIZE_TOLERANCE = 20;
+const POSITION_TOLERANCE = 5;
+const SIZE_TOLERANCE = 10;
 
 // ── Default matrix ─────────────────────────────────────────
 const ALL_THEMES = ['bold', 'cinematic', 'brutalist', 'retro', 'neon'];
@@ -51,7 +51,7 @@ const ALL_VIEWPORTS = [
 ];
 
 // Card 3 = Home (targets .hero h1). Other cards target .project-hero-title.
-const ALL_CARDS = [3];
+const ALL_CARDS = [0, 3];
 
 // ── CLI flag parsing ───────────────────────────────────────
 function parseFlags() {
@@ -115,21 +115,53 @@ async function testFlyAlignment(browser, theme, cardId, viewport) {
       await page.waitForTimeout(5000);
     }
 
-    // 4. Inject measurement probe — captures clone's final rect and target's rect
+    // 4. Inject measurement probe — captures clone AND target rects on the same
+    //    frame to eliminate cross-frame reflow drift.
     await page.evaluate(function(cid) {
       window.__flyTestResult = null;
 
-      // We'll observe the flyOverlay for clone insertion, then poll the clone's
-      // position until the animation completes (clone removed from DOM).
       var overlay = document.getElementById('flyOverlay');
       if (!overlay) { window.__flyTestResult = { error: 'No flyOverlay found' }; return; }
 
       var lastCloneRect = null;
+      var lastTargetRect = null;
+      var lastCloneTextRect = null;
       var cloneStyle = null;
       var cloneFound = false;
+      var framePairCount = 0;
+
+      function findTarget() {
+        var isHome = cid === 3;
+        if (isHome) {
+          var homePage = document.getElementById('page-home');
+          var h1s = homePage ? homePage.querySelectorAll('.hero h1') : [];
+          for (var j = 0; j < h1s.length; j++) {
+            if (h1s[j].offsetHeight > 0) return h1s[j];
+          }
+          return h1s.length ? h1s[0] : null;
+        } else {
+          return document.querySelector('.project-hero-title');
+        }
+      }
+
+      // Measure the first text node's rendered position via Range.
+      // This captures where the actual text starts, not just the container box.
+      function getTextRect(el) {
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+        var textNode = null;
+        while ((textNode = walker.nextNode())) {
+          if (textNode.textContent.trim().length > 0) break;
+        }
+        if (!textNode) return null;
+        var range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, Math.min(1, textNode.textContent.length));
+        var r = range.getBoundingClientRect();
+        return { left: r.left, top: r.top, width: r.width, height: r.height };
+      }
+
       var observer = new MutationObserver(function() {
         if (cloneFound) return;
-        // Grab the first fixed-position child — that's always the title clone
         var children = overlay.children;
         var clone = null;
         for (var i = 0; i < children.length; i++) {
@@ -138,46 +170,44 @@ async function testFlyAlignment(browser, theme, cardId, viewport) {
         if (!clone) return;
         cloneFound = true;
 
-        // Poll clone position every frame until it's removed
         function pollClone() {
           if (!overlay.contains(clone)) {
-            // Clone was removed — animation complete. Measure the real target.
-            var isHome = cid === 3;
-            var target;
-            if (isHome) {
-              var homePage = document.getElementById('page-home');
-              // Find the visible h1 (themes have alternate hidden layouts)
-              var h1s = homePage ? homePage.querySelectorAll('.hero h1') : [];
-              for (var j = 0; j < h1s.length; j++) {
-                if (h1s[j].offsetHeight > 0) { target = h1s[j]; break; }
-              }
-              if (!target && h1s.length) target = h1s[0];
-            } else {
-              target = document.querySelector('.project-hero-title');
-            }
-
-            if (!target) {
-              window.__flyTestResult = { error: 'Target element not found after transition' };
+            if (!lastCloneRect) {
+              window.__flyTestResult = { error: 'Clone rect was never recorded' };
               return;
             }
-
-            var targetRect = target.getBoundingClientRect();
-            window.__flyTestResult = {
-              cloneRect: lastCloneRect,
-              cloneStyle: cloneStyle,
-              targetRect: {
-                left: targetRect.left,
-                top: targetRect.top,
-                width: targetRect.width,
-                height: targetRect.height,
-              },
-            };
+            // Clone removed — wait a few frames for post-swap reflow to settle
+            // (scrollTo, class removal, TextDestruction, opacity restore all
+            // fire in the same GSAP callback and may need multiple frames).
+            var settleFrames = 3;
+            function waitSettle() {
+              if (--settleFrames > 0) { requestAnimationFrame(waitSettle); return; }
+              var target = findTarget();
+              if (!target) {
+                window.__flyTestResult = { error: 'Target element not found after swap' };
+                return;
+              }
+              var tr = target.getBoundingClientRect();
+              var postSwapRect = { left: tr.left, top: tr.top, width: tr.width, height: tr.height };
+              var postSwapTextRect = getTextRect(target);
+              window.__flyTestResult = {
+                cloneRect: lastCloneRect,
+                cloneTextRect: lastCloneTextRect,
+                targetRect: lastTargetRect,
+                postSwapRect: postSwapRect,
+                postSwapTextRect: postSwapTextRect,
+                cloneStyle: cloneStyle,
+                framePairCount: framePairCount,
+              };
+            }
+            requestAnimationFrame(waitSettle);
             return;
           }
 
-          // Clone still exists — record its current rect
+          // Clone still in DOM — measure it
           var r = clone.getBoundingClientRect();
           lastCloneRect = { left: r.left, top: r.top, width: r.width, height: r.height };
+          lastCloneTextRect = getTextRect(clone);
           var cs = getComputedStyle(clone);
           cloneStyle = {
             fontFamily: cs.fontFamily,
@@ -185,7 +215,17 @@ async function testFlyAlignment(browser, theme, cardId, viewport) {
             fontStyle: cs.fontStyle,
             textTransform: cs.textTransform,
             letterSpacing: cs.letterSpacing,
+            textAlign: cs.textAlign,
           };
+
+          // Measure target on the SAME frame — no DOM mutations between calls
+          var target = findTarget();
+          if (target) {
+            var tr = target.getBoundingClientRect();
+            lastTargetRect = { left: tr.left, top: tr.top, width: tr.width, height: tr.height };
+            framePairCount++;
+          }
+
           requestAnimationFrame(pollClone);
         }
 
@@ -222,33 +262,58 @@ async function testFlyAlignment(browser, theme, cardId, viewport) {
     }
 
     var cr = result.cloneRect;
-    var tr = result.targetRect;
+    var sr = result.postSwapRect;
 
-    // Zero-dimension target means the wrong element was measured (e.g. hidden layout)
-    if (tr.width === 0 || tr.height === 0) {
-      report(label, false, 'Target has zero dimensions — wrong element selected. target(' + tr.left.toFixed(0) + ',' + tr.top.toFixed(0) + ' ' + tr.width.toFixed(0) + '×' + tr.height.toFixed(0) + ')');
+    if (!sr) {
+      report(label, false, 'Post-swap target rect missing');
       return;
     }
     if (cr.width === 0 || cr.height === 0) {
       report(label, false, 'Clone has zero dimensions — measurement failed. clone(' + cr.left.toFixed(0) + ',' + cr.top.toFixed(0) + ' ' + cr.width.toFixed(0) + '×' + cr.height.toFixed(0) + ')');
       return;
     }
+    if (sr.width === 0 || sr.height === 0) {
+      report(label, false, 'Post-swap target has zero dimensions — wrong element. target(' + sr.left.toFixed(0) + ',' + sr.top.toFixed(0) + ' ' + sr.width.toFixed(0) + '×' + sr.height.toFixed(0) + ')');
+      return;
+    }
 
-    var dLeft = Math.abs(cr.left - tr.left);
-    var dTop = Math.abs(cr.top - tr.top);
-    var dWidth = Math.abs(cr.width - tr.width);
-    var dHeight = Math.abs(cr.height - tr.height);
+    // Swap delta: where the clone last was vs where the real title actually is
+    // after removal. This is what the user sees — any gap here is the slingshot.
+    var dLeft = Math.abs(cr.left - sr.left);
+    var dTop = Math.abs(cr.top - sr.top);
+    var dWidth = Math.abs(cr.width - sr.width);
+    var dHeight = Math.abs(cr.height - sr.height);
 
     var posOk = dLeft <= POSITION_TOLERANCE && dTop <= POSITION_TOLERANCE;
     var sizeOk = dWidth <= SIZE_TOLERANCE && dHeight <= SIZE_TOLERANCE;
-    var passed = posOk && sizeOk;
 
-    var detail = 'pos Δ(' + dLeft.toFixed(1) + ', ' + dTop.toFixed(1) + ') '
-      + 'size Δ(' + dWidth.toFixed(1) + ', ' + dHeight.toFixed(1) + ') '
-      + '| clone(' + cr.left.toFixed(0) + ',' + cr.top.toFixed(0)
+    // Text-level check: compare where the first character renders in the clone
+    // vs the real target. Catches text-align mismatches, font metric shifts, etc.
+    // that don't show up in bounding box comparison.
+    var ctr = result.cloneTextRect;
+    var str = result.postSwapTextRect;
+    var textOk = true;
+    var textDetail = '';
+
+    if (ctr && str) {
+      var dtLeft = Math.abs(ctr.left - str.left);
+      var dtTop = Math.abs(ctr.top - str.top);
+      textOk = dtLeft <= POSITION_TOLERANCE && dtTop <= POSITION_TOLERANCE;
+      textDetail = ' text Δ(' + dtLeft.toFixed(1) + ', ' + dtTop.toFixed(1) + ')';
+    } else {
+      textDetail = ' text Δ(n/a)';
+    }
+
+    var passed = posOk && sizeOk && textOk;
+
+    var detail = 'swap Δ(' + dLeft.toFixed(1) + ', ' + dTop.toFixed(1) + ') '
+      + 'size Δ(' + dWidth.toFixed(1) + ', ' + dHeight.toFixed(1) + ')'
+      + textDetail
+      + ' | lastClone(' + cr.left.toFixed(0) + ',' + cr.top.toFixed(0)
       + ' ' + cr.width.toFixed(0) + '×' + cr.height.toFixed(0) + ') '
-      + 'target(' + tr.left.toFixed(0) + ',' + tr.top.toFixed(0)
-      + ' ' + tr.width.toFixed(0) + '×' + tr.height.toFixed(0) + ')';
+      + 'postSwap(' + sr.left.toFixed(0) + ',' + sr.top.toFixed(0)
+      + ' ' + sr.width.toFixed(0) + '×' + sr.height.toFixed(0) + ')'
+      + ' pairs=' + (result.framePairCount || 0);
 
     report(label, passed, detail);
 
