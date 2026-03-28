@@ -2342,7 +2342,7 @@ footer span {
   z-index: 1;
 }
 
-[data-theme="retro"] .section-heading {
+[data-theme="retro"] #about .section-heading {
   color: #F0EBE0;
 }
 

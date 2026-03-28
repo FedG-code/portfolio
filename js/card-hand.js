@@ -68,8 +68,14 @@ var MAX_GLOW_SIZE       = 30;
 /* ═══════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════ */
-var activePageCardId = 3; // Start with Home active (gold card absent from hand)
-var cardOrder = [0, 1, 2]; // IDs of cards currently in hand
+var activePageCardId = (function() {
+  var page = location.pathname.split('/').pop() || 'index.html';
+  for (var i = 0; i < CARDS.length; i++) {
+    if (CARDS[i].pageUrl && page.indexOf(CARDS[i].pageUrl) !== -1) return CARDS[i].id;
+  }
+  return 3; // default to Home
+})();
+var cardOrder = CARDS.filter(function(c) { return c.id !== activePageCardId; }).map(function(c) { return c.id; });
 var dragState = null;
 var animState = 'IDLE'; // IDLE | DRAGGING | RETURNING | PLAYING | TRANSITIONING
 var _activePointerId = null;   // track first pointer to ignore second touch

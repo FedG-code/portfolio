@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/project.css">
+<link rel="stylesheet" href="css/cards.css">
 <script>
   var t = localStorage.getItem('portfolio-theme');
   if (t === 'coral' || t === 'slate') { t = 'bold'; localStorage.setItem('portfolio-theme', 'bold'); }
@@ -26,6 +27,11 @@
 <body>
 
 <div id="plane-canvas"></div>
+<div class="drag-blur-overlay" id="dragBlurOverlay"></div>
+<div class="page-container" id="pageContainer"></div>
+<div class="hand-container" id="handContainer"></div>
+<div class="perspective-container" id="perspectiveContainer"></div>
+<div class="fly-overlay" id="flyOverlay"></div>
 
 <!-- THEME SWITCHER -->
 <button class="theme-switcher" id="themeSwitcher">Cinematic</button>
@@ -207,5 +213,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Physics2DPlugin.min.js"></script>
 <script src="js/destruction.js"></script>
 <script src="js/plane.js"></script>
+<script src="js/card-hand.js"></script>
+<script src="js/page-transition.js"></script>
 </body>
 </html>

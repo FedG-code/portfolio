@@ -37,7 +37,9 @@ function extractPageContent(doc) {
 
   var removeSelectors = [
     'nav', '.theme-switcher', 'footer', 'script',
-    '#plane-canvas', '.blur-overlay', '.project-nav'
+    '#plane-canvas', '.blur-overlay', '.project-nav',
+    '#handContainer', '#dragBlurOverlay', '#pageContainer',
+    '#perspectiveContainer', '#flyOverlay'
   ];
   removeSelectors.forEach(function(sel) {
     clone.querySelectorAll(sel).forEach(function(el) { el.remove(); });
@@ -175,6 +177,12 @@ function beginPageTransition(cardEl, cardId, cardData) {
 
   var isHome = cardData.pageUrl === null;
   var pageContainer = document.getElementById('pageContainer');
+
+  // On standalone project pages (no #page-home), fall back to full navigation
+  if (!document.getElementById('page-home')) {
+    window.location.href = isHome ? 'index.html' : cardData.pageUrl;
+    return;
+  }
 
   // Step 1: Measure card element positions at current scale
   var titleEl = cardEl.querySelector('.card-title h3') || cardEl.querySelector('.card-art-title');
@@ -600,6 +608,13 @@ function rebuildHand(activeCardIdNew) {
 
 function navigateToPage(cardId) {
   if (cardId === activePageCardId) return;
+
+  // On standalone project pages, fall back to full navigation
+  if (!document.getElementById('page-home')) {
+    var cd = CARDS.filter(function(c) { return c.id === cardId; })[0];
+    window.location.href = (!cd || !cd.pageUrl) ? 'index.html' : cd.pageUrl;
+    return;
+  }
 
   // Kill any in-flight animations
   gsap.globalTimeline.clear();
