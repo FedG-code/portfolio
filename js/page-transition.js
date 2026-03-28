@@ -196,7 +196,14 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   targetPage.classList.add('measuring');
   targetPage.scrollTop = 0;
 
-  var targetTitle = targetPage.querySelector('.hero h1');
+  // Find the visible hero h1 — themes use alternate layouts (.hero-default vs
+  // .hero-brutalist) so querySelector('.hero h1') may return a hidden element.
+  var heroH1s = targetPage.querySelectorAll('.hero h1');
+  var targetTitle = null;
+  for (var i = 0; i < heroH1s.length; i++) {
+    if (heroH1s[i].offsetHeight > 0) { targetTitle = heroH1s[i]; break; }
+  }
+  if (!targetTitle && heroH1s.length) targetTitle = heroH1s[0];
 
   // Pin all hero animated elements: disable fadeUp animations so they sit at
   // final positions (otherwise they replay opacity:0 + translateY(24px) → visible)
@@ -208,9 +215,7 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   });
 
   var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
-  var targetCs = targetTitle ? getComputedStyle(targetTitle) : null;
-  var targetFontSize = targetCs ? parseFloat(targetCs.fontSize) : 32;
-  var targetLineHeight = targetCs ? targetCs.lineHeight : null;
+  var targetTypo = targetTitle ? getTargetTypography(targetTitle) : null;
 
   targetPage.classList.remove('measuring');
 
@@ -239,16 +244,24 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   var flyTl = gsap.timeline();
 
   // Fly title to hero h1 (skip if Home card has no title)
-  if (titleClone) {
+  if (titleClone && targetTypo) {
+    // Set discrete properties immediately (can't be smoothly interpolated)
+    titleClone.style.fontFamily    = targetTypo.fontFamily;
+    titleClone.style.fontStyle     = targetTypo.fontStyle;
+    titleClone.style.textTransform = targetTypo.textTransform;
+
     flyTl.to(titleClone, {
-      left: targetTitleRect.left,
-      top: targetTitleRect.top,
-      width: targetTitleRect.width,
-      height: targetTitleRect.height,
-      fontSize: targetFontSize,
-      lineHeight: targetLineHeight || undefined,
-      duration: FLY_DURATION,
-      ease: 'power3.out',
+      left:          targetTitleRect.left,
+      top:           targetTitleRect.top,
+      width:         targetTitleRect.width,
+      height:        targetTitleRect.height,
+      fontSize:      targetTypo.fontSize,
+      lineHeight:    targetTypo.lineHeight || undefined,
+      fontWeight:    targetTypo.fontWeight,
+      letterSpacing: targetTypo.letterSpacing,
+      color:         targetTypo.color,
+      duration:      FLY_DURATION,
+      ease:          'power3.out',
     });
   }
 
@@ -356,11 +369,12 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
       var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
       var targetImageRect = targetImage ? targetImage.getBoundingClientRect() : null;
-      var targetCs = targetTitle ? getComputedStyle(targetTitle) : null;
-      var targetFontSize = targetCs ? parseFloat(targetCs.fontSize) : 32;
-      var targetLineHeight = targetCs ? targetCs.lineHeight : null;
+      var targetTypo = targetTitle ? getTargetTypography(targetTitle) : null;
 
       wrapper.classList.remove('measuring');
+
+      // Hide real title so it doesn't show through when wrapper fades in
+      if (targetTitle) targetTitle.style.opacity = '0';
 
       // Create flying clones
       var titleClone = titleEl.cloneNode(true);
@@ -382,16 +396,24 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
       var flyTl = gsap.timeline();
 
       // Fly title
-      if (targetTitleRect) {
+      if (targetTitleRect && targetTypo) {
+        // Set discrete properties immediately (can't be smoothly interpolated)
+        titleClone.style.fontFamily    = targetTypo.fontFamily;
+        titleClone.style.fontStyle     = targetTypo.fontStyle;
+        titleClone.style.textTransform = targetTypo.textTransform;
+
         flyTl.to(titleClone, {
-          left: targetTitleRect.left,
-          top: targetTitleRect.top,
-          width: targetTitleRect.width,
-          height: targetTitleRect.height,
-          fontSize: targetFontSize,
-          lineHeight: targetLineHeight || undefined,
-          duration: FLY_DURATION,
-          ease: 'power3.out',
+          left:          targetTitleRect.left,
+          top:           targetTitleRect.top,
+          width:         targetTitleRect.width,
+          height:        targetTitleRect.height,
+          fontSize:      targetTypo.fontSize,
+          lineHeight:    targetTypo.lineHeight || undefined,
+          fontWeight:    targetTypo.fontWeight,
+          letterSpacing: targetTypo.letterSpacing,
+          color:         targetTypo.color,
+          duration:      FLY_DURATION,
+          ease:          'power3.out',
         });
       }
 
@@ -441,6 +463,7 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
       // Swap clones for real elements + rebuild hand
       flyTl.call(function() {
+        if (targetTitle) targetTitle.style.opacity = '';
         flyOverlay.innerHTML = '';
         wrapper.classList.remove('transitioning');
 
@@ -479,15 +502,31 @@ function applyCloneStyles(titleClone, titleRect, sourceEl) {
   titleClone.style.height = (titleRect.height - (padT + padB) * scale) + 'px';
   titleClone.style.margin = '0';
   titleClone.style.padding = '0';
-  titleClone.style.fontFamily = 'var(--font-serif)';
+  titleClone.style.fontFamily = cs.fontFamily;
   titleClone.style.fontWeight = cs.fontWeight;
   titleClone.style.fontStyle = cs.fontStyle;
   titleClone.style.fontSize = scaledFontSize + 'px';
   titleClone.style.letterSpacing = cs.letterSpacing;
-  titleClone.style.color = 'var(--text-primary)';
+  titleClone.style.textTransform = cs.textTransform;
+  titleClone.style.color = cs.color;
   titleClone.style.lineHeight = scaledLineHeight + 'px';
+  titleClone.style.overflow = 'hidden';
   titleClone.style.zIndex = '501';
   titleClone.style.pointerEvents = 'none';
+}
+
+function getTargetTypography(el) {
+  var cs = getComputedStyle(el);
+  return {
+    fontSize:      parseFloat(cs.fontSize),
+    lineHeight:    cs.lineHeight,
+    fontFamily:    cs.fontFamily,
+    fontWeight:    cs.fontWeight,
+    fontStyle:     cs.fontStyle,
+    textTransform: cs.textTransform,
+    letterSpacing: cs.letterSpacing,
+    color:         cs.color
+  };
 }
 
 function applyArtCloneStyles(artClone, artRect) {
