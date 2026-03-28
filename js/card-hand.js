@@ -8,7 +8,6 @@ var CARDS = [
     typeLeft: 'Logifuture', typeRight: 'Game Developer',
     icon: '\u2666',
     text: 'Developed casino game features across web and mobile platforms, shipping live products to players worldwide.',
-    accentColor: '#c83830', accentMuted: '#8a5a5a',
     pageUrl: 'logifuture.html',
     artImage: 'assets/spin+.gif',
   },
@@ -18,7 +17,6 @@ var CARDS = [
     typeLeft: 'Coffin-Likker', typeRight: 'Solo Developer',
     icon: '\u2620',
     text: 'Stealth-horror project focused on visibility, AI behavior, and environmental tension. Set in the bayou.',
-    accentColor: '#6a4cba', accentMuted: '#6a5a8a',
     pageUrl: 'coffin-likker.html',
     artImage: 'assets/visionsystem.gif',
   },
@@ -28,7 +26,6 @@ var CARDS = [
     typeLeft: 'Lost Satellite Studios', typeRight: 'Tech Designer',
     icon: '\u263E',
     text: 'Combat, enemies and movement for a narrative-driven metroidvania in Godot.',
-    accentColor: '#28885a', accentMuted: '#5a8a6a',
     pageUrl: 'lost-satellite.html',
     artImage: 'assets/ult+bossfightgif.gif',
   },
@@ -38,7 +35,6 @@ var CARDS = [
     typeLeft: 'Index', typeRight: 'Portfolio',
     icon: '\u2302',
     text: 'Return to the main page. Overview of all projects and contact information.',
-    accentColor: '#e8a44a', accentMuted: '#8a7a5a',
     pageUrl: null,
     artImage: null,
   },
@@ -254,14 +250,12 @@ function applyProximityFeedback(cardEl, proximity) {
   dragBlurOverlay.style.backdropFilter = 'blur(' + blurVal + 'px)';
   dragBlurOverlay.style.webkitBackdropFilter = 'blur(' + blurVal + 'px)';
   dragBlurOverlay.style.background = 'rgba(0,0,0,' + overlayVal + ')';
+  var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  var accentRGB = hexToRGB(accent);
   var glowSize = proximity * MAX_GLOW_SIZE;
-  inner.style.boxShadow = '0 0 ' + glowSize + 'px ' + cardData.accentColor;
-  var muted = hexToRGB(cardData.accentMuted);
-  var vivid = hexToRGB(cardData.accentColor);
-  var r = Math.round(muted.r + (vivid.r - muted.r) * proximity);
-  var g = Math.round(muted.g + (vivid.g - muted.g) * proximity);
-  var b = Math.round(muted.b + (vivid.b - muted.b) * proximity);
-  inner.style.borderColor = 'rgb(' + r + ',' + g + ',' + b + ')';
+  inner.style.boxShadow = '0 0 ' + glowSize + 'px ' + accent;
+  var opacity = 0.3 + 0.7 * proximity;
+  inner.style.borderColor = 'rgba(' + accentRGB.r + ',' + accentRGB.g + ',' + accentRGB.b + ',' + opacity + ')';
 }
 
 function resetProximityFeedback(cardEl) {

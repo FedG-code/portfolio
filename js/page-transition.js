@@ -78,7 +78,7 @@ function bootstrapFromProjectPage() {
     var child = body.children[i];
     if (child.tagName === 'SCRIPT') continue;
     if (child.id && infraIds.indexOf(child.id) !== -1) continue;
-    if (child.tagName === 'BUTTON' && child.classList.contains('theme-switcher')) continue;
+    if (child.tagName === 'BUTTON' && (child.classList.contains('theme-switcher') || child.classList.contains('plane-toggle'))) continue;
     nodesToMove.push(child);
   }
 
@@ -218,8 +218,9 @@ function playCard(cardEl, cardId) {
       dragBlurOverlay.style.webkitBackdropFilter = 'blur(' + blurVal + 'px)';
       dragBlurOverlay.style.background = 'rgba(0,0,0,' + overlayVal + ')';
       var glowSize = startGlow + p * (endGlow - startGlow);
-      inner.style.boxShadow = '0 0 ' + glowSize + 'px ' + cardData.accentColor;
-      inner.style.borderColor = cardData.accentColor;
+      var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      inner.style.boxShadow = '0 0 ' + glowSize + 'px ' + accent;
+      inner.style.borderColor = accent;
     }
   });
 
