@@ -5,27 +5,39 @@
  * during card-play page transitions. Catches misalignment caused by theme-
  * specific layouts, wrong font metrics, or measurement bugs.
  *
- * Reusable: specify theme, card ID, and viewport via CLI flags.
- *
  * Prerequisites:
  *   - Local server running on port 8080: npx http-server -p 8080 -c-1
  *   - Playwright installed: npm install playwright
  *
  * Usage:
- *   # Run default suite (all themes × key viewports × home card)
+ *   # Run default suite (5 themes × 2 cards × 7 viewports = 70 tests)
  *   node tests/fly-clone-alignment-test.js
  *
- *   # Run a specific combination
- *   node tests/fly-clone-alignment-test.js --theme=brutalist --card=3 --width=2560 --height=1440
+ *   # Single theme, single viewport (named shortcut)
+ *   node tests/fly-clone-alignment-test.js --theme=brutalist --viewport=mobile
  *
- *   # Test a project page card on a single theme
+ *   # Multiple themes and viewports
+ *   node tests/fly-clone-alignment-test.js --theme=bold,retro --viewport=375x812,1920x1080
+ *
+ *   # All 4 cards at desktop resolution
+ *   node tests/fly-clone-alignment-test.js --all-cards --viewport=desktop
+ *
+ *   # Legacy width/height still works
  *   node tests/fly-clone-alignment-test.js --theme=bold --card=0 --width=1920 --height=1080
  *
  * Flags:
- *   --theme=<name>    Single theme to test (bold|cinematic|brutalist|retro|neon)
- *   --card=<id>       Card ID to play (0=Logifuture, 1=Coffin-Likker, 2=Lost Satellite, 3=Home)
- *   --width=<px>      Viewport width
- *   --height=<px>     Viewport height
+ *   --theme=<name,...>      Comma-separated themes (bold|cinematic|brutalist|retro|neon)
+ *   --card=<id,...>         Comma-separated card IDs (0=Logifuture, 1=Coffin-Likker, 2=Lost Satellite, 3=Home)
+ *   --all-cards             Test all 4 cards (equivalent to --card=0,1,2,3)
+ *   --viewport=<spec,...>   Comma-separated viewports: WxH or shortcut (mobile|tablet|desktop)
+ *   --width=<px>            Viewport width  (legacy, prefer --viewport)
+ *   --height=<px>           Viewport height (legacy, prefer --viewport)
+ *   --help                  Show usage information
+ *
+ * Viewport shortcuts:
+ *   mobile  = 375×812   (iPhone SE / 13 mini)
+ *   tablet  = 768×1024  (iPad portrait)
+ *   desktop = 1920×1080 (Full HD)
  *
  * When no flags are given, runs the full matrix.
  */
@@ -48,19 +60,43 @@ const ALL_VIEWPORTS = [
   { width: 1920, height: 1080, label: '1920×1080' },
   { width: 2560, height: 1440, label: '2560×1440' },
   { width: 1024, height: 768,  label: '1024×768'  },
+  { width: 375,  height: 812,  label: '375×812'   },
+  { width: 390,  height: 844,  label: '390×844'   },
+  { width: 768,  height: 1024, label: '768×1024'  },
 ];
 
+const VIEWPORT_SHORTCUTS = {
+  mobile:  { width: 375,  height: 812,  label: '375×812'  },
+  tablet:  { width: 768,  height: 1024, label: '768×1024' },
+  desktop: { width: 1920, height: 1080, label: '1920×1080' },
+};
+
 // Card 3 = Home (targets .hero h1). Other cards target .project-hero-title.
-const ALL_CARDS = [0, 3];
+const DEFAULT_CARDS = [0, 3];
+const ALL_CARD_IDS = [0, 1, 2, 3];
 
 // ── CLI flag parsing ───────────────────────────────────────
 function parseFlags() {
   var flags = {};
   process.argv.slice(2).forEach(function(arg) {
-    var m = arg.match(/^--(\w+)=(.+)$/);
-    if (m) flags[m[1]] = m[2];
+    var m = arg.match(/^--([\w-]+)=(.+)$/);
+    if (m) { flags[m[1]] = m[2]; return; }
+    var b = arg.match(/^--([\w-]+)$/);
+    if (b) { flags[b[1]] = true; return; }
   });
   return flags;
+}
+
+function resolveViewport(token) {
+  var lower = token.toLowerCase();
+  if (VIEWPORT_SHORTCUTS[lower]) return VIEWPORT_SHORTCUTS[lower];
+  var m = token.match(/^(\d+)[xX×](\d+)$/);
+  if (m) {
+    var w = parseInt(m[1], 10);
+    var h = parseInt(m[2], 10);
+    return { width: w, height: h, label: w + '×' + h };
+  }
+  return null;
 }
 
 // ── Results tracking ───────────────────────────────────────
@@ -328,11 +364,57 @@ async function testFlyAlignment(browser, theme, cardId, viewport) {
 async function run() {
   var flags = parseFlags();
 
-  var themes = flags.theme ? [flags.theme] : ALL_THEMES;
-  var cards = flags.card !== undefined ? [parseInt(flags.card, 10)] : ALL_CARDS;
-  var viewports = (flags.width && flags.height)
-    ? [{ width: parseInt(flags.width), height: parseInt(flags.height), label: flags.width + '×' + flags.height }]
-    : ALL_VIEWPORTS;
+  if (flags.help) {
+    console.log('Usage: node tests/fly-clone-alignment-test.js [flags]');
+    console.log('');
+    console.log('Flags:');
+    console.log('  --theme=<name,...>      Theme(s) to test (bold|cinematic|brutalist|retro|neon)');
+    console.log('  --card=<id,...>         Card ID(s) to play (0=Logifuture, 1=Coffin-Likker, 2=Lost Satellite, 3=Home)');
+    console.log('  --all-cards             Test all 4 cards (equivalent to --card=0,1,2,3)');
+    console.log('  --viewport=<spec,...>   Viewport(s): WxH or named shortcut (mobile|tablet|desktop)');
+    console.log('  --width=<px>            Viewport width  (legacy, use --viewport instead)');
+    console.log('  --height=<px>           Viewport height (legacy, use --viewport instead)');
+    console.log('  --help                  Show this help');
+    console.log('');
+    console.log('Examples:');
+    console.log('  node tests/fly-clone-alignment-test.js');
+    console.log('  node tests/fly-clone-alignment-test.js --theme=bold,brutalist --viewport=mobile');
+    console.log('  node tests/fly-clone-alignment-test.js --theme=retro --card=0,1,2,3 --viewport=375x812,1920x1080');
+    console.log('  node tests/fly-clone-alignment-test.js --all-cards --viewport=desktop');
+    process.exit(0);
+  }
+
+  // Themes: comma-separated or all
+  var themes = flags.theme
+    ? flags.theme.split(',').map(function(s) { return s.trim(); })
+    : ALL_THEMES;
+
+  // Cards: --all-cards, comma-separated, or default subset
+  var cards;
+  if (flags['all-cards']) {
+    cards = ALL_CARD_IDS;
+  } else if (flags.card !== undefined) {
+    cards = String(flags.card).split(',').map(function(s) { return parseInt(s.trim(), 10); });
+  } else {
+    cards = DEFAULT_CARDS;
+  }
+
+  // Viewports: --viewport (new), --width+--height (legacy), or all
+  var viewports;
+  if (flags.viewport) {
+    viewports = flags.viewport.split(',').map(function(token) {
+      var vp = resolveViewport(token.trim());
+      if (!vp) {
+        console.error('Unknown viewport: "' + token.trim() + '". Use WxH or: mobile, tablet, desktop');
+        process.exit(1);
+      }
+      return vp;
+    });
+  } else if (flags.width && flags.height) {
+    viewports = [{ width: parseInt(flags.width), height: parseInt(flags.height), label: flags.width + '×' + flags.height }];
+  } else {
+    viewports = ALL_VIEWPORTS;
+  }
 
   console.log('Fly-Clone Alignment Test');
   console.log('========================');
