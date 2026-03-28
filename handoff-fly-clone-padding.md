@@ -18,19 +18,6 @@ The fly animation in `js/page-transition.js` doesn't account for the target elem
 
 **Why only brutalist card 3:** Other themes' hero h1 has no horizontal padding. Cards 0-2 fly to `.project-hero-title` which also has no horizontal padding.
 
-## The Fix
-
-Modify `js/page-transition.js` to account for target element padding in the fly animation. Do NOT remove the padding from `shared.css` — it's needed for the brutalist layout.
-
-### Approach
-
-1. In `getTargetTypography()` (~line 518), also capture `paddingLeft` and `paddingRight` from the target's computed style.
-
-2. In the fly tween (both `transitionToHome` ~line 253 and `transitionToProject` ~line 405 for consistency), apply the target's padding to the clone. Two options:
-   - **Option A**: Set `box-sizing: border-box` on the clone in `applyCloneStyles`, then tween `paddingLeft`/`paddingRight` alongside the other properties. With border-box, `width: targetTitleRect.width` still matches the bounding box while padding pushes text inward.
-   - **Option B**: Set padding as discrete properties (like `fontFamily`) right before the fly tween starts, and adjust the tween's `width` to subtract the padding (since default box model is content-box).
-
-   Option A is cleaner — the bounding box naturally matches throughout the animation.
 
 ### Key files
 - `js/page-transition.js` — `applyCloneStyles()` (~486), `getTargetTypography()` (~518), `transitionToHome()` (~192), `transitionToProject()` (~330)

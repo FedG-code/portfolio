@@ -217,6 +217,16 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
   var targetTypo = targetTitle ? getTargetTypography(targetTitle) : null;
 
+  // Compute target padding so the clone lands on the content box, not the padding box
+  var tPadL = 0, tPadR = 0, tPadT = 0, tPadB = 0;
+  if (targetTitle) {
+    var tCS = getComputedStyle(targetTitle);
+    tPadL = parseFloat(tCS.paddingLeft)   || 0;
+    tPadR = parseFloat(tCS.paddingRight)  || 0;
+    tPadT = parseFloat(tCS.paddingTop)    || 0;
+    tPadB = parseFloat(tCS.paddingBottom) || 0;
+  }
+
   targetPage.classList.remove('measuring');
 
   // Create flying clones
@@ -255,6 +265,7 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
       top:           targetTitleRect.top,
       width:         targetTitleRect.width,
       height:        targetTitleRect.height,
+      padding:       tPadT + 'px ' + tPadR + 'px ' + tPadB + 'px ' + tPadL + 'px',
       fontSize:      targetTypo.fontSize,
       lineHeight:    targetTypo.lineHeight || undefined,
       fontWeight:    targetTypo.fontWeight,
