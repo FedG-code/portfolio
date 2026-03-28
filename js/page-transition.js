@@ -49,6 +49,93 @@ function extractPageContent(doc) {
 }
 
 /* ═══════════════════════════════════════════════
+   SPA BOOTSTRAP — project page reload support
+   ═══════════════════════════════════════════════ */
+var spaBootstrapReady = null; // null = not needed, Promise = pending/done
+
+function bootstrapFromProjectPage() {
+  if (document.getElementById('page-home')) return; // already on index.html
+
+  var pageContainer = document.getElementById('pageContainer');
+  if (!pageContainer) return;
+
+  // Snapshot current project content for the page cache before rearranging DOM
+  var currentUrl = location.pathname.split('/').pop();
+  if (currentUrl) {
+    var tempDoc = document.cloneNode(true);
+    var cachedContent = extractPageContent(tempDoc);
+    pageCache[currentUrl] = Promise.resolve(cachedContent);
+  }
+
+  // Collect project content nodes (everything that isn't SPA infrastructure)
+  var infraIds = ['plane-canvas', 'dragBlurOverlay', 'pageContainer',
+                  'handContainer', 'perspectiveContainer', 'flyOverlay',
+                  'themeSwitcher', 'statusBar'];
+  var body = document.body;
+  var nodesToMove = [];
+
+  for (var i = 0; i < body.children.length; i++) {
+    var child = body.children[i];
+    if (child.tagName === 'SCRIPT') continue;
+    if (child.id && infraIds.indexOf(child.id) !== -1) continue;
+    if (child.tagName === 'BUTTON' && child.classList.contains('theme-switcher')) continue;
+    nodesToMove.push(child);
+  }
+
+  // Wrap project content and move into pageContainer
+  var wrapper = document.createElement('div');
+  wrapper.className = 'spa-page active';
+  nodesToMove.forEach(function(node) { wrapper.appendChild(node); });
+
+  pageContainer.innerHTML = '';
+  pageContainer.appendChild(wrapper);
+  pageContainer.style.opacity = '1';
+  pageContainer.style.pointerEvents = 'auto';
+
+  // Fetch index.html to get #page-home
+  spaBootstrapReady = fetch('index.html')
+    .then(function(r) {
+      if (!r.ok) throw new Error('Fetch failed: ' + r.status);
+      return r.text();
+    })
+    .then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+
+      // Extract and inject #page-home (hidden)
+      var homePage = doc.getElementById('page-home');
+      if (!homePage) throw new Error('No #page-home in index.html');
+      homePage.classList.remove('active');
+      body.insertBefore(homePage, pageContainer);
+
+      // Grab status bar if present
+      var statusBar = doc.getElementById('statusBar');
+      if (statusBar && !document.getElementById('statusBar')) {
+        body.insertBefore(statusBar, homePage);
+      }
+
+      // Re-init text destruction for newly-injected home content
+      if (window.TextDestruction && TextDestruction.onThemeChange) {
+        TextDestruction.onThemeChange();
+      }
+
+      // Prefetch other project pages
+      CARDS.forEach(function(c) {
+        if (c.pageUrl && c.pageUrl !== currentUrl) {
+          prefetchPage(c.pageUrl);
+        }
+      });
+
+      return true;
+    })
+    .catch(function(err) {
+      console.error('SPA bootstrap failed:', err);
+      spaBootstrapReady = null;
+      return false;
+    });
+}
+
+/* ═══════════════════════════════════════════════
    PLAY CARD ANIMATION (center -> wriggle -> expand)
    ═══════════════════════════════════════════════ */
 function playCard(cardEl, cardId) {
@@ -178,8 +265,18 @@ function beginPageTransition(cardEl, cardId, cardData) {
   var isHome = cardData.pageUrl === null;
   var pageContainer = document.getElementById('pageContainer');
 
-  // On standalone project pages (no #page-home), fall back to full navigation
+  // On standalone project pages (no #page-home), wait for bootstrap or fall back
   if (!document.getElementById('page-home')) {
+    if (spaBootstrapReady) {
+      spaBootstrapReady.then(function(ok) {
+        if (ok && document.getElementById('page-home')) {
+          beginPageTransition(cardEl, cardId, cardData);
+        } else {
+          window.location.href = isHome ? 'index.html' : cardData.pageUrl;
+        }
+      });
+      return;
+    }
     window.location.href = isHome ? 'index.html' : cardData.pageUrl;
     return;
   }
@@ -609,8 +706,19 @@ function rebuildHand(activeCardIdNew) {
 function navigateToPage(cardId) {
   if (cardId === activePageCardId) return;
 
-  // On standalone project pages, fall back to full navigation
+  // On standalone project pages, wait for bootstrap or fall back
   if (!document.getElementById('page-home')) {
+    if (spaBootstrapReady) {
+      spaBootstrapReady.then(function(ok) {
+        if (ok && document.getElementById('page-home')) {
+          navigateToPage(cardId);
+        } else {
+          var cd = CARDS.filter(function(c) { return c.id === cardId; })[0];
+          window.location.href = (!cd || !cd.pageUrl) ? 'index.html' : cd.pageUrl;
+        }
+      });
+      return;
+    }
     var cd = CARDS.filter(function(c) { return c.id === cardId; })[0];
     window.location.href = (!cd || !cd.pageUrl) ? 'index.html' : cd.pageUrl;
     return;
@@ -688,6 +796,9 @@ function navigateToPage(cardId) {
   rebuildHand(cardId);
   animState = 'IDLE';
 }
+
+// Bootstrap SPA infrastructure on standalone project pages
+bootstrapFromProjectPage();
 
 // Replace initial history entry so first page has state
 history.replaceState({ cardId: activePageCardId }, '', location.pathname);
