@@ -70,32 +70,7 @@ async function measureHeroElements(page, label) {
       };
     }
 
-    var h1El = homePage.querySelector('.hero h1');
-    result.h1 = measure(h1El);
-
-    // When h1 is visible, also measure its internal text bbox via SplitText
-    // (chars may sit above the element box due to font ascenders)
-    if (h1El && result.h1 && parseFloat(result.h1.opacity) > 0 && result.h1.height > 0 && window.SplitText) {
-      try {
-        var split = SplitText.create(h1El, { type: 'chars', tag: 'span' });
-        var tMinL = Infinity, tMinT = Infinity, tMaxR = -Infinity, tMaxB = -Infinity;
-        for (var k = 0; k < split.chars.length; k++) {
-          var cr = split.chars[k].getBoundingClientRect();
-          if (cr.width === 0 && cr.height === 0) continue;
-          if (cr.left < tMinL) tMinL = cr.left;
-          if (cr.top < tMinT) tMinT = cr.top;
-          if (cr.right > tMaxR) tMaxR = cr.right;
-          if (cr.bottom > tMaxB) tMaxB = cr.bottom;
-        }
-        split.revert();
-        if (tMinL !== Infinity) {
-          result.h1TextBox = {
-            top: tMinT, left: tMinL, width: tMaxR - tMinL, height: tMaxB - tMinT,
-          };
-        }
-      } catch (e) { /* SplitText not available or failed */ }
-    }
-
+    result.h1 = measure(homePage.querySelector('.hero h1'));
     result.badge = measure(homePage.querySelector('.hero-badge'));
     result.heroBody = measure(homePage.querySelector('.hero-body'));
 
@@ -352,17 +327,13 @@ async function run() {
     console.log('WARNING: No char spans detected in flyOverlay — TextRearrange.fly() may have returned null');
   }
 
-  // Check fly landing accuracy: last sample with chars vs first sample with visible h1 text
-  // Compare against h1TextBox (internal char positions via SplitText) for accuracy —
-  // the h1 element box can differ from actual text position due to font ascenders.
+  // Check fly landing accuracy: last sample with chars vs first sample with visible h1
   var lastChars = null;
   var firstH1 = null;
-  var firstH1TextBox = null;
   for (var j = 0; j < samples.length; j++) {
     if (samples[j].clone) lastChars = samples[j].clone;
     if (!firstH1 && samples[j].h1 && parseFloat(samples[j].h1.opacity) > 0 && samples[j].h1.top > 0) {
       firstH1 = samples[j].h1;
-      firstH1TextBox = samples[j].h1TextBox || null;
     }
   }
 
@@ -371,25 +342,16 @@ async function run() {
   var landingDy = 0;
   console.log('\n=== Fly Landing Accuracy ===');
   if (lastChars && firstH1) {
-    // Prefer h1TextBox (actual char positions) over h1 element box
-    var compareTarget = firstH1TextBox || firstH1;
-    var compareLabel = firstH1TextBox ? 'h1 text chars' : 'h1 element box';
-    landingDx = lastChars.left - compareTarget.left;
-    landingDy = lastChars.top - compareTarget.top;
+    landingDx = lastChars.left - firstH1.left;
+    landingDy = lastChars.top - firstH1.top;
     console.log(
       'Last chars bbox: left=' + lastChars.left.toFixed(1) + ', top=' + lastChars.top.toFixed(1) +
       ', w=' + lastChars.width.toFixed(1) + ', h=' + lastChars.height.toFixed(1)
     );
     console.log(
-      'Target (' + compareLabel + '): left=' + compareTarget.left.toFixed(1) + ', top=' + compareTarget.top.toFixed(1) +
-      ', w=' + compareTarget.width.toFixed(1) + ', h=' + compareTarget.height.toFixed(1)
+      'First visible h1: left=' + firstH1.left.toFixed(1) + ', top=' + firstH1.top.toFixed(1) +
+      ', w=' + firstH1.width.toFixed(1) + ', h=' + firstH1.height.toFixed(1)
     );
-    if (firstH1TextBox) {
-      console.log(
-        'h1 element box: left=' + firstH1.left.toFixed(1) + ', top=' + firstH1.top.toFixed(1) +
-        '  (text-to-box offset: dy=' + (firstH1TextBox.top - firstH1.top).toFixed(1) + 'px)'
-      );
-    }
     console.log(
       'Landing delta: dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px' +
       (Math.abs(landingDx) > JUMP_THRESHOLD || Math.abs(landingDy) > JUMP_THRESHOLD ? ' *** MISS ***' : ' (accurate)')
