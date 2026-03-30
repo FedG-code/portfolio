@@ -88,6 +88,21 @@ function revertAllText() {
   allChars = [];
 }
 
+function revertElement(el) {
+  for (var i = splitInstances.length - 1; i >= 0; i--) {
+    if (splitInstances[i].elements && splitInstances[i].elements[0] === el) {
+      splitInstances[i].revert();
+      splitInstances.splice(i, 1);
+      allChars = [];
+      splitInstances.forEach(function(inst) {
+        allChars = allChars.concat(inst.chars);
+      });
+      return true;
+    }
+  }
+  return false;
+}
+
 function preloadSplit() {
   if (window.innerWidth <= 768) return;  // same gate as plane.js MIN_VIEWPORT
   splitAllText();
@@ -517,7 +532,9 @@ window.TextDestruction = {
     isArmed = wasArmed;
     cacheStale = true;
     scheduleEagerCacheWarm();
-  }
+  },
+
+  revertElement: revertElement
 };
 
 // --- Auto-run preload on script load ---

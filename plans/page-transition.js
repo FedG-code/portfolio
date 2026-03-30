@@ -288,78 +288,14 @@ function beginPageTransition(cardEl, cardId, cardData) {
   var titleRect = titleEl ? titleEl.getBoundingClientRect() : null;
   var artRect = artEl.getBoundingClientRect();
 
-  // Compute scale factor for title (visual size / natural size)
-  var titleScale = 1;
-  if (titleEl) {
-    var naturalH = titleEl.offsetHeight;
-    titleScale = naturalH > 0 ? titleRect.height / naturalH : 1;
-  }
-
-  // Step 2: Reparent real elements into fly overlay (no clones)
-  // Reparent artEl first (for Home card, titleEl is a child of artEl)
-  artEl.parentNode.removeChild(artEl);
-  applyArtCloneStyles(artEl, artRect);
-  flyOverlay.appendChild(artEl);
-
-  // Pull titleEl out of artEl if nested (Home card), otherwise reparent independently
-  if (titleEl) {
-    // Capture computed font BEFORE reparenting — the h3 inside .card-title loses
-    // ancestor-dependent CSS rules (e.g. `.card-title h3`, `[data-theme] .card-title h3`)
-    // once removed from its parent.
-    var titleCS = getComputedStyle(titleEl);
-    var titleFont = {
-      fontFamily:    titleCS.fontFamily,
-      fontWeight:    titleCS.fontWeight,
-      fontStyle:     titleCS.fontStyle,
-      fontSize:      titleCS.fontSize,
-      letterSpacing: titleCS.letterSpacing,
-      textTransform: titleCS.textTransform,
-      color:         titleCS.color,
-      lineHeight:    titleCS.lineHeight,
-      textAlign:     titleCS.textAlign,
-    };
-
-    if (artEl.contains(titleEl)) {
-      titleEl.parentNode.removeChild(titleEl);
-    } else {
-      titleEl.parentNode.removeChild(titleEl);
-    }
-    titleEl.style.position = 'fixed';
-    titleEl.style.left = titleRect.left + 'px';
-    titleEl.style.top = titleRect.top + 'px';
-    titleEl.style.width = (titleRect.width / titleScale) + 'px';
-    titleEl.style.margin = '0';
-    titleEl.style.transformOrigin = 'top left';
-    titleEl.style.transform = 'scale(' + titleScale + ')';
-    titleEl.style.zIndex = '501';
-    titleEl.style.pointerEvents = 'none';
-    titleEl.style.fontFamily    = titleFont.fontFamily;
-    titleEl.style.fontWeight    = titleFont.fontWeight;
-    titleEl.style.fontStyle     = titleFont.fontStyle;
-    titleEl.style.letterSpacing = titleFont.letterSpacing;
-    titleEl.style.textTransform = titleFont.textTransform;
-    titleEl.style.color         = titleFont.color;
-    titleEl.style.lineHeight    = titleFont.lineHeight;
-    titleEl.style.fontSize      = titleFont.fontSize;
-    titleEl.style.textAlign     = titleFont.textAlign;
-    flyOverlay.appendChild(titleEl);
-  }
-
-  // Hide card shell (now empty of title + art)
-  cardEl.style.opacity = '0';
-  requestAnimationFrame(function() {
-    cardEl.remove();
-    perspectiveContainer.innerHTML = '';
-  });
-
   if (isHome) {
-    transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer, titleScale);
+    transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer);
   } else {
-    transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer, titleScale);
+    transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer);
   }
 }
 
-function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer, titleScale) {
+function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer) {
   var targetPage = document.getElementById('page-home');
 
   // Make target page measurable
@@ -384,68 +320,78 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
     el.style.transform = 'translateY(0)';
   });
 
-  // Remove .reveal so measurement isn't offset by translateY(24px)
-  if (targetTitle) targetTitle.classList.remove('reveal');
-
   var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
   var targetTypo = targetTitle ? getTargetTypography(targetTitle) : null;
 
-  // titleEl and artEl are already reparented in flyOverlay (from beginPageTransition)
+  // Compute target padding so the clone lands on the content box, not the padding box
+  var tPadL = 0, tPadR = 0, tPadT = 0, tPadB = 0;
+  if (targetTitle) {
+    var tCS = getComputedStyle(targetTitle);
+    tPadL = parseFloat(tCS.paddingLeft)   || 0;
+    tPadR = parseFloat(tCS.paddingRight)  || 0;
+    tPadT = parseFloat(tCS.paddingTop)    || 0;
+    tPadB = parseFloat(tCS.paddingBottom) || 0;
+  }
+
+  targetPage.classList.remove('measuring');
+
+  // Create art flying clone (title handled by TextRearrange when available)
+  var artClone = artEl.cloneNode(true);
+  applyArtCloneStyles(artClone, artRect);
+  flyOverlay.appendChild(artClone);
+
+  // Character-level title rearrangement (same approach as project transitions)
+  var rearrangeResult = null;
+  if (titleEl && targetTitle && targetTitleRect) {
+    try {
+      rearrangeResult = TextRearrange.fly({
+        sourceEl:   titleEl,
+        titleRect:  titleRect,
+        targetEl:   targetTitle,
+        targetRect: targetTitleRect,
+        overlay:    flyOverlay,
+        duration:   FLY_DURATION + 0.05,
+      });
+    } catch (e) {
+      console.warn('TextRearrange failed, falling back to clone tween:', e);
+    }
+  }
+
+  // Fallback: old clone-and-tween if rearrange unavailable
+  var titleClone = null;
+  if (!rearrangeResult && titleEl && targetTypo) {
+    titleClone = titleEl.cloneNode(true);
+    applyCloneStyles(titleClone, titleRect, titleEl);
+    flyOverlay.appendChild(titleClone);
+  }
+
+  // Hide card
+  cardEl.style.opacity = '0';
+  requestAnimationFrame(function() {
+    cardEl.remove();
+    perspectiveContainer.innerHTML = '';
+  });
 
   // Clear project page content
   pageContainer.innerHTML = '';
   pageContainer.style.opacity = '';
   pageContainer.style.pointerEvents = '';
 
-  // Revert destruction split on title so TextRearrange gets clean text
-  if (window.TextDestruction && titleEl) {
-    TextDestruction.revertElement(titleEl);
-  }
-
-  // Remove title's scale transform — set font-size to visual size instead
-  // so chars measure at correct screen coordinates
-  if (titleEl) {
-    var cs = getComputedStyle(titleEl);
-    var computedFS = parseFloat(cs.fontSize);
-    var computedLH = parseFloat(cs.lineHeight) || computedFS * 1.2;
-    titleEl.style.transform = '';
-    titleEl.style.fontSize = (computedFS * titleScale) + 'px';
-    titleEl.style.lineHeight = (computedLH * titleScale) + 'px';
-    titleEl.style.width = titleRect.width + 'px';
-  }
-
-  var rearrangeResult = null;
-  if (titleEl && targetTitle) {
-    try {
-      rearrangeResult = TextRearrange.fly({
-        sourceEl: titleEl,
-        targetEl: targetTitle,
-        overlay: flyOverlay,
-      });
-    } catch (e) {
-      console.warn('TextRearrange failed:', e);
-    }
-  }
-
-  // Remove .measuring AFTER fly() has measured the target — removing it
-  // earlier causes .spa-page { display:none }, zeroing all getBoundingClientRect calls.
-  targetPage.classList.remove('measuring');
-
   var flyTl = gsap.timeline();
 
+  // Fly title — rearrange path or fallback clone tween
   if (rearrangeResult) {
     flyTl.add(rearrangeResult.timeline, 0);
-  } else if (titleEl && targetTitleRect && targetTypo) {
-    // Fallback: tween whole titleEl to target
-    titleEl.style.fontFamily    = targetTypo.fontFamily;
-    titleEl.style.fontStyle     = targetTypo.fontStyle;
-    titleEl.style.textTransform = targetTypo.textTransform;
-
-    flyTl.to(titleEl, {
+  } else if (titleClone && targetTypo) {
+    titleClone.style.fontFamily    = targetTypo.fontFamily;
+    titleClone.style.fontStyle     = targetTypo.fontStyle;
+    titleClone.style.textTransform = targetTypo.textTransform;
+    flyTl.to(titleClone, {
       left:          targetTitleRect.left,
       top:           targetTitleRect.top,
       width:         targetTitleRect.width,
       height:        targetTitleRect.height,
+      padding:       tPadT + 'px ' + tPadR + 'px ' + tPadB + 'px ' + tPadL + 'px',
       fontSize:      targetTypo.fontSize,
       lineHeight:    targetTypo.lineHeight || undefined,
       fontWeight:    targetTypo.fontWeight,
@@ -457,9 +403,10 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   }
 
   // Fade out art (no image target on home)
-  flyTl.to(artEl, {
+  var hasTitle = rearrangeResult || titleClone;
+  flyTl.to(artClone, {
     opacity: 0, duration: 0.3, ease: 'power2.out',
-  }, titleEl ? '<' : '>');
+  }, hasTitle ? 0 : '>');
 
   // Page fade-in
   flyTl.call(function() {
@@ -477,10 +424,9 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
     opacity: 1, duration: 0.4, ease: 'power2.out',
   }, '-=0.25');
 
-  // Cleanup + rebuild hand
+  // Swap clones for real elements + rebuild hand
   flyTl.call(function() {
     if (targetTitle) targetTitle.style.opacity = '1';
-    if (rearrangeResult) rearrangeResult.destroy();
     flyOverlay.innerHTML = '';
     targetPage.classList.remove('transitioning');
     window.scrollTo(0, 0);
@@ -498,7 +444,7 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
   });
 }
 
-function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer, titleScale) {
+function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect, artRect, pageContainer) {
 
   // Ensure fetch is started
   if (!pageCache[cardData.pageUrl]) {
@@ -510,7 +456,8 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
     if (!content) {
       // Fetch failed — restore UI so the user isn't stuck
       console.error('Failed to load page:', cardData.pageUrl);
-      flyOverlay.innerHTML = '';
+      cardEl.remove();
+      perspectiveContainer.innerHTML = '';
       dragBlurOverlay.style.backdropFilter = '';
       dragBlurOverlay.style.webkitBackdropFilter = '';
       dragBlurOverlay.style.background = '';
@@ -535,10 +482,8 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
     pageContainer.appendChild(wrapper);
     pageContainer.style.pointerEvents = 'auto';
 
-    // Wait one frame for layout, then wait for fonts (injecting content may trigger new loads)
+    // Wait one frame for layout
     requestAnimationFrame(function() {
-      var fontWait = document.fonts ? document.fonts.ready : Promise.resolve();
-      fontWait.then(function() {
       var targetTitle = wrapper.querySelector('.project-hero-title');
       var targetImage = wrapper.querySelector('.work-image');
 
@@ -564,56 +509,60 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
       var targetImageRect = targetImage ? targetImage.getBoundingClientRect() : null;
       var targetTypo = targetTitle ? getTargetTypography(targetTitle) : null;
 
+      wrapper.classList.remove('measuring');
+
       // Hide real title so it doesn't show through when wrapper fades in
       if (targetTitle) targetTitle.style.opacity = '0';
 
-      // titleEl and artEl are already reparented in flyOverlay (from beginPageTransition)
+      // Create art flying clone (title handled by TextRearrange)
+      var artClone = artEl.cloneNode(true);
+      applyArtCloneStyles(artClone, artRect);
+      flyOverlay.appendChild(artClone);
 
-      // Revert destruction split on title so TextRearrange gets clean text
-      if (window.TextDestruction && titleEl) {
-        TextDestruction.revertElement(titleEl);
-      }
-
-      // Remove title's scale transform — set font-size to visual size instead
-      if (titleEl) {
-        var cs = getComputedStyle(titleEl);
-        var computedFS = parseFloat(cs.fontSize);
-        var computedLH = parseFloat(cs.lineHeight) || computedFS * 1.2;
-        titleEl.style.transform = '';
-        titleEl.style.fontSize = (computedFS * titleScale) + 'px';
-        titleEl.style.lineHeight = (computedLH * titleScale) + 'px';
-        titleEl.style.width = titleRect.width + 'px';
-      }
-
+      // Character-level title rearrangement: individual chars fly from
+      // card layout positions to page-title layout positions, handling
+      // line-break mismatches gracefully at any viewport width.
       var rearrangeResult = null;
-      if (titleEl && targetTitle) {
+      if (targetTitleRect && targetTitle) {
         try {
           rearrangeResult = TextRearrange.fly({
-            sourceEl: titleEl,
-            targetEl: targetTitle,
-            overlay: flyOverlay,
+            sourceEl:   titleEl,
+            titleRect:  titleRect,
+            targetEl:   targetTitle,
+            targetRect: targetTitleRect,
+            overlay:    flyOverlay,
+            duration:   FLY_DURATION + 0.05,
           });
         } catch (e) {
-          console.warn('TextRearrange failed:', e);
+          console.warn('TextRearrange failed, falling back to clone tween:', e);
         }
       }
 
-      // Remove .measuring AFTER fly() has measured the target — removing it
-      // earlier causes .spa-page { display:none }, zeroing all getBoundingClientRect calls.
-      wrapper.classList.remove('measuring');
+      // Fallback: if rearrange failed, use the old clone-and-tween approach
+      var titleClone = null;
+      if (!rearrangeResult && targetTitleRect && targetTypo) {
+        titleClone = titleEl.cloneNode(true);
+        applyCloneStyles(titleClone, titleRect, titleEl);
+        flyOverlay.appendChild(titleClone);
+      }
+
+      // Hide card (rearrange chars / clone are already at source position)
+      cardEl.style.opacity = '0';
+      requestAnimationFrame(function() {
+        cardEl.remove();
+        perspectiveContainer.innerHTML = '';
+      });
 
       var flyTl = gsap.timeline();
 
-      // Fly title
+      // Fly title — rearrange path or fallback clone tween
       if (rearrangeResult) {
         flyTl.add(rearrangeResult.timeline, 0);
-      } else if (titleEl && targetTitleRect && targetTypo) {
-        // Fallback: tween whole titleEl to target
-        titleEl.style.fontFamily    = targetTypo.fontFamily;
-        titleEl.style.fontStyle     = targetTypo.fontStyle;
-        titleEl.style.textTransform = targetTypo.textTransform;
-
-        flyTl.to(titleEl, {
+      } else if (titleClone && targetTypo) {
+        titleClone.style.fontFamily    = targetTypo.fontFamily;
+        titleClone.style.fontStyle     = targetTypo.fontStyle;
+        titleClone.style.textTransform = targetTypo.textTransform;
+        flyTl.to(titleClone, {
           left:          targetTitleRect.left,
           top:           targetTitleRect.top,
           width:         targetTitleRect.width,
@@ -630,18 +579,18 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
       // Fly art to first image
       if (targetImageRect) {
-        flyTl.to(artEl, {
+        flyTl.to(artClone, {
           left: targetImageRect.left,
           top: targetImageRect.top,
           width: targetImageRect.width,
           height: targetImageRect.height,
           duration: FLY_DURATION,
           ease: 'power3.out',
-        }, '<');
+        }, 0);
       } else {
-        flyTl.to(artEl, {
+        flyTl.to(artClone, {
           opacity: 0, duration: 0.3, ease: 'power2.out',
-        }, '<');
+        }, 0);
       }
 
       // Page fade-in
@@ -661,6 +610,8 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
 
         // Re-init text destruction while wrapper is still opacity 0 so the
         // heavy DOM mutations (SplitText char/word re-wrapping) are invisible.
+        // Title and image stay visible within the wrapper — they fade in
+        // naturally with the wrapper's opacity, covered by the fly clones.
         if (window.TextDestruction) {
           TextDestruction.onThemeChange();
         }
@@ -670,10 +621,9 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
         opacity: 1, duration: 0.4, ease: 'power2.out',
       }, '-=0.25');
 
-      // Cleanup + rebuild hand
+      // Swap clones for real elements + rebuild hand
       flyTl.call(function() {
         if (targetTitle) targetTitle.style.opacity = '';
-        if (rearrangeResult) rearrangeResult.destroy();
         flyOverlay.innerHTML = '';
         wrapper.classList.remove('transitioning');
 
@@ -686,14 +636,45 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
         rebuildHand(cardId);
         history.pushState({ cardId: cardId }, '', cardData.pageUrl);
       });
-    }); // end fontWait.then
-    }); // end rAF
-  }); // end pageCache.then
+    });
+  });
 }
 
 /* ═══════════════════════════════════════════════
-   HELPERS
+   CLONE HELPERS
    ═══════════════════════════════════════════════ */
+function applyCloneStyles(titleClone, titleRect, sourceEl) {
+  var cs = getComputedStyle(sourceEl);
+  var padL = parseFloat(cs.paddingLeft) || 0;
+  var padR = parseFloat(cs.paddingRight) || 0;
+  var padT = parseFloat(cs.paddingTop) || 0;
+  var padB = parseFloat(cs.paddingBottom) || 0;
+  // Derive scale from visual vs natural size (card may be scaled via transform)
+  var naturalH = sourceEl.offsetHeight;
+  var visualH = titleRect.height;
+  var scale = naturalH > 0 ? visualH / naturalH : 1;
+  var scaledFontSize = parseFloat(cs.fontSize) * scale;
+  var scaledLineHeight = parseFloat(cs.lineHeight) * scale;
+  titleClone.style.position = 'fixed';
+  titleClone.style.left = (titleRect.left + padL * scale) + 'px';
+  titleClone.style.top = (titleRect.top + padT * scale) + 'px';
+  titleClone.style.width = (titleRect.width - (padL + padR) * scale) + 'px';
+  titleClone.style.height = (titleRect.height - (padT + padB) * scale) + 'px';
+  titleClone.style.margin = '0';
+  titleClone.style.padding = '0';
+  titleClone.style.fontFamily = cs.fontFamily;
+  titleClone.style.fontWeight = cs.fontWeight;
+  titleClone.style.fontStyle = cs.fontStyle;
+  titleClone.style.fontSize = scaledFontSize + 'px';
+  titleClone.style.letterSpacing = cs.letterSpacing;
+  titleClone.style.textTransform = cs.textTransform;
+  titleClone.style.color = cs.color;
+  titleClone.style.lineHeight = scaledLineHeight + 'px';
+  titleClone.style.overflow = 'hidden';
+  titleClone.style.zIndex = '501';
+  titleClone.style.pointerEvents = 'none';
+}
+
 function getTargetTypography(el) {
   var cs = getComputedStyle(el);
   return {

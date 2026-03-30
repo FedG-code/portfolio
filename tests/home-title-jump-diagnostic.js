@@ -27,20 +27,28 @@ async function measureHeroElements(page, label) {
       heroBody: null,
     };
 
-    // Check for flying clone in fly-overlay
+    // Check for flying char spans in fly-overlay (TextRearrange animation)
     var flyOverlay = document.getElementById('flyOverlay');
     if (flyOverlay) {
-      var cloneEls = flyOverlay.querySelectorAll('*');
-      for (var i = 0; i < cloneEls.length; i++) {
-        var el = cloneEls[i];
-        if (el.style.position === 'fixed' && el.style.fontFamily) {
-          var r = el.getBoundingClientRect();
+      var charSpans = flyOverlay.querySelectorAll('span[style*="position"]');
+      if (charSpans.length > 0) {
+        var minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+        var totalOpacity = 0;
+        for (var i = 0; i < charSpans.length; i++) {
+          var r = charSpans[i].getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) continue;
+          if (r.left < minL) minL = r.left;
+          if (r.top < minT) minT = r.top;
+          if (r.right > maxR) maxR = r.right;
+          if (r.bottom > maxB) maxB = r.bottom;
+          totalOpacity += parseFloat(getComputedStyle(charSpans[i]).opacity) || 0;
+        }
+        if (minL !== Infinity) {
           result.clone = {
-            top: r.top, left: r.left, width: r.width, height: r.height,
-            opacity: getComputedStyle(el).opacity,
-            text: el.textContent.trim().substring(0, 30),
+            top: minT, left: minL, width: maxR - minL, height: maxB - minT,
+            opacity: (totalOpacity / charSpans.length).toFixed(2),
+            charCount: charSpans.length,
           };
-          break;
         }
       }
     }
@@ -62,7 +70,32 @@ async function measureHeroElements(page, label) {
       };
     }
 
-    result.h1 = measure(homePage.querySelector('.hero h1'));
+    var h1El = homePage.querySelector('.hero h1');
+    result.h1 = measure(h1El);
+
+    // When h1 is visible, also measure its internal text bbox via SplitText
+    // (chars may sit above the element box due to font ascenders)
+    if (h1El && result.h1 && parseFloat(result.h1.opacity) > 0 && result.h1.height > 0 && window.SplitText) {
+      try {
+        var split = SplitText.create(h1El, { type: 'chars', tag: 'span' });
+        var tMinL = Infinity, tMinT = Infinity, tMaxR = -Infinity, tMaxB = -Infinity;
+        for (var k = 0; k < split.chars.length; k++) {
+          var cr = split.chars[k].getBoundingClientRect();
+          if (cr.width === 0 && cr.height === 0) continue;
+          if (cr.left < tMinL) tMinL = cr.left;
+          if (cr.top < tMinT) tMinT = cr.top;
+          if (cr.right > tMaxR) tMaxR = cr.right;
+          if (cr.bottom > tMaxB) tMaxB = cr.bottom;
+        }
+        split.revert();
+        if (tMinL !== Infinity) {
+          result.h1TextBox = {
+            top: tMinT, left: tMinL, width: tMaxR - tMinL, height: tMaxB - tMinT,
+          };
+        }
+      } catch (e) { /* SplitText not available or failed */ }
+    }
+
     result.badge = measure(homePage.querySelector('.hero-badge'));
     result.heroBody = measure(homePage.querySelector('.hero-body'));
 
@@ -132,26 +165,31 @@ async function run() {
       return origBegin.apply(this, arguments);
     };
 
-    // Observe clone insertion
+    // Observe char span insertion (TextRearrange creates spans in flyOverlay)
     var obs = new MutationObserver(function(muts) {
-      muts.forEach(function(m) {
-        m.addedNodes.forEach(function(n) {
-          if (n.style && n.style.position === 'fixed' && n.style.fontFamily) {
-            window.__flyDebug.cloneStart = {
-              left: parseFloat(n.style.left),
-              top: parseFloat(n.style.top),
-              width: parseFloat(n.style.width),
-              height: parseFloat(n.style.height),
-              fontSize: n.style.fontSize,
-              lineHeight: n.style.lineHeight,
-              text: n.textContent.trim().substring(0, 30),
-            };
-          }
-        });
-      });
+      if (window.__flyDebug.charsStart) return; // only capture first batch
+      var flyOv = document.getElementById('flyOverlay');
+      if (!flyOv) return;
+      var spans = flyOv.querySelectorAll('span[style*="position"]');
+      if (spans.length === 0) return;
+      var minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+      for (var i = 0; i < spans.length; i++) {
+        var r = spans[i].getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) continue;
+        if (r.left < minL) minL = r.left;
+        if (r.top < minT) minT = r.top;
+        if (r.right > maxR) maxR = r.right;
+        if (r.bottom > maxB) maxB = r.bottom;
+      }
+      if (minL !== Infinity) {
+        window.__flyDebug.charsStart = {
+          left: minL, top: minT, width: maxR - minL, height: maxB - minT,
+          charCount: spans.length,
+        };
+      }
     });
     var flyOv = document.getElementById('flyOverlay');
-    if (flyOv) obs.observe(flyOv, { childList: true });
+    if (flyOv) obs.observe(flyOv, { childList: true, subtree: true });
   });
 
   // Step 4: Capture card title position, then play Home card
@@ -207,7 +245,7 @@ async function run() {
   // Summary table
   console.log('\n=== Hero h1 Position Over Time ===');
   console.log(
-    'elapsed  | h1.top     | h1.height  | h1.opacity | h1.transform             | badge.top  | badge.opacity | body.top   | body.opacity | clone.top  | scrollY'
+    'elapsed  | h1.top     | h1.height  | h1.opacity | h1.transform             | badge.top  | badge.opacity | body.top   | body.opacity | chars.top  | chars# | scrollY'
   );
   console.log('-'.repeat(175));
 
@@ -229,6 +267,7 @@ async function run() {
     var bdt = s.heroBody ? s.heroBody.top.toFixed(1) : '-';
     var bdo = s.heroBody ? s.heroBody.opacity : '-';
     var ct = s.clone ? s.clone.top.toFixed(1) : '-';
+    var cc = s.clone ? String(s.clone.charCount) : '-';
 
     var h1Top = s.h1 ? s.h1.top : null;
     var h1Height = s.h1 ? s.h1.height : null;
@@ -261,6 +300,7 @@ async function run() {
       String(bdt).padStart(9) + ' | ' +
       String(bdo).padStart(12) + ' | ' +
       String(ct).padStart(9) + ' | ' +
+      String(cc).padStart(6) + ' | ' +
       String(s.scrollY) +
       marker
     );
@@ -291,37 +331,82 @@ async function run() {
     var naturalH = ct.height; // includes scaled padding, this is visual
     console.log('  (padding is CSS-level; multiply by card scale for visual position)');
   }
-  if (flyDebug.cloneStart) {
+  if (flyDebug.charsStart) {
     console.log(
-      'Clone START: left=' + flyDebug.cloneStart.left.toFixed(1) +
-      ', top=' + flyDebug.cloneStart.top.toFixed(1) +
-      ', w=' + flyDebug.cloneStart.width.toFixed(1) +
-      ', h=' + flyDebug.cloneStart.height.toFixed(1) +
-      ', fontSize=' + flyDebug.cloneStart.fontSize +
-      ', lineHeight=' + flyDebug.cloneStart.lineHeight
+      'Chars START: left=' + flyDebug.charsStart.left.toFixed(1) +
+      ', top=' + flyDebug.charsStart.top.toFixed(1) +
+      ', w=' + flyDebug.charsStart.width.toFixed(1) +
+      ', h=' + flyDebug.charsStart.height.toFixed(1) +
+      ', chars=' + flyDebug.charsStart.charCount
     );
     if (flyDebug.cardTitleAtTransition) {
       var ct2 = flyDebug.cardTitleAtTransition;
-      // Scale factor: clone fontSize / raw fontSize tells us the card scale
-      var cloneFs = parseFloat(flyDebug.cloneStart.fontSize);
-      var rawFs = parseFloat(ct2.fontSize);
-      var scl = rawFs > 0 ? cloneFs / rawFs : 1;
-      var textLeft = ct2.left + ct2.padL * scl;
-      var textTop = ct2.top + ct2.padT * scl;
-      var dx = flyDebug.cloneStart.left - textLeft;
-      var dy = flyDebug.cloneStart.top - textTop;
+      var dx = flyDebug.charsStart.left - ct2.left;
+      var dy = flyDebug.charsStart.top - ct2.top;
       console.log(
-        '  DELTA from card text (scale=' + scl.toFixed(2) + '): dx=' + dx.toFixed(1) + 'px, dy=' + dy.toFixed(1) + 'px' +
+        '  DELTA from card title: dx=' + dx.toFixed(1) + 'px, dy=' + dy.toFixed(1) + 'px' +
         (Math.abs(dx) > 2 || Math.abs(dy) > 2 ? ' *** MISMATCH ***' : ' (aligned)')
       );
     }
+  } else {
+    console.log('WARNING: No char spans detected in flyOverlay — TextRearrange.fly() may have returned null');
+  }
+
+  // Check fly landing accuracy: last sample with chars vs first sample with visible h1 text
+  // Compare against h1TextBox (internal char positions via SplitText) for accuracy —
+  // the h1 element box can differ from actual text position due to font ascenders.
+  var lastChars = null;
+  var firstH1 = null;
+  var firstH1TextBox = null;
+  for (var j = 0; j < samples.length; j++) {
+    if (samples[j].clone) lastChars = samples[j].clone;
+    if (!firstH1 && samples[j].h1 && parseFloat(samples[j].h1.opacity) > 0 && samples[j].h1.top > 0) {
+      firstH1 = samples[j].h1;
+      firstH1TextBox = samples[j].h1TextBox || null;
+    }
+  }
+
+  var landingMiss = false;
+  var landingDx = 0;
+  var landingDy = 0;
+  console.log('\n=== Fly Landing Accuracy ===');
+  if (lastChars && firstH1) {
+    // Prefer h1TextBox (actual char positions) over h1 element box
+    var compareTarget = firstH1TextBox || firstH1;
+    var compareLabel = firstH1TextBox ? 'h1 text chars' : 'h1 element box';
+    landingDx = lastChars.left - compareTarget.left;
+    landingDy = lastChars.top - compareTarget.top;
+    console.log(
+      'Last chars bbox: left=' + lastChars.left.toFixed(1) + ', top=' + lastChars.top.toFixed(1) +
+      ', w=' + lastChars.width.toFixed(1) + ', h=' + lastChars.height.toFixed(1)
+    );
+    console.log(
+      'Target (' + compareLabel + '): left=' + compareTarget.left.toFixed(1) + ', top=' + compareTarget.top.toFixed(1) +
+      ', w=' + compareTarget.width.toFixed(1) + ', h=' + compareTarget.height.toFixed(1)
+    );
+    if (firstH1TextBox) {
+      console.log(
+        'h1 element box: left=' + firstH1.left.toFixed(1) + ', top=' + firstH1.top.toFixed(1) +
+        '  (text-to-box offset: dy=' + (firstH1TextBox.top - firstH1.top).toFixed(1) + 'px)'
+      );
+    }
+    console.log(
+      'Landing delta: dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px' +
+      (Math.abs(landingDx) > JUMP_THRESHOLD || Math.abs(landingDy) > JUMP_THRESHOLD ? ' *** MISS ***' : ' (accurate)')
+    );
+    landingMiss = Math.abs(landingDx) > JUMP_THRESHOLD || Math.abs(landingDy) > JUMP_THRESHOLD;
+  } else if (!lastChars) {
+    console.log('WARNING: No char span samples captured — cannot check landing accuracy');
+  } else {
+    console.log('WARNING: h1 never became visible — cannot check landing accuracy');
   }
 
   // Result
   console.log('\n=== Result ===');
   var totalJumps = jumpCount + heightJumpCount;
-  if (totalJumps === 0) {
-    console.log('PASS: No title jumps detected (threshold: ' + JUMP_THRESHOLD + 'px)');
+  var totalFails = totalJumps + (landingMiss ? 1 : 0);
+  if (totalFails === 0) {
+    console.log('PASS: No title jumps or landing misses detected (threshold: ' + JUMP_THRESHOLD + 'px)');
   } else {
     if (jumpCount > 0) {
       console.log('FAIL: ' + jumpCount + ' top jump(s) detected. Max top jump: ' + maxJump.toFixed(1) + 'px');
@@ -329,11 +414,14 @@ async function run() {
     if (heightJumpCount > 0) {
       console.log('FAIL: ' + heightJumpCount + ' height jump(s) detected. Max height jump: ' + maxHeightJump.toFixed(1) + 'px');
     }
+    if (landingMiss) {
+      console.log('FAIL: Chars missed target h1 position. dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px');
+    }
   }
 
   console.log('\nScreenshots saved to tests/diag-home-*.png');
   await browser.close();
-  process.exit(totalJumps > 0 ? 1 : 0);
+  process.exit(totalFails > 0 ? 1 : 0);
 }
 
 run().catch(function(err) {
