@@ -78,8 +78,67 @@ async function measureHeroElements(page, label) {
   }, label);
 }
 
+/**
+ * Polls for flying chars and a target title element, then checks that the
+ * chars' final bounding box matches the title's bounding box within threshold.
+ * Returns { miss: bool, dx, dy } or null if chars/title never appeared.
+ */
+async function checkLandingAccuracy(page, titleSelector, durationMs, label) {
+  var intervalMs = 50;
+  var iterations = Math.ceil(durationMs / intervalMs);
+  var lastChars = null;
+  var firstTitle = null;
+
+  for (var i = 0; i < iterations; i++) {
+    var m = await page.evaluate(function(sel) {
+      var r = {};
+      var fly = document.getElementById('flyOverlay');
+      if (fly) {
+        var spans = fly.querySelectorAll('span[style*="position"]');
+        if (spans.length > 0) {
+          var minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+          for (var i = 0; i < spans.length; i++) {
+            var rect = spans[i].getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) continue;
+            if (rect.left < minL) minL = rect.left;
+            if (rect.top < minT) minT = rect.top;
+            if (rect.right > maxR) maxR = rect.right;
+            if (rect.bottom > maxB) maxB = rect.bottom;
+          }
+          if (minL !== Infinity) r.chars = { left: minL, top: minT, width: maxR - minL, height: maxB - minT };
+        }
+      }
+      var t = document.querySelector(sel);
+      if (t) {
+        var tr = t.getBoundingClientRect();
+        var op = parseFloat(getComputedStyle(t).opacity);
+        if (tr.height > 0 && op > 0) r.title = { left: tr.left, top: tr.top, width: tr.width, height: tr.height };
+      }
+      return r;
+    }, titleSelector);
+
+    if (m.chars) lastChars = m.chars;
+    if (!firstTitle && m.title) firstTitle = m.title;
+    await page.waitForTimeout(intervalMs);
+  }
+
+  if (!lastChars || !firstTitle) return null;
+
+  var dx = lastChars.left - firstTitle.left;
+  var dy = lastChars.top - firstTitle.top;
+  var miss = Math.abs(dx) > JUMP_THRESHOLD || Math.abs(dy) > JUMP_THRESHOLD;
+
+  console.log('  ' + label + ' landing:');
+  console.log('    Chars bbox:  left=' + lastChars.left.toFixed(1) + ', top=' + lastChars.top.toFixed(1));
+  console.log('    Title rect:  left=' + firstTitle.left.toFixed(1) + ', top=' + firstTitle.top.toFixed(1));
+  console.log('    Delta: dx=' + dx.toFixed(1) + 'px, dy=' + dy.toFixed(1) + 'px' +
+    (miss ? ' *** MISS ***' : ' (accurate)'));
+
+  return { miss: miss, dx: dx, dy: dy };
+}
+
 async function run() {
-  console.log('=== Home Card Title Jump Diagnostic ===\n');
+  console.log('=== Title Landing Diagnostic ===\n');
 
   var browser = await chromium.launch({ headless: false });
   var context = await browser.newContext({
@@ -95,14 +154,16 @@ async function run() {
   }, { timeout: 15000 });
   await page.waitForTimeout(1500); // let initial animations settle
 
-  // Step 2: Play a project card (card 0 = Logifuture) to get Home card in hand
-  console.log('Step 2: Playing Logifuture card to put Home card in hand...');
+  // Step 2: Play a project card (card 0 = Logifuture) — check landing accuracy
+  console.log('Step 2: Playing Logifuture card...');
   await page.evaluate(function() {
     var el = document.querySelector('[data-card-id="0"]');
     if (!el) throw new Error('Card 0 not found');
     playCard(el, 0);
   });
-  await page.waitForTimeout(6000); // wait for full transition + hand rebuild
+
+  var projectLanding = await checkLandingAccuracy(page, '.project-hero-title', 5000, 'Project page');
+  await page.waitForTimeout(2000); // let hand rebuild settle
 
   // Verify Home card is now in hand
   var hasHome = await page.evaluate(function() {
@@ -365,19 +426,23 @@ async function run() {
 
   // Result
   console.log('\n=== Result ===');
+  var projectMiss = projectLanding && projectLanding.miss;
   var totalJumps = jumpCount + heightJumpCount;
-  var totalFails = totalJumps + (landingMiss ? 1 : 0);
+  var totalFails = totalJumps + (landingMiss ? 1 : 0) + (projectMiss ? 1 : 0);
   if (totalFails === 0) {
     console.log('PASS: No title jumps or landing misses detected (threshold: ' + JUMP_THRESHOLD + 'px)');
   } else {
+    if (projectMiss) {
+      console.log('FAIL: Project page chars missed target. dx=' + projectLanding.dx.toFixed(1) + 'px, dy=' + projectLanding.dy.toFixed(1) + 'px');
+    }
     if (jumpCount > 0) {
-      console.log('FAIL: ' + jumpCount + ' top jump(s) detected. Max top jump: ' + maxJump.toFixed(1) + 'px');
+      console.log('FAIL: Home ' + jumpCount + ' top jump(s) detected. Max top jump: ' + maxJump.toFixed(1) + 'px');
     }
     if (heightJumpCount > 0) {
-      console.log('FAIL: ' + heightJumpCount + ' height jump(s) detected. Max height jump: ' + maxHeightJump.toFixed(1) + 'px');
+      console.log('FAIL: Home ' + heightJumpCount + ' height jump(s) detected. Max height jump: ' + maxHeightJump.toFixed(1) + 'px');
     }
     if (landingMiss) {
-      console.log('FAIL: Chars missed target h1 position. dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px');
+      console.log('FAIL: Home chars missed target h1 position. dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px');
     }
   }
 

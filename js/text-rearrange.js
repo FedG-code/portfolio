@@ -62,6 +62,7 @@ var TextRearrange = (function () {
           fontFamily:    cs.fontFamily,
           fontWeight:    cs.fontWeight,
           fontStyle:     cs.fontStyle,
+          lineHeight:    cs.lineHeight,
           letterSpacing: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing,
           textTransform: cs.textTransform,
           color:         cs.color
@@ -69,7 +70,8 @@ var TextRearrange = (function () {
         charEls.push(charSpan);
       }
 
-      var result = { positions: positions, sourceChars: charEls, split: split };
+      var elCS = getComputedStyle(el);
+      var result = { positions: positions, sourceChars: charEls, split: split, elRect: elRect, lineHeight: elCS.lineHeight };
       if (keepSplit) split = null; // prevent finally from reverting
       return result;
     } finally {
@@ -112,6 +114,25 @@ var TextRearrange = (function () {
       console.warn('TextRearrange: char count mismatch — source:', srcData.positions.length, 'target:', tgtData.positions.length);
     }
 
+    // ── Correct target positions for inline vs inline-block glyph offset ──
+    // measureDirect returns inline span glyph bounds (ascenders/italic overhangs
+    // extend beyond the element box). Flying chars are display:inline-block, where
+    // the box edges ARE the positioned coordinates. Shift target positions so the
+    // inline-block boxes align with the element box, keeping glyphs at the correct
+    // visual position when the real element appears.
+    if (tgtData.elRect && tgtData.positions.length > 0) {
+      var minCharY = tgtData.positions[0].y;
+      for (var j = 1; j < tgtData.positions.length; j++) {
+        if (tgtData.positions[j].y < minCharY) minCharY = tgtData.positions[j].y;
+      }
+      var yCorrection = tgtData.elRect.top - minCharY;
+      if (yCorrection !== 0) {
+        for (var j = 0; j < tgtData.positions.length; j++) {
+          tgtData.positions[j].y += yCorrection;
+        }
+      }
+    }
+
     // ── Pull source chars out of sourceEl into overlay directly ──
     var charEls = [];
     for (var i = 0; i < count; i++) {
@@ -128,7 +149,7 @@ var TextRearrange = (function () {
         'letter-spacing:' + sp.letterSpacing + ';' +
         'text-transform:' + sp.textTransform + ';' +
         'color:'          + sp.color         + ';' +
-        'line-height:1;';
+        'line-height:'   + sp.lineHeight   + ';';
 
       overlay.appendChild(charSpan);
       gsap.set(charSpan, { x: sp.x, y: sp.y });
@@ -197,6 +218,11 @@ var TextRearrange = (function () {
             var srcLS = parseFloat(sp.letterSpacing) || 0;
             var tgtLS = parseFloat(tp.letterSpacing) || 0;
             charEl.style.letterSpacing = (srcLS + (tgtLS - srcLS) * t) + 'px';
+
+            // Interpolate line height
+            var srcLH = parseFloat(sp.lineHeight) || sp.fontSize;
+            var tgtLH = parseFloat(tp.lineHeight) || tp.fontSize;
+            charEl.style.lineHeight = (srcLH + (tgtLH - srcLH) * t) + 'px';
 
             // Swap discrete (non-interpolatable) properties once
             if (!swapped && t >= DISCRETE_SWAP) {
