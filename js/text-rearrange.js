@@ -195,6 +195,15 @@ var TextRearrange = (function () {
         var swapped = false;
         var proxy = { t: 0 };
 
+        var srcFS = sp.fontSize;
+        var tgtFS = tp.fontSize;
+        var srcW  = parseFloat(sp.fontWeight)    || 400;
+        var tgtW  = parseFloat(tp.fontWeight)    || 400;
+        var srcLS = parseFloat(sp.letterSpacing) || 0;
+        var tgtLS = parseFloat(tp.letterSpacing) || 0;
+        var srcLH = parseFloat(sp.lineHeight)    || sp.fontSize;
+        var tgtLH = parseFloat(tp.lineHeight)    || tp.fontSize;
+
         var startTime = idx * CHAR_STAGGER;
 
         tl.to(proxy, {
@@ -209,23 +218,15 @@ var TextRearrange = (function () {
             gsap.set(charEl, { x: pos.x, y: pos.y });
 
             // Interpolate font size
-            var srcFS = sp.fontSize;
-            var tgtFS = tp.fontSize;
             charEl.style.fontSize = (srcFS + (tgtFS - srcFS) * t) + 'px';
 
             // Interpolate font weight (numeric)
-            var srcW = parseFloat(sp.fontWeight) || 400;
-            var tgtW = parseFloat(tp.fontWeight) || 400;
             charEl.style.fontWeight = Math.round(srcW + (tgtW - srcW) * t);
 
             // Interpolate letter spacing
-            var srcLS = parseFloat(sp.letterSpacing) || 0;
-            var tgtLS = parseFloat(tp.letterSpacing) || 0;
             charEl.style.letterSpacing = (srcLS + (tgtLS - srcLS) * t) + 'px';
 
             // Interpolate line height
-            var srcLH = parseFloat(sp.lineHeight) || sp.fontSize;
-            var tgtLH = parseFloat(tp.lineHeight) || tp.fontSize;
             charEl.style.lineHeight = (srcLH + (tgtLH - srcLH) * t) + 'px';
 
             // Swap discrete (non-interpolatable) properties once
