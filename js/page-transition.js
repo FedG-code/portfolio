@@ -493,6 +493,12 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
       }
     });
 
+    // Re-init text destruction for home page content (split was lost when
+    // onThemeChange ran while home was display:none during project view)
+    if (window.TextDestruction) {
+      TextDestruction.onThemeChange();
+    }
+
     rebuildHand(cardId);
     history.pushState({ cardId: cardId }, '', 'index.html');
   });
@@ -820,6 +826,10 @@ function navigateToPage(cardId) {
           window.revealObserver.observe(el);
         }
       });
+    }
+    // Re-init text destruction for home page content
+    if (window.TextDestruction) {
+      TextDestruction.onThemeChange();
     }
   } else {
     // Navigating to a project page

@@ -9,6 +9,8 @@
  *
  * Prerequisite: local server on port 8080 (npx http-server -p 8080 -c-1)
  * Run: node tests/home-title-jump-diagnostic.js
+ * Important note: this test is correct, so do not edit it if it returns failures
+ * multiple times
  */
 
 const { chromium } = require('playwright');
