@@ -99,6 +99,7 @@ var TextRearrange = (function () {
 
     // Guard: bail if fonts haven't loaded (measurements would use fallback fonts)
     if (document.fonts && document.fonts.status !== 'loaded') {
+      console.warn('TextRearrange.fly(): fonts not yet loaded — bailing to avoid wrong measurements');
       return null;
     }
 
@@ -112,6 +113,9 @@ var TextRearrange = (function () {
 
     if (srcData.positions.length !== tgtData.positions.length) {
       console.warn('TextRearrange: char count mismatch — source:', srcData.positions.length, 'target:', tgtData.positions.length);
+      if (Math.abs(srcData.positions.length - tgtData.positions.length) > 2) {
+        return null;  // large mismatch — fall back to whole-element tween
+      }
     }
 
     // ── Correct target positions for inline vs inline-block glyph offset ──

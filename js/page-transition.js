@@ -319,11 +319,7 @@ function beginPageTransition(cardEl, cardId, cardData) {
       textAlign:     titleCS.textAlign,
     };
 
-    if (artEl.contains(titleEl)) {
-      titleEl.parentNode.removeChild(titleEl);
-    } else {
-      titleEl.parentNode.removeChild(titleEl);
-    }
+    titleEl.parentNode.removeChild(titleEl);
     titleEl.style.position = 'fixed';
     titleEl.style.left = titleRect.left + 'px';
     titleEl.style.top = titleRect.top + 'px';
