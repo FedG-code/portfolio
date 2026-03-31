@@ -390,9 +390,9 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
     // Summary table
     console.log('\n  === Title Position Over Time ===');
     console.log(
-      '  elapsed  | h1.top     | h1.height  | h1.opacity | h1.transform             | badge.top  | badge.opacity | body.top   | body.opacity | chars.top  | chars# | scrollY'
+      '  elapsed  | h1.top     | h1.height  | h1.opacity | h1.transform             | badge.top  | badge.opacity | body.top   | body.opacity | chars.top  | chars.h    | chars# | scrollY'
     );
-    console.log('  ' + '-'.repeat(173));
+    console.log('  ' + '-'.repeat(185));
 
     var prevH1Top = null;
     var prevH1Height = null;
@@ -412,6 +412,7 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
       var bdt = s.heroBody ? s.heroBody.top.toFixed(1) : '-';
       var bdo = s.heroBody ? s.heroBody.opacity : '-';
       var ct = s.clone ? s.clone.top.toFixed(1) : '-';
+      var ch = s.clone ? s.clone.height.toFixed(1) : '-';
       var cc = s.clone ? String(s.clone.charCount) : '-';
 
       var h1Top = s.h1 ? s.h1.top : null;
@@ -444,6 +445,7 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
         String(bdt).padStart(9) + ' | ' +
         String(bdo).padStart(12) + ' | ' +
         String(ct).padStart(9) + ' | ' +
+        String(ch).padStart(9) + ' | ' +
         String(cc).padStart(6) + ' | ' +
         String(s.scrollY) +
         marker
@@ -504,12 +506,17 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
     }
 
     var landingMiss = false;
+    var reflowMiss = false;
     var landingDx = 0;
     var landingDy = 0;
+    var landingDh = 0;
+    var landingDw = 0;
     console.log('\n  === Fly Landing Accuracy ===');
     if (lastChars && firstH1) {
       landingDx = lastChars.left - firstH1.left;
       landingDy = lastChars.top - firstH1.top;
+      landingDh = lastChars.height - firstH1.height;
+      landingDw = lastChars.width - firstH1.width;
       console.log(
         '  Last chars bbox: left=' + lastChars.left.toFixed(1) + ', top=' + lastChars.top.toFixed(1) +
         ', w=' + lastChars.width.toFixed(1) + ', h=' + lastChars.height.toFixed(1)
@@ -522,7 +529,12 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
         '  Landing delta: dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px' +
         (Math.abs(landingDx) > JUMP_THRESHOLD || Math.abs(landingDy) > JUMP_THRESHOLD ? ' *** MISS ***' : ' (accurate)')
       );
+      console.log(
+        '  Size delta:    dw=' + landingDw.toFixed(1) + 'px, dh=' + landingDh.toFixed(1) + 'px' +
+        (Math.abs(landingDh) > JUMP_THRESHOLD || Math.abs(landingDw) > JUMP_THRESHOLD ? ' *** REFLOW ***' : ' (matched)')
+      );
       landingMiss = Math.abs(landingDx) > JUMP_THRESHOLD || Math.abs(landingDy) > JUMP_THRESHOLD;
+      reflowMiss = Math.abs(landingDh) > JUMP_THRESHOLD || Math.abs(landingDw) > JUMP_THRESHOLD;
     } else if (!lastChars) {
       console.log('  WARNING: No char span samples captured — cannot check landing accuracy');
     } else {
@@ -532,7 +544,7 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
     // Result for this combination
     var projectMiss = projectLanding && projectLanding.miss;
     var totalJumps = jumpCount + heightJumpCount;
-    var totalFails = totalJumps + (landingMiss ? 1 : 0) + (projectMiss ? 1 : 0);
+    var totalFails = totalJumps + (landingMiss ? 1 : 0) + (reflowMiss ? 1 : 0) + (projectMiss ? 1 : 0);
     var passed = totalFails === 0;
 
     console.log('\n  === Result ===');
@@ -550,6 +562,9 @@ async function runDiagnostic(browser, theme, cardId, viewport) {
       }
       if (landingMiss) {
         console.log('  FAIL: Chars missed target h1 position. dx=' + landingDx.toFixed(1) + 'px, dy=' + landingDy.toFixed(1) + 'px');
+      }
+      if (reflowMiss) {
+        console.log('  FAIL: Chars bbox size mismatches target (text reflow on swap). dw=' + landingDw.toFixed(1) + 'px, dh=' + landingDh.toFixed(1) + 'px');
       }
     }
 

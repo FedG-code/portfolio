@@ -37,7 +37,7 @@ var TextRearrange = (function () {
   function measureDirect(el, keepSplit) {
     var split = null;
     try {
-      split = SplitText.create(el, { type: 'chars', tag: 'span' });
+      split = SplitText.create(el, { type: 'words, chars', tag: 'span', wordsClass: 'destruct-word' });
 
       var elRect = el.getBoundingClientRect();
       if (elRect.width === 0 && elRect.height === 0) {
