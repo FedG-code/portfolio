@@ -37,7 +37,7 @@ var TextRearrange = (function () {
   function measureDirect(el, keepSplit) {
     var split = null;
     try {
-      split = SplitText.create(el, { type: 'words, chars', tag: 'span', wordsClass: 'destruct-word' });
+      split = SplitText.create(el, { type: 'words, chars', tag: 'span', charsClass: 'destruct-char', wordsClass: 'destruct-word' });
 
       var elRect = el.getBoundingClientRect();
       if (elRect.width === 0 && elRect.height === 0) {
@@ -118,24 +118,10 @@ var TextRearrange = (function () {
       }
     }
 
-    // ── Correct target positions for inline vs inline-block glyph offset ──
-    // measureDirect returns inline span glyph bounds (ascenders/italic overhangs
-    // extend beyond the element box). Flying chars are display:inline-block, where
-    // the box edges ARE the positioned coordinates. Shift target positions so the
-    // inline-block boxes align with the element box, keeping glyphs at the correct
-    // visual position when the real element appears.
-    if (tgtData.elRect && tgtData.positions.length > 0) {
-      var minCharY = tgtData.positions[0].y;
-      for (var j = 1; j < tgtData.positions.length; j++) {
-        if (tgtData.positions[j].y < minCharY) minCharY = tgtData.positions[j].y;
-      }
-      var yCorrection = tgtData.elRect.top - minCharY;
-      if (yCorrection !== 0) {
-        for (var j = 0; j < tgtData.positions.length; j++) {
-          tgtData.positions[j].y += yCorrection;
-        }
-      }
-    }
+    // Y-correction removed: measureDirect now uses charsClass:'destruct-char'
+    // (inline-block), so getBoundingClientRect already returns box positions that
+    // match the final split state. The old correction shifted targets to elRect.top
+    // which was BELOW the actual inline-block char tops, causing a 16px vertical gap.
 
     // ── Pull source chars out of sourceEl into overlay directly ──
     var charEls = [];

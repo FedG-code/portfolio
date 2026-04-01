@@ -475,6 +475,13 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
 
   // Cleanup + rebuild hand
   flyTl.call(function() {
+    // Re-init text destruction BEFORE revealing the title — splits the
+    // target h1 into destruct-char spans so positions match the fly targets.
+    // Moving this after opacity='1' caused a visible 15px jump on the fullstop.
+    if (window.TextDestruction) {
+      TextDestruction.onThemeChange();
+    }
+
     if (targetTitle) targetTitle.style.opacity = '1';
     if (rearrangeResult) rearrangeResult.destroy();
     flyOverlay.innerHTML = '';
@@ -488,12 +495,6 @@ function transitionToHome(cardEl, cardId, cardData, titleEl, artEl, titleRect, a
         if (window.revealObserver) window.revealObserver.observe(el);
       }
     });
-
-    // Re-init text destruction for home page content (split was lost when
-    // onThemeChange ran while home was display:none during project view)
-    if (window.TextDestruction) {
-      TextDestruction.onThemeChange();
-    }
 
     rebuildHand(cardId);
     history.pushState({ cardId: cardId }, '', 'index.html');

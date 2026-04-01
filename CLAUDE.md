@@ -49,6 +49,7 @@ js/
 - **JS features**: Scroll reveal (IntersectionObserver), theme switcher with localStorage
 - **Text Destruction**: See [js/CLAUDE.md](js/CLAUDE.md) for detailed destruction.js documentation (mechanics, constants, mobile-gated values, impact throttle, design fallback).
 - **Card-hand system**: See [js/CLAUDE.md](js/CLAUDE.md) for card-hand.js and page-transition.js documentation (play animation phases, SPA navigation, title matching, .reveal vs card handoff, known issues).
+- **Fly-swap alignment pitfall**: Character positions differ between inline text and `display: inline-block` spans (`.destruct-char`). Any code that measures character positions for the fly animation (`measureDirect` in text-rearrange.js) must use `charsClass: 'destruct-char'` so measurements match the final split state. Similarly, `onThemeChange()` must run before the target title is revealed during cleanup — see [js/CLAUDE.md](js/CLAUDE.md) "transitionToHome Cleanup Ordering" and "Measurement Invariant" sections.
 - **Project pages**: Shared template - theme switcher, back link, project hero, repeatable sub-project sections, footer
 
 ## Serving Locally

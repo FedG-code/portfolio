@@ -188,19 +188,21 @@ GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
 | measureDirect | 37-80 | el, keepSplit | {positions[], sourceChars[], split, elRect, lineHeight} | Measures char positions + computed styles via SplitText |
 | fly | 94-263 | {sourceEl, targetEl, overlay, onStart?} | {timeline, lastLaunchTime, destroy(), charEls[]} or null | Builds GSAP timeline: chars fly along bezier arcs from source to target |
 
-### Y-Correction Logic (L121-138)
-**Problem**: SplitText on inline elements captures glyph bounds (ascenders extend above element box). Flying chars are inline-block where the box top IS the positioned coordinate.
-**Solution**: Shift all target Y positions by `elementTop - minCharY` to align inline-block boxes with glyph visual positions.
+### Measurement Invariant: destruct-char Consistency
+`measureDirect()` uses `charsClass: 'destruct-char'` so that SplitText creates inline-block spans matching the final state after `TextDestruction.onThemeChange()` re-splits. This is critical — without it, positions measured as inline text differ from positions rendered as inline-block spans, causing visible character shifts (especially on punctuation like "." which shifts ~15px).
+
+The old Y-correction block (previously L121-138) was removed because it compensated for inline-vs-inline-block glyph offset, which no longer exists when both source and target are measured as inline-block.
+
+**If you touch measureDirect or splitAllText**: both MUST use `charsClass: 'destruct-char'` with matching SplitText options, or fly-swap positions will diverge.
 
 ### Line-Height Interpolation (L204-205, L230)
 Source and target line-heights extracted per-char, linearly interpolated during animation. Prevents vertical spacing jumps between card and page typography.
 
 ### fly() Animation Flow
 1. **Validate** (L94-119): Check fonts loaded, measure source (keepSplit), measure target, validate char count (+/-2 tolerance)
-2. **Y-correct** (L121-138): Compute element-vs-glyph offset
-3. **Prepare chars** (L140-164): Reparent source chars to overlay as fixed-position elements, copy 9 computed style properties
-4. **Build timeline** (L166-250): Per-char bezier arc (alternating perpendicular offset), interpolate font-size/weight/letter-spacing/line-height linearly, swap font-family/style/text-transform at DISCRETE_SWAP, GSAP native color interpolation
-5. **Return** (L252-262): timeline, lastLaunchTime, destroy(), charEls[]
+2. **Prepare chars** (L126-150): Reparent source chars to overlay as fixed-position elements, copy 9 computed style properties
+3. **Build timeline** (L152-236): Per-char bezier arc (alternating perpendicular offset), interpolate font-size/weight/letter-spacing/line-height linearly, swap font-family/style/text-transform at DISCRETE_SWAP, GSAP native color interpolation
+4. **Return** (L238-248): timeline, lastLaunchTime, destroy(), charEls[]
 
 ### Dependencies
 GSAP core (timeline, to, set), SplitText (measureDirect)
@@ -326,6 +328,9 @@ GSAP core (timeline, to, set), SplitText (measureDirect)
 2. Reparents real elements to #flyOverlay with fixed positioning (L298-342)
 3. Uses TextRearrange.fly() for char-by-char animation (or fallback tween)
 4. After animation: destroy() clears overlay
+
+### transitionToHome Cleanup Ordering
+In the cleanup callback (~L477), `TextDestruction.onThemeChange()` MUST run BEFORE `targetTitle.style.opacity = '1'` and `rearrangeResult.destroy()`. This ensures the h1 is already split into `destruct-char` spans (inline-block) when it becomes visible. If onThemeChange runs after the title is revealed, the h1 briefly appears in its unsplit (inline) state, then jumps when re-split — punctuation like "." shifts ~15px.
 
 ### .reveal Class Handling
 Elements with `.reveal` start at opacity:0 + translateY(24px). Must be stripped from fly targets before measuring, otherwise getBoundingClientRect returns wrong values. Re-observed after transition for elements without `.visible`.
