@@ -22,6 +22,7 @@ js/
 ## Detailed Documentation
 - **CSS** (themes, line ranges, selectors): See [css/CLAUDE.md](css/CLAUDE.md)
 - **JS** (functions, constants, APIs): See [js/CLAUDE.md](js/CLAUDE.md)
+- **Tests** (scenarios, thresholds, setup): See [tests/CLAUDE.md](tests/CLAUDE.md)
 
 ## Key Details
 - **Fonts**: Google Fonts `<link>` tags in every page's `<head>` load all theme fonts:
