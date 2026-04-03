@@ -49,19 +49,21 @@ These are called without null checks — would throw if undefined and script loa
 | Section | Lines | Notes |
 |---------|-------|-------|
 | GSAP registration | 1-7 | Registers SplitText + Physics2DPlugin |
-| Constants | 8-17 | Unified (no mobile overrides) |
-| Tween pressure monitor | 19-20 | activeBatchCount / MAX_ACTIVE_BATCHES |
-| DESTRUCTIBLE_SELECTOR | 22-42 | 28 CSS selectors targeting destructible text |
-| splitAllText() | 50-75 | SplitText.create() per element, caches parent color |
-| revertAllText() | 77-83 | Clears splits/char arrays |
-| revertElement() | 85-98 | Single element revert |
-| preloadSplit() | 100-103 | Pre-split on fonts ready (all viewports) |
-| CollisionDetector + spatial grid | 105-212 | Document-relative cache, spatial grid (80px cells), eager warm-up |
-| getCharsInBlastRadius() | ~170-212 | O(1) spatial grid lookup (3x3 cell neighborhood) |
-| shatterChars() | ~228-304 | Physics2D scatter + color flash + batch tracking |
-| scheduleTypingReform() | ~306-390 | Staggered reform, chunked cleanup (40 chars/RAF) |
-| Resize debounce | ~392-403 | 300ms debounce, re-splits + stale cache |
-| Public API (window.TextDestruction) | ~405-447 | init(), destroy(), onProjectileAt(), onThemeChange(), revertElement() |
+| Constants | 8-23 | Unified (no mobile overrides), SCATTER_MS precomputed |
+| Animation pressure monitor | 26-29 | activeBatchCount / MAX_ACTIVE_BATCHES (20), pendingReformTimeouts |
+| DESTRUCTIBLE_SELECTOR | 31-51 | 28 CSS selectors targeting destructible text |
+| splitAllText() | 54-82 | SplitText.create() per element, caches parent color |
+| revertAllText() | 84-90 | Clears splits/char arrays |
+| revertElement() | 92-105 | Single element revert |
+| preloadSplit() | 107-110 | Pre-split on fonts ready (all viewports) |
+| CollisionDetector + spatial grid | 112-213 | Document-relative cache, spatial grid (80px cells), eager warm-up |
+| getCharsInBlastRadius() | ~176-213 | O(1) spatial grid lookup (3x3 cell neighborhood) |
+| WAAPI helpers | ~217-247 | cancelElementAnimations(), makeScatterKeyframes() |
+| shatterChars() | ~255-316 | WAAPI scatter + color flash + batch tracking |
+| scheduleTypingReform() | ~318-378 | WAAPI reform with fill:'backwards', staggered delays |
+| reformCleanup() | ~380-403 | Chunked cleanup (40 chars/RAF), no animation cancel needed |
+| Resize debounce | ~405-416 | 300ms debounce, re-splits + stale cache |
+| Public API (window.TextDestruction) | ~420-470 | init(), destroy(), onProjectileAt(), onThemeChange(), revertElement() |
 
 ### Constants Table
 | Name | Value | Description |
@@ -79,8 +81,9 @@ These are called without null checks — would throw if undefined and script loa
 | MAX_VELOCITY | 500 | Scatter velocity ceiling (px/s) |
 | ANGLE_SPREAD | 60 | Scatter angle variance (deg) |
 | MAX_ROTATION | 720 | Max rotation scatter (deg) |
+| SCATTER_MS | 1200 | SCATTER_DURATION in milliseconds (for WAAPI) |
 | GRID_CELL_SIZE | 80 | Spatial grid cell size (2x BLAST_RADIUS) |
-| MAX_ACTIVE_BATCHES | 6 | Tween pressure cap (defers impacts when exceeded) |
+| MAX_ACTIVE_BATCHES | 20 | Pressure cap (generous — WAAPI is compositor-driven) |
 
 ### Global API
 ```
@@ -96,12 +99,13 @@ window.TextDestruction = {
 ### Key Mechanisms
 - **Document-relative cache**: Stores {el, docX, docY} per visible char. Positions are document-relative (docY = screenY + scrollY), so the cache never needs rebuilding on scroll — only on init, resize, and theme change.
 - **Spatial grid**: Cache entries are indexed into 80px grid cells (key: "col,row"). `getCharsInBlastRadius()` checks only 9 cells (3x3 neighborhood) for O(1) average-case hit detection instead of O(n) linear scan.
-- **Tween pressure monitor**: `activeBatchCount` tracks in-flight scatter batches. `onProjectileAt()` returns early when `activeBatchCount >= MAX_ACTIVE_BATCHES` (6), preventing runaway tween creation. This replaces all previous platform-specific throttles.
-- **Shatter**: Physics2D scatter with gravity + rotation + color flash on all platforms.
-- **Reform**: Left-to-right DOM order, staggered CHAR_STAGGER with WORD_EXTRA_STAGGER at word boundaries. Cleanup chunked (40 chars/RAF) on all platforms.
+- **WAAPI animations**: All per-element animations (scatter, color flash, reform) use Web Animations API instead of GSAP tweens. WAAPI runs on the compositor thread — zero per-frame JS cost. Scatter trajectories are pre-computed from the same physics equations Physics2DPlugin uses, sampled into 4 keyframes per char.
+- **Pressure monitor**: `activeBatchCount` tracks in-flight scatter batches. Limit is 20 (generous because WAAPI is cheap). `onProjectileAt()` returns early when exceeded.
+- **Shatter**: WAAPI scatter with pre-computed parabolic keyframes (gravity + rotation) + color flash on all platforms. `will-change: transform, opacity` promotes chars to compositor layers during animation.
+- **Reform**: WAAPI with `fill:'backwards'` (first keyframe applies during stagger delay, animation self-expires after finishing). Left-to-right DOM order, staggered CHAR_STAGGER with WORD_EXTRA_STAGGER at word boundaries. Cleanup chunked (40 chars/RAF) — no `getAnimations()` needed since animations auto-expire.
 
 ### Dependencies
-GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
+GSAP core, SplitText plugin (CDN, no npm). Physics2DPlugin still registered but no longer used in hot path — scatter physics pre-computed into WAAPI keyframes.
 
 ---
 

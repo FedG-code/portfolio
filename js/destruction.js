@@ -10,6 +10,7 @@ gsap.registerPlugin(SplitText, Physics2DPlugin);
 var BLAST_RADIUS       = 40;
 var MAX_SHATTERED      = 300;
 var SCATTER_DURATION   = 1.2;
+var SCATTER_MS         = SCATTER_DURATION * 1000;
 var REFORM_PAUSE       = 0.8;
 var CHAR_LAND_DURATION = 0.12;
 var CHAR_STAGGER       = 0.055;
@@ -21,9 +22,11 @@ var MAX_VELOCITY       = 500;
 var ANGLE_SPREAD       = 60;
 var MAX_ROTATION       = 720;
 
-// --- Tween pressure monitor ---
-var activeBatchCount = 0;       // scatter batches currently animating
-var MAX_ACTIVE_BATCHES = 6;     // defer new impacts when overloaded
+// --- Animation pressure monitor ---
+// WAAPI runs on the compositor, so the limit is generous.
+var activeBatchCount = 0;
+var MAX_ACTIVE_BATCHES = 20;
+var pendingReformTimeouts = [];
 
 var DESTRUCTIBLE_SELECTOR = [
   'h1', 'h2', 'h3', 'h4',
@@ -214,7 +217,41 @@ function getCharsInBlastRadius(screenX, screenY) {
 
 window.addEventListener('resize', function() { cacheStale = true; scheduleEagerCacheWarm(); });
 
-// --- (impact coalescing removed — replaced by tween pressure monitor) ---
+// --- Animation helpers (Web Animations API) ---
+// WAAPI runs on the compositor thread — zero per-frame JS cost.
+// Scatter trajectories are pre-computed from the same physics equations
+// that Physics2DPlugin solves per-frame, but sampled into keyframes.
+
+function cancelElementAnimations(el) {
+  var anims = el.getAnimations();
+  for (var a = 0; a < anims.length; a++) {
+    anims[a].cancel();
+  }
+}
+
+// Pre-compute parabolic scatter keyframes from physics equations.
+// Physics2D: x(t) = v*cos(a)*t, y(t) = -v*sin(a)*t + 0.5*g*t²
+// Sampled at t=0, T/3, 2T/3, T with linear interpolation between keyframes.
+function makeScatterKeyframes(angle, velocity, rotation) {
+  var rad = angle * Math.PI / 180;
+  var vx = velocity * Math.cos(rad);
+  var vy = -velocity * Math.sin(rad);
+  var halfG = 0.5 * GRAVITY;
+  var T = SCATTER_DURATION;
+  var t1 = T / 3, t2 = T * 2 / 3;
+
+  var x1 = vx * t1, y1 = vy * t1 + halfG * t1 * t1;
+  var x2 = vx * t2, y2 = vy * t2 + halfG * t2 * t2;
+  var xE = vx * T,  yE = vy * T  + halfG * T  * T;
+  var r1 = (rotation / 3) | 0, r2 = (rotation * 2 / 3) | 0, rE = rotation | 0;
+
+  return [
+    { offset: 0,     transform: 'translate(0px,0px) rotate(0deg)',                                      opacity: 1   },
+    { offset: 0.333, transform: 'translate(' + (x1|0) + 'px,' + (y1|0) + 'px) rotate(' + r1 + 'deg)',  opacity: 0.7 },
+    { offset: 0.667, transform: 'translate(' + (x2|0) + 'px,' + (y2|0) + 'px) rotate(' + r2 + 'deg)',  opacity: 0.3 },
+    { offset: 1,     transform: 'translate(' + (xE|0) + 'px,' + (yE|0) + 'px) rotate(' + rE + 'deg)',  opacity: 0   }
+  ];
+}
 
 // --- ShatterAnimator ---
 var currentShattered = 0;
@@ -229,7 +266,6 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
   if (!accentColor) readAccentColor();
 
   var blastChars = [];
-
   var angles = [];
   var velocities = [];
   var rotations = [];
@@ -263,30 +299,35 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
   if (blastChars.length > 0) {
     activeBatchCount++;
 
-    // Batch color flash (1 tween for all hit chars)
-    gsap.fromTo(blastChars, { color: accentColor }, {
-      duration: 0.15,
-      color: function(i) { return origColors[i]; },
-      ease: 'power1.out'
-    });
+    // Promote to compositor layer for GPU-accelerated animation
+    for (var w = 0; w < blastChars.length; w++) {
+      blastChars[w].style.willChange = 'transform, opacity';
+    }
 
-    // Batch scatter: physics2D with rotation
-    var scatterProps = {
-      duration: SCATTER_DURATION,
-      physics2D: {
-        velocity: function(i) { return velocities[i]; },
-        angle: function(i) { return angles[i]; },
-        gravity: GRAVITY
-      },
-      opacity: 0,
-      ease: 'none',
-      onComplete: function() {
-        activeBatchCount--;
-        if (activeBatchCount === 0 && cacheStale) scheduleEagerCacheWarm();
-      }
-    };
-    scatterProps.rotation = function(i) { return rotations[i]; };
-    gsap.to(blastChars, scatterProps);
+    // Color flash via WAAPI (compositor-driven, no JS per-frame cost)
+    for (var cf = 0; cf < blastChars.length; cf++) {
+      blastChars[cf].animate(
+        [{ color: accentColor }, { color: origColors[cf] }],
+        { duration: 150, easing: 'ease-out' }
+      );
+    }
+
+    // Scatter via WAAPI with pre-computed physics keyframes
+    var lastScatterAnim = null;
+    for (var s = 0; s < blastChars.length; s++) {
+      lastScatterAnim = blastChars[s].animate(
+        makeScatterKeyframes(angles[s], velocities[s], rotations[s]),
+        { duration: SCATTER_MS, easing: 'linear', fill: 'forwards' }
+      );
+    }
+
+    // Decrement batch count when scatter finishes (promise-based, no setTimeout)
+    lastScatterAnim.finished.then(function() {
+      activeBatchCount--;
+      if (activeBatchCount === 0 && cacheStale) scheduleEagerCacheWarm();
+    }).catch(function() {
+      // Cancelled by destroy/theme change — activeBatchCount reset by those methods
+    });
 
     scheduleTypingReform(blastChars);
   }
@@ -298,16 +339,15 @@ function scheduleTypingReform(chars) {
     var pos = a.compareDocumentPosition(b);
     return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
   });
-  var charRects = chars.map(function(el) { return { el: el }; });
 
   // Compute sequential delays with extra pause at word boundaries
   var delays = [];
   var cumulative = 0;
-  for (var i = 0; i < charRects.length; i++) {
+  for (var i = 0; i < chars.length; i++) {
     if (i > 0) {
       cumulative += CHAR_STAGGER;
       // Detect word boundary by parent element change
-      if (charRects[i].el.parentElement !== charRects[i - 1].el.parentElement) {
+      if (chars[i].parentElement !== chars[i - 1].parentElement) {
         cumulative += WORD_EXTRA_STAGGER;
       }
     }
@@ -315,54 +355,83 @@ function scheduleTypingReform(chars) {
   }
 
   var startDelay = SCATTER_DURATION + REFORM_PAUSE;
-  var els = charRects.map(function(c) { return c.el; });
+  var els = chars;
 
-  // Pre-position all chars just before reform starts (1 delayedCall instead of N)
-  gsap.delayedCall(startDelay - 0.01, function() {
+  var reformTimeoutId = setTimeout(function() {
+    // Remove from pending list
+    var tidx = pendingReformTimeouts.indexOf(reformTimeoutId);
+    if (tidx !== -1) pendingReformTimeouts.splice(tidx, 1);
+
+    // Cancel scatter animations; set inline styles to final reformed state.
+    // Reform animations use fill:'backwards' to show the first keyframe during
+    // their stagger delay. After finishing, animations auto-expire and the
+    // inline styles (cleared = CSS default) become the visible state.
     for (var k = 0; k < els.length; k++) {
-      gsap.killTweensOf(els[k]);
-    }
-    // Single batched set (1 call instead of N)
-    gsap.set(els, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
-
-    function reformComplete() {
-      // Chunk cleanup across frames to avoid DOM write storms
-      var CHUNK = 40;
-      var idx = 0;
-      function cleanChunk() {
-        var end = Math.min(idx + CHUNK, els.length);
-        for (var m = idx; m < end; m++) {
-          els[m].dataset.shattered = '0';
-          els[m].style.color = els[m].dataset.originalColor || '';
-          els[m].style.display = '';
-        }
-        idx = end;
-        if (idx < els.length) {
-          requestAnimationFrame(cleanChunk);
-        } else {
-          currentShattered -= els.length;
-          cacheStale = true;
-          scheduleEagerCacheWarm();
-        }
-      }
-      cleanChunk();
+      cancelElementAnimations(els[k]);
+      els[k].style.transform = '';
+      els[k].style.opacity = '';
     }
 
-    // Separate tweens for y (power2.out) and opacity (linear) for richer visual
-    gsap.to(els, {
-      duration: CHAR_LAND_DURATION,
-      y: 0,
-      ease: 'power2.out',
-      stagger: function(i) { return delays[i]; }
-    });
-    gsap.to(els, {
-      duration: CHAR_LAND_DURATION * 0.4,
-      opacity: 1,
-      ease: 'none',
-      stagger: function(i) { return delays[i]; },
-      onComplete: reformComplete
-    });
-  });
+    // Reform via WAAPI: combined transform + opacity with staggered delays.
+    // fill:'backwards' applies first keyframe during delay (char stays hidden
+    // until its turn). After finishing, no fill — inline styles take over.
+    var lastReformAnim = null;
+    for (var r = 0; r < els.length; r++) {
+      lastReformAnim = els[r].animate(
+        [
+          { transform: 'translateY(-' + DROP_DISTANCE + 'px)', opacity: 0 },
+          { transform: 'translateY(0px)', opacity: 1 }
+        ],
+        {
+          duration: CHAR_LAND_DURATION * 1000,
+          delay: delays[r] * 1000,
+          easing: 'ease-out',
+          fill: 'backwards'
+        }
+      );
+    }
+
+    // Cleanup after last char finishes reforming
+    if (lastReformAnim) {
+      lastReformAnim.finished.then(function() {
+        reformCleanup(els);
+      }).catch(function() {
+        // Cancelled by destroy/theme change — cleanup handled there
+      });
+    }
+  }, startDelay * 1000);
+
+  pendingReformTimeouts.push(reformTimeoutId);
+}
+
+function reformCleanup(els) {
+  // Chunk cleanup across frames to avoid DOM write storms.
+  // Reform animations use fill:'backwards' so they auto-expire — no need
+  // to call cancelElementAnimations here (saves getAnimations() overhead).
+  // Inline transform/opacity were cleared before reform started.
+  var CHUNK = 40;
+  var idx = 0;
+  var cleaned = 0;
+  function cleanChunk() {
+    var end = Math.min(idx + CHUNK, els.length);
+    for (var m = idx; m < end; m++) {
+      if (els[m].dataset.shattered !== '1') continue; // already cleaned by destroy
+      els[m].dataset.shattered = '0';
+      els[m].style.color = els[m].dataset.originalColor || '';
+      els[m].style.display = '';
+      els[m].style.willChange = '';
+      cleaned++;
+    }
+    idx = end;
+    if (idx < els.length) {
+      requestAnimationFrame(cleanChunk);
+    } else {
+      currentShattered = Math.max(0, currentShattered - cleaned);
+      cacheStale = true;
+      scheduleEagerCacheWarm();
+    }
+  }
+  cleanChunk();
 }
 
 // --- Resize debounce for re-split ---
@@ -380,6 +449,12 @@ function onResizeDebounced() {
 
 // --- Lifecycle Manager ---
 var resizeListenerActive = false;
+
+function cancelAllAnimations() {
+  pendingReformTimeouts.forEach(clearTimeout);
+  pendingReformTimeouts = [];
+  allChars.forEach(cancelElementAnimations);
+}
 
 window.TextDestruction = {
   init: function() {
@@ -399,15 +474,18 @@ window.TextDestruction = {
 
   destroy: function() {
     isArmed = false;
+    cancelAllAnimations();
     allChars.forEach(function(el) {
-      gsap.killTweensOf(el);
       if (el.dataset.shattered === '1') {
-        gsap.set(el, { x: 0, y: 0, rotation: 0, opacity: 1 });
+        el.style.transform = '';
+        el.style.opacity = '';
+        el.style.willChange = '';
         el.style.display = '';
         el.dataset.shattered = '0';
       }
     });
     currentShattered = 0;
+    activeBatchCount = 0;
     charRectCache = [];
     spatialGrid = {};
     // Do NOT revert split or remove resize listener — spans persist
@@ -424,10 +502,9 @@ window.TextDestruction = {
 
   onThemeChange: function() {
     var wasArmed = isArmed;
-    allChars.forEach(function(el) {
-      gsap.killTweensOf(el);
-    });
+    cancelAllAnimations();
     currentShattered = 0;
+    activeBatchCount = 0;
     charRectCache = [];
     spatialGrid = {};
     revertAllText();
