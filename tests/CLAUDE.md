@@ -1,11 +1,82 @@
 # Tests Reference Map
 
-Overview: 10 Playwright test files (~4,000 lines). Two categories: performance benchmarks (2 files) and visual/interaction regression tests (8 files). All require `npx http-server -p 8080 -c-1` running locally. All use Chromium.
+Overview: 14 Playwright test files (~5,400 lines). Three categories: destruction correctness/integration/regression (4 files), performance benchmarks (2 files), and visual/interaction regression tests (8 files). All require `npx http-server -p 8080 -c-1` running locally. All use Chromium.
 
 ## Running Tests
 
 All tests: `node tests/<filename>.js`
 Prerequisite: local server on port 8080.
+
+Run full destruction suite: `node tests/run-destruction-suite.js`
+
+## Destruction Test Suite
+
+### run-destruction-suite.js (~60 lines)
+
+**Purpose**: Aggregate runner for CI. Runs correctness, integration, and perf regression tests in sequence.
+
+**Exit**: 0 = all pass, 1 = any failure.
+
+---
+
+### destruction-correctness-test.js (~350 lines)
+
+**Purpose**: Validates correctness of the three bottleneck fixes from remove-mobile-downgrades: spatial grid, document-relative cache, tween pressure monitor, and cache lifecycle.
+
+**Setup**: Chromium headless, desktop 1920x1080, no CPU throttle.
+
+#### Suites
+| Suite | Tests | What It Validates |
+|-------|-------|-------------------|
+| Spatial Grid Accuracy | 20 test points | `getCharsInBlastRadius()` returns identical results to brute-force linear scan |
+| Document-Relative Coords | 30 checks (3 scroll states x 10 entries) | Cache entries map to correct screen positions after scrolling |
+| Tween Pressure Monitor | 4 checks | `activeBatchCount` never exceeds MAX_ACTIVE_BATCHES (6), returns to 0 after completion |
+| Cache Lifecycle | 6 checks | Shatter -> reform -> cacheStale -> rebuild -> reformed chars back in grid |
+
+**Key technique**: Brute-force reference scan runs before grid lookup (non-destructive read vs destructive splice). Cache rebuilt between test points.
+
+**Pass/fail**: `process.exit(0/1)` based on all assertions.
+
+---
+
+### destruction-integration-test.js (~280 lines)
+
+**Purpose**: Validates scatter + reform across multiple viewports and verifies mobile-desktop parity.
+
+**Setup**: Chromium headless, 3 viewports (desktop 1920x1080, mobile 375x812, tablet 1024x768).
+
+#### Tests
+| Test | Viewports | What It Validates |
+|------|-----------|-------------------|
+| Scatter and Reform | All 3 | Chars shatter on impact, reform back to original state |
+| Mobile-Desktop Parity | Desktop + Mobile | Animation constants identical (GRAVITY, MAX_ROTATION, etc.), mobile can fire multiple batches |
+| Cross-Page Re-init | Desktop | Destruction works after SPA card play navigation to project page |
+
+**Pass/fail**: `process.exit(0/1)`.
+
+---
+
+### destruction-perf-regression-test.js (~400 lines)
+
+**Purpose**: Baseline-aware performance regression detection with proper exit codes.
+
+**Setup**: Chromium headless, desktop (1920x1080, no throttle) + mobile (375x812, 2x throttle).
+
+#### Scenarios (subset of perf-test-destruction.js)
+| Scenario | What It Measures |
+|----------|-----------------|
+| scatter_spike | Single impact scatter frame timing |
+| dense_burst | 6 rapid-fire impacts burst + scatter |
+| figure8_scroll_fire | Lissajous scroll + destruction |
+| sustained_annihilation | Dense grid fired 6 cycles |
+
+**Baselines**: Stored in `tests/baselines/<viewport>.json`. First run creates baseline. Subsequent runs compare.
+
+**Tolerance**: 10% desktop, 15% mobile (configurable via `--tolerance`).
+
+**CLI flags**: `--update-baseline`, `--viewport desktop|mobile|all`, `--tolerance N`.
+
+**Exit**: 0 = pass/baseline created, 1 = regression, 2 = crash.
 
 ## Performance Tests
 

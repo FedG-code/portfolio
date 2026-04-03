@@ -6,24 +6,24 @@
 
 gsap.registerPlugin(SplitText, Physics2DPlugin);
 
-// --- Mobile detection ---
-var _isMob = window.innerWidth <= 768 ||
-  ('ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches);
-
-// --- Tuneable Constants (mobile-gated where noted) ---
+// --- Tuneable Constants ---
 var BLAST_RADIUS       = 40;
-var MAX_SHATTERED      = _isMob ? 100 : 300;       // reduce on mobile — caps concurrent tweens
+var MAX_SHATTERED      = 300;
 var SCATTER_DURATION   = 1.2;
-var REFORM_PAUSE       = _isMob ? 1.0 : 0.8;       // longer pause on mobile — less scatter/reform overlap
+var REFORM_PAUSE       = 0.8;
 var CHAR_LAND_DURATION = 0.12;
-var CHAR_STAGGER       = _isMob ? 0.035 : 0.055;   // faster stagger on mobile — shorter reform window
-var WORD_EXTRA_STAGGER = _isMob ? 0.03 : 0.05;     // proportional reduction
+var CHAR_STAGGER       = 0.055;
+var WORD_EXTRA_STAGGER = 0.05;
 var DROP_DISTANCE      = 16;
 var GRAVITY            = 600;
 var MIN_VELOCITY       = 150;
-var MAX_VELOCITY       = _isMob ? 350 : 500;        // less velocity on mobile — simpler physics
+var MAX_VELOCITY       = 500;
 var ANGLE_SPREAD       = 60;
-var MAX_ROTATION       = _isMob ? 360 : 720;        // halve rotation on mobile — fewer transform recalcs
+var MAX_ROTATION       = 720;
+
+// --- Tween pressure monitor ---
+var activeBatchCount = 0;       // scatter batches currently animating
+var MAX_ACTIVE_BATCHES = 6;     // defer new impacts when overloaded
 
 var DESTRUCTIBLE_SELECTOR = [
   'h1', 'h2', 'h3', 'h4',
@@ -104,7 +104,6 @@ function revertElement(el) {
 }
 
 function preloadSplit() {
-  if (window.innerWidth <= 768) return;  // same gate as plane.js MIN_VIEWPORT
   splitAllText();
   isSplit = true;
 }
@@ -113,25 +112,24 @@ function preloadSplit() {
 var charRectCache = [];
 var cacheStale = true;
 var cacheRebuilding = false;
-var scrollStale = false;
-var lastCacheScrollY = 0;
+
+// Spatial grid for O(1) hit detection (Phase 2)
+var GRID_CELL_SIZE = BLAST_RADIUS * 2; // 80px cells
+var spatialGrid = {};                   // key: "col,row" -> array of cache entries
 
 function scheduleEagerCacheWarm() {
-  if (!cacheRebuilding) {
+  // Defer rebuild while scatter batches are in-flight to avoid layout thrashing
+  if (!cacheRebuilding && activeBatchCount === 0) {
     cacheRebuilding = true;
-    requestAnimationFrame(function() { rebuildCharCache(true); });
+    requestAnimationFrame(function() { rebuildCharCache(); });
   }
 }
 
-var CACHE_CHUNK_SIZE = 200; // chars per RAF frame during async rebuild (mobile only)
-var asyncCacheBuffer = [];  // holds partial results during async rebuild
-var asyncCacheIndex = 0;
-var asyncVisibleParents = null;
-
-function rebuildCharCache(eager) {
+function rebuildCharCache() {
   cacheRebuilding = false;
   var viewH = window.innerHeight;
   var viewW = window.innerWidth;
+  var scrollY = window.scrollY;
 
   // Pre-filter: check parent visibility to skip entire off-screen text blocks
   var visibleParents = new Set();
@@ -143,22 +141,6 @@ function rebuildCharCache(eager) {
     var visible = pRect.bottom >= 0 && pRect.top <= viewH && pRect.right >= 0 && pRect.left <= viewW;
     checkedParents.set(parent, visible);
     if (visible) visibleParents.add(parent);
-  }
-
-  // Async chunked rebuild on mobile — only for eager warm-ups, not on-demand lookups.
-  // During async rebuild, the old charRectCache remains live for hit detection.
-  // Hits may use slightly stale positions until the rebuild finishes and swaps in
-  // asyncCacheBuffer. This is intentional: a few stale rects are preferable to
-  // blocking the main thread with a synchronous full rebuild on mobile.
-  if (eager && _isMob && allChars.length > CACHE_CHUNK_SIZE) {
-    asyncCacheBuffer = [];
-    asyncCacheIndex = 0;
-    asyncVisibleParents = visibleParents;
-    cacheStale = false;
-    scrollStale = false;
-    lastCacheScrollY = window.scrollY;
-    rebuildCharCacheChunk();
-    return;
   }
 
   var newCache = [];
@@ -173,96 +155,66 @@ function rebuildCharCache(eager) {
 
     newCache.push({
       el: el,
-      cx: rect.left + rect.width / 2,
-      cy: rect.top + rect.height / 2
+      docX: rect.left + rect.width / 2,
+      docY: rect.top + rect.height / 2 + scrollY
     });
   }
   charRectCache = newCache;
   cacheStale = false;
-  scrollStale = false;
-  lastCacheScrollY = window.scrollY;
-}
 
-function rebuildCharCacheChunk() {
-  var viewH = window.innerHeight;
-  var viewW = window.innerWidth;
-  var end = Math.min(asyncCacheIndex + CACHE_CHUNK_SIZE, allChars.length);
-
-  for (var i = asyncCacheIndex; i < end; i++) {
-    var el = allChars[i];
-    if (el.dataset.shattered === '1') continue;
-    if (!asyncVisibleParents.has(el.parentElement)) continue;
-
-    var rect = el.getBoundingClientRect();
-    if (rect.bottom < 0 || rect.top > viewH) continue;
-    if (rect.right < 0 || rect.left > viewW) continue;
-
-    asyncCacheBuffer.push({
-      el: el,
-      cx: rect.left + rect.width / 2,
-      cy: rect.top + rect.height / 2
-    });
-  }
-
-  asyncCacheIndex = end;
-  if (asyncCacheIndex < allChars.length) {
-    requestAnimationFrame(rebuildCharCacheChunk);
-  } else {
-    // Finalize: swap buffer into live cache
-    charRectCache = asyncCacheBuffer;
-    asyncCacheBuffer = [];
-    asyncVisibleParents = null;
-    lastCacheScrollY = window.scrollY;
+  // Build spatial grid for fast hit detection
+  spatialGrid = {};
+  for (var g = 0; g < newCache.length; g++) {
+    var col = Math.floor(newCache[g].docX / GRID_CELL_SIZE);
+    var row = Math.floor(newCache[g].docY / GRID_CELL_SIZE);
+    var key = col + ',' + row;
+    if (!spatialGrid[key]) spatialGrid[key] = [];
+    spatialGrid[key].push(newCache[g]);
   }
 }
 
 function getCharsInBlastRadius(screenX, screenY) {
-  if (cacheStale) {
+  if (cacheStale && activeBatchCount === 0) {
     rebuildCharCache();
-  } else if (scrollStale) {
-    var scrollDelta = window.scrollY - lastCacheScrollY;
-    for (var j = 0; j < charRectCache.length; j++) {
-      charRectCache[j].cy -= scrollDelta;
-    }
-    lastCacheScrollY = window.scrollY;
-    scrollStale = false;
   }
+
+  // Convert screen coords to document-relative
+  var docX = screenX;
+  var docY = screenY + window.scrollY;
 
   var hits = [];
   var rSq = BLAST_RADIUS * BLAST_RADIUS;
+  var col = Math.floor(docX / GRID_CELL_SIZE);
+  var row = Math.floor(docY / GRID_CELL_SIZE);
 
-  for (var i = charRectCache.length - 1; i >= 0; i--) {
-    var c = charRectCache[i];
-    var dx = c.cx - screenX;
-    var dy = c.cy - screenY;
-    if (dx * dx + dy * dy <= rSq) {
-      hits.push({
-        el: c.el,
-        dx: dx,
-        dy: dy,
-        dist: Math.sqrt(dx * dx + dy * dy)
-      });
-      charRectCache[i] = charRectCache[charRectCache.length - 1];
-      charRectCache.pop();
+  // Check 3x3 grid neighborhood
+  for (var dr = -1; dr <= 1; dr++) {
+    for (var dc = -1; dc <= 1; dc++) {
+      var key = (col + dc) + ',' + (row + dr);
+      var cell = spatialGrid[key];
+      if (!cell) continue;
+      for (var i = cell.length - 1; i >= 0; i--) {
+        var c = cell[i];
+        var dx = c.docX - docX;
+        var dy = c.docY - docY;
+        if (dx * dx + dy * dy <= rSq) {
+          hits.push({
+            el: c.el,
+            dx: dx,
+            dy: dy,
+            dist: Math.sqrt(dx * dx + dy * dy)
+          });
+          cell.splice(i, 1);
+        }
+      }
     }
   }
   return hits;
 }
 
-window.addEventListener('scroll', function() { scrollStale = true; }, { passive: true });
 window.addEventListener('resize', function() { cacheStale = true; scheduleEagerCacheWarm(); });
 
-// --- Impact coalescing (mobile-only) ---
-var pendingHits = [];
-var coalescePending = false;
-
-function flushPendingHits() {
-  coalescePending = false;
-  if (pendingHits.length === 0) return;
-  var batch = pendingHits;
-  pendingHits = [];
-  shatterChars(batch, 0, 0);
-}
+// --- (impact coalescing removed — replaced by tween pressure monitor) ---
 
 // --- ShatterAnimator ---
 var currentShattered = 0;
@@ -309,49 +261,32 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
   });
 
   if (blastChars.length > 0) {
-    // Batch color flash (1 tween instead of N) — skip on mobile to reduce tween count
-    if (!_isMob) {
-      gsap.fromTo(blastChars, { color: accentColor }, {
-        duration: 0.15,
-        color: function(i) { return origColors[i]; },
-        ease: 'power1.out'
-      });
-    }
+    activeBatchCount++;
 
-    // Batch scatter animation
-    if (_isMob) {
-      // Mobile: replace physics2D with pre-computed end positions (simple gsap.to)
-      // Straight-line eased motion is visually indistinguishable on small screens
-      var endXs = [];
-      var endYs = [];
-      for (var si = 0; si < blastChars.length; si++) {
-        var rad = angles[si] * (Math.PI / 180);
-        var dist = velocities[si] * SCATTER_DURATION * 0.5; // approximate travel distance
-        endXs.push(Math.cos(rad) * dist);
-        endYs.push(Math.sin(rad) * dist + GRAVITY * SCATTER_DURATION * SCATTER_DURATION * 0.25);
+    // Batch color flash (1 tween for all hit chars)
+    gsap.fromTo(blastChars, { color: accentColor }, {
+      duration: 0.15,
+      color: function(i) { return origColors[i]; },
+      ease: 'power1.out'
+    });
+
+    // Batch scatter: physics2D with rotation
+    var scatterProps = {
+      duration: SCATTER_DURATION,
+      physics2D: {
+        velocity: function(i) { return velocities[i]; },
+        angle: function(i) { return angles[i]; },
+        gravity: GRAVITY
+      },
+      opacity: 0,
+      ease: 'none',
+      onComplete: function() {
+        activeBatchCount--;
+        if (activeBatchCount === 0 && cacheStale) scheduleEagerCacheWarm();
       }
-      gsap.to(blastChars, {
-        duration: SCATTER_DURATION,
-        x: function(i) { return '+=' + endXs[i]; },
-        y: function(i) { return '+=' + endYs[i]; },
-        opacity: 0,
-        ease: 'power2.in'
-      });
-    } else {
-      // Desktop: full physics2D with rotation for premium visual
-      var scatterProps = {
-        duration: SCATTER_DURATION,
-        physics2D: {
-          velocity: function(i) { return velocities[i]; },
-          angle: function(i) { return angles[i]; },
-          gravity: GRAVITY
-        },
-        opacity: 0,
-        ease: 'none'
-      };
-      scatterProps.rotation = function(i) { return rotations[i]; };
-      gsap.to(blastChars, scatterProps);
-    }
+    };
+    scatterProps.rotation = function(i) { return rotations[i]; };
+    gsap.to(blastChars, scatterProps);
 
     scheduleTypingReform(blastChars);
   }
@@ -391,65 +326,42 @@ function scheduleTypingReform(chars) {
     gsap.set(els, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
 
     function reformComplete() {
-      if (_isMob) {
-        // Chunk cleanup across frames to avoid synchronous DOM write storm
-        var CHUNK = 40;
-        var idx = 0;
-        function cleanChunk() {
-          var end = Math.min(idx + CHUNK, els.length);
-          for (var m = idx; m < end; m++) {
-            els[m].dataset.shattered = '0';
-            els[m].style.color = els[m].dataset.originalColor || '';
-            els[m].style.display = '';
-          }
-          idx = end;
-          if (idx < els.length) {
-            requestAnimationFrame(cleanChunk);
-          } else {
-            currentShattered -= els.length;
-            cacheStale = true;
-            scheduleEagerCacheWarm();
-          }
-        }
-        cleanChunk();
-      } else {
-        for (var m = 0; m < els.length; m++) {
+      // Chunk cleanup across frames to avoid DOM write storms
+      var CHUNK = 40;
+      var idx = 0;
+      function cleanChunk() {
+        var end = Math.min(idx + CHUNK, els.length);
+        for (var m = idx; m < end; m++) {
           els[m].dataset.shattered = '0';
           els[m].style.color = els[m].dataset.originalColor || '';
           els[m].style.display = '';
         }
-        currentShattered -= els.length;
-        cacheStale = true;
-        scheduleEagerCacheWarm();
+        idx = end;
+        if (idx < els.length) {
+          requestAnimationFrame(cleanChunk);
+        } else {
+          currentShattered -= els.length;
+          cacheStale = true;
+          scheduleEagerCacheWarm();
+        }
       }
+      cleanChunk();
     }
 
-    if (_isMob) {
-      // Single merged tween on mobile (1 tween instead of 2)
-      gsap.to(els, {
-        duration: CHAR_LAND_DURATION,
-        y: 0,
-        opacity: 1,
-        ease: 'power2.out',
-        stagger: function(i) { return delays[i]; },
-        onComplete: reformComplete
-      });
-    } else {
-      // Desktop: separate tweens for y (power2.out) and opacity (linear) for better visual
-      gsap.to(els, {
-        duration: CHAR_LAND_DURATION,
-        y: 0,
-        ease: 'power2.out',
-        stagger: function(i) { return delays[i]; }
-      });
-      gsap.to(els, {
-        duration: CHAR_LAND_DURATION * 0.4,
-        opacity: 1,
-        ease: 'none',
-        stagger: function(i) { return delays[i]; },
-        onComplete: reformComplete
-      });
-    }
+    // Separate tweens for y (power2.out) and opacity (linear) for richer visual
+    gsap.to(els, {
+      duration: CHAR_LAND_DURATION,
+      y: 0,
+      ease: 'power2.out',
+      stagger: function(i) { return delays[i]; }
+    });
+    gsap.to(els, {
+      duration: CHAR_LAND_DURATION * 0.4,
+      opacity: 1,
+      ease: 'none',
+      stagger: function(i) { return delays[i]; },
+      onComplete: reformComplete
+    });
   });
 }
 
@@ -497,23 +409,16 @@ window.TextDestruction = {
     });
     currentShattered = 0;
     charRectCache = [];
+    spatialGrid = {};
     // Do NOT revert split or remove resize listener — spans persist
   },
 
   onProjectileAt: function(screenX, screenY) {
     if (!isArmed) return;
+    if (activeBatchCount >= MAX_ACTIVE_BATCHES) return; // pressure relief
     var hits = getCharsInBlastRadius(screenX, screenY);
     if (hits.length > 0) {
-      if (_isMob) {
-        // Coalesce same-frame hits into one batched shatterChars call
-        pendingHits = pendingHits.concat(hits);
-        if (!coalescePending) {
-          coalescePending = true;
-          requestAnimationFrame(flushPendingHits);
-        }
-      } else {
-        shatterChars(hits, screenX, screenY);
-      }
+      shatterChars(hits, screenX, screenY);
     }
   },
 
@@ -524,6 +429,7 @@ window.TextDestruction = {
     });
     currentShattered = 0;
     charRectCache = [];
+    spatialGrid = {};
     revertAllText();
     isSplit = false;
     splitAllText();

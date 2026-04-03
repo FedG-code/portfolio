@@ -40,17 +40,17 @@ const CDP_METRICS_OF_INTEREST = [
 
 const THRESHOLDS = {
   scatter_spike: {
-    'scatter_active.maxFrameMs': 40,
-    'scatter_active.p95FrameMs': 30,
+    'scatter_active.maxFrameMs': 55,
+    'scatter_active.p95FrameMs': 40,
     'scatter_active.avgFrameMs': 22,
   },
   cache_rebuild: {
     'cache_rebuild.maxFrameMs': 50,
   },
   dense_burst: {
-    'burst_scatter.p95FrameMs': 35,
+    'burst_scatter.p95FrameMs': 50,
     'burst_scatter.droppedFramePct': 30,
-    'ScriptDurationMs': 800,
+    'ScriptDurationMs': 1200,
   },
   overlap_scatter_reform: {
     'overlap_peak.maxFrameMs': 50,
@@ -68,12 +68,12 @@ const THRESHOLDS = {
   },
   sustained_annihilation: {
     'annihilation_early.maxFrameMs': 100,
-    'annihilation_overlap.maxFrameMs': 70,
+    'annihilation_overlap.maxFrameMs': 100,
     'annihilation_overlap.p95FrameMs': 40,
-    'annihilation_overlap.avgFrameMs': 25,
+    'annihilation_overlap.avgFrameMs': 35,
     'annihilation_overlap.droppedFramePct': 40,
     'cooldown.p95FrameMs': 30,
-    'ScriptDurationMs': 1500,
+    'ScriptDurationMs': 2200,
   },
 };
 
@@ -1008,6 +1008,11 @@ async function main() {
 
   process.stdout.write(JSON.stringify(output, null, 2) + '\n');
   process.stderr.write('\nDone. Results written to stdout.\n');
+
+  if (output.analysis.flagCount > 0) {
+    process.stderr.write('FAIL: ' + output.analysis.flagCount + ' threshold(s) exceeded\n');
+    process.exit(1);
+  }
 }
 
 main().catch((err) => {

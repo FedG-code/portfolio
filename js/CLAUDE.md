@@ -43,62 +43,62 @@ These are called without null checks — would throw if undefined and script loa
 
 ---
 
-## destruction.js (545 lines)
+## destruction.js (~447 lines)
 
 ### Section Map
 | Section | Lines | Notes |
 |---------|-------|-------|
 | GSAP registration | 1-7 | Registers SplitText + Physics2DPlugin |
-| Mobile detection | 9-11 | `_isMob`: viewport ≤768px OR coarse pointer |
-| Constants (mobile-gated) | 13-26 | 14 constants with mobile overrides |
-| DESTRUCTIBLE_SELECTOR | 28-48 | 28 CSS selectors targeting destructible text |
-| splitAllText() | 56-81 | SplitText.create() per element, caches parent color |
-| revertAllText() | 83-89 | Clears splits/char arrays |
-| revertElement() | 91-104 | Single element revert |
-| preloadSplit() | 106-110 | Desktop-only pre-split on fonts ready |
-| CharRect cache + rebuild | 112-217 | Async chunking on mobile, eager warm-up, scroll/viewport checks |
-| getCharsInBlastRadius() | 219-250 | Distance-based hit detection using cache |
-| Impact coalescing (mobile) | 255-265 | Batches same-frame hits via RAF |
-| shatterChars() | 276-358 | Physics2D scatter (desktop) or eased motion (mobile), color flash desktop-only |
-| scheduleTypingReform() | 360-454 | Staggered reform with word-boundary pauses, chunked cleanup on mobile |
-| Resize debounce | 456-467 | 300ms debounce, re-splits + stale cache |
-| Public API (window.TextDestruction) | 469-538 | init(), destroy(), onProjectileAt(), onThemeChange(), revertElement() |
-| Auto-run preload | 540-545 | Delays until fonts ready or 100ms |
+| Constants | 8-17 | Unified (no mobile overrides) |
+| Tween pressure monitor | 19-20 | activeBatchCount / MAX_ACTIVE_BATCHES |
+| DESTRUCTIBLE_SELECTOR | 22-42 | 28 CSS selectors targeting destructible text |
+| splitAllText() | 50-75 | SplitText.create() per element, caches parent color |
+| revertAllText() | 77-83 | Clears splits/char arrays |
+| revertElement() | 85-98 | Single element revert |
+| preloadSplit() | 100-103 | Pre-split on fonts ready (all viewports) |
+| CollisionDetector + spatial grid | 105-212 | Document-relative cache, spatial grid (80px cells), eager warm-up |
+| getCharsInBlastRadius() | ~170-212 | O(1) spatial grid lookup (3x3 cell neighborhood) |
+| shatterChars() | ~228-304 | Physics2D scatter + color flash + batch tracking |
+| scheduleTypingReform() | ~306-390 | Staggered reform, chunked cleanup (40 chars/RAF) |
+| Resize debounce | ~392-403 | 300ms debounce, re-splits + stale cache |
+| Public API (window.TextDestruction) | ~405-447 | init(), destroy(), onProjectileAt(), onThemeChange(), revertElement() |
 
 ### Constants Table
-| Name | Desktop | Mobile | Description |
-|------|---------|--------|-------------|
-| BLAST_RADIUS | 40 | 40 | Impact radius (px) |
-| MAX_SHATTERED | 300 | 100 | Max concurrent shattered chars |
-| SCATTER_DURATION | 1.2 | 1.2 | Scatter time (s) |
-| REFORM_PAUSE | 0.8 | 1.0 | Pause before reform (s) |
-| CHAR_LAND_DURATION | 0.12 | 0.12 | Drop-in time per char (s) |
-| CHAR_STAGGER | 0.055 | 0.035 | Delay between char reforms (s) |
-| WORD_EXTRA_STAGGER | 0.05 | 0.03 | Extra pause at word boundary (s) |
-| DROP_DISTANCE | 16 | 16 | Pre-position offset above slot (px) |
-| GRAVITY | 600 | 600 | Physics gravity (desktop only) |
-| MIN_VELOCITY | 150 | 150 | Scatter velocity floor (px/s) |
-| MAX_VELOCITY | 500 | 350 | Scatter velocity ceiling (px/s) |
-| ANGLE_SPREAD | 60 | 60 | Scatter angle variance (deg) |
-| MAX_ROTATION | 720 | 360 | Max rotation scatter (deg) |
-| CACHE_CHUNK_SIZE | 200 | 200 | Chars per RAF frame during async rebuild |
+| Name | Value | Description |
+|------|-------|-------------|
+| BLAST_RADIUS | 40 | Impact radius (px) |
+| MAX_SHATTERED | 300 | Max concurrent shattered chars |
+| SCATTER_DURATION | 1.2 | Scatter time (s) |
+| REFORM_PAUSE | 0.8 | Pause before reform (s) |
+| CHAR_LAND_DURATION | 0.12 | Drop-in time per char (s) |
+| CHAR_STAGGER | 0.055 | Delay between char reforms (s) |
+| WORD_EXTRA_STAGGER | 0.05 | Extra pause at word boundary (s) |
+| DROP_DISTANCE | 16 | Pre-position offset above slot (px) |
+| GRAVITY | 600 | Physics gravity |
+| MIN_VELOCITY | 150 | Scatter velocity floor (px/s) |
+| MAX_VELOCITY | 500 | Scatter velocity ceiling (px/s) |
+| ANGLE_SPREAD | 60 | Scatter angle variance (deg) |
+| MAX_ROTATION | 720 | Max rotation scatter (deg) |
+| GRID_CELL_SIZE | 80 | Spatial grid cell size (2x BLAST_RADIUS) |
+| MAX_ACTIVE_BATCHES | 6 | Tween pressure cap (defers impacts when exceeded) |
 
 ### Global API
 ```
 window.TextDestruction = {
   init()                    // Arm + split all text
   destroy()                 // Disarm + kill tweens (does NOT revert split)
-  onProjectileAt(sx, sy)    // Hit detection entry (coalesced on mobile)
+  onProjectileAt(sx, sy)    // Hit detection entry (pressure-gated)
   onThemeChange()           // Kill tweens, revert/re-split, re-read accent
   revertElement(el)         // Revert single element split
 }
 ```
 
 ### Key Mechanisms
-- **CharRect cache** (L112-217): Stores {el, cx, cy} per visible char. Rebuilt sync (desktop) or async-chunked (mobile). Scroll delta adjustment in getCharsInBlastRadius().
-- **Impact coalescing** (L255-265, mobile only): pendingHits[] batched per RAF frame.
-- **Shatter**: Desktop uses physics2D (gravity+rotation); mobile uses pre-computed eased motion.
-- **Reform**: Left-to-right DOM order, staggered CHAR_STAGGER with WORD_EXTRA_STAGGER at word boundaries. Cleanup chunked on mobile (40 chars/RAF).
+- **Document-relative cache**: Stores {el, docX, docY} per visible char. Positions are document-relative (docY = screenY + scrollY), so the cache never needs rebuilding on scroll — only on init, resize, and theme change.
+- **Spatial grid**: Cache entries are indexed into 80px grid cells (key: "col,row"). `getCharsInBlastRadius()` checks only 9 cells (3x3 neighborhood) for O(1) average-case hit detection instead of O(n) linear scan.
+- **Tween pressure monitor**: `activeBatchCount` tracks in-flight scatter batches. `onProjectileAt()` returns early when `activeBatchCount >= MAX_ACTIVE_BATCHES` (6), preventing runaway tween creation. This replaces all previous platform-specific throttles.
+- **Shatter**: Physics2D scatter with gravity + rotation + color flash on all platforms.
+- **Reform**: Left-to-right DOM order, staggered CHAR_STAGGER with WORD_EXTRA_STAGGER at word boundaries. Cleanup chunked (40 chars/RAF) on all platforms.
 
 ### Dependencies
 GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
@@ -136,7 +136,7 @@ GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
 | PROJECTILE_SPEED | 8.0 | no | World units/s |
 | FIRE_INTERVAL | 0.12 | no | Rapid-fire delay (s) |
 | POOL_SIZE | 20 | no | Projectile pool |
-| IMPACT_THROTTLE | 0ms desktop / 120ms mobile | yes | Text destruction hit throttle |
+| IMPACT_THROTTLE | removed | — | Was 120ms mobile; now handled by destruction.js tween pressure monitor |
 | TOUCH_HIT_RADIUS | 60 | no | Mobile touch target (px) |
 | LS_KEY | 'portfolio-plane' | — | SessionStorage key |
 | IFRAME_BUFFER | 50 | no | Avoidance margin (px) |
@@ -147,7 +147,7 @@ GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
 
 ### Three.js Setup
 - Orthographic camera, frustum height 10, looking down Y axis
-- WebGL renderer, antialias disabled on mobile, pixel ratio capped at 2.0
+- WebGL renderer, antialias always-on, pixel ratio capped at 2.0
 - GLB from `assets/plane.glb`, finds FrontPropeller/TopPropeller children
 - Ambient light 0.8 + directional light 0.6
 
@@ -155,7 +155,7 @@ GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
 - Pool of 20 pre-allocated THREE.Line objects (BufferGeometry, 6 floats each)
 - Fires 2 per trigger (left + right wing)
 - Progress 0-1, head travels at PROJECTILE_SPEED, tail at 70% (TAIL_SPEED_RATIO)
-- At head=1.0: triggers TextDestruction.onProjectileAt() (throttled on mobile)
+- At head=1.0: triggers TextDestruction.onProjectileAt() (unthrottled; destruction.js handles pressure)
 
 ### Toggle Persistence
 - SessionStorage key 'portfolio-plane', cleared on page reload (L804-808)
