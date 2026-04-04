@@ -57,6 +57,29 @@ js/
 npx http-server -p 8080 -c-1
 ```
 
+## Mobile Destruction Performance — Investigation Notes (2026-04-04)
+
+**Status**: Optimizations removed, diagnostic tests written. GSAP tween count is NOT the problem.
+
+### What the diagnostic proved
+- **6 GSAP calls per impact** (3 immediate + 3 deferred) — very modest
+- **Peak 6 concurrent tweens** even with 10 overlapping impacts — no explosion
+- **Tweens clean up properly** — globalTimeline returns to 0, no leaks, no orphans
+- **Duplicate tweens exist** but are by-design (color flash + physics scatter on same chars) — not stacking
+- The removed optimizations (MAX_ACTIVE_BATCHES=6, MAX_SHATTERED=300, cache deferral, cleanup chunking) were solving a nonexistent problem and bottlenecking the effect
+
+### Directions to investigate next
+1. **Physics2DPlugin per-frame cost** — Each `physics2D` tween runs a gravity simulation every RAF tick. With overlapping batches, the plugin iterates all active physics particles every frame. Profile the GSAP tick itself (not tween count) to see if physics2D's per-frame loop is the real cost.
+2. **`getBoundingClientRect` during cache rebuilds** — Now that cache rebuild deferral is removed, `rebuildCharCache()` can fire while animations are running. Each rebuild calls `getBoundingClientRect()` on every visible char's parent. On mobile this forces layout recalc. Measure how often rebuilds trigger during rapid fire.
+3. **SplitText DOM overhead** — `splitAllText()` wraps every destructible char in a `<span>`. With 1228 chars, that's 1228 extra DOM nodes. Mobile browsers are slow at style recalc on deep/wide DOM trees. The initial split cost + any re-split on theme change may cause jank spikes.
+4. **Plane.js render loop** — The Three.js `animate()` runs every frame regardless of destruction. On low-end mobile, the combined cost of WebGL render + GSAP tick + destruction physics may exceed the 16ms frame budget even though each system alone is fine.
+5. **Scroll-triggered cache invalidation** — `plane.js` scroll-on-drag (now disabled) was calling `window.scrollBy()` every frame, which sets `cacheStale=true` via the resize/scroll listener, potentially triggering `rebuildCharCache()` every frame during drag.
+
+### Temporary changes in place
+- Scroll-on-drag disabled in `plane.js` (search for "Scroll-on-drag disabled")
+- All destruction optimizations removed from `destruction.js`
+- Run `node tests/gsap-diagnostic-test.js` to see current GSAP behavior
+
 ## Verification
 After making visual changes, start the local server yourself (`npx http-server -p 8080 -c-1 -o` in background) and use `playwright-cli` to screenshot the page and verify the result. Do not prompt the user to start the server.
 
