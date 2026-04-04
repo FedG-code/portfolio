@@ -889,6 +889,10 @@ footer span {
 @media (max-width: 600px) {
   html { overflow-x: hidden; }
 
+  .plane-toggle {
+    top: 3.25rem;
+  }
+
   [data-theme="neon"] .theme-switcher {
     top: 0.75rem;
   }
@@ -1185,6 +1189,9 @@ footer span {
 @media (max-width: 600px) {
   [data-theme="bold"] .theme-switcher {
     top: 0.75rem;
+  }
+  [data-theme="bold"] .hero-desc {
+    color: #000;
   }
   [data-theme="bold"] .hero::after {
     width: 80vw;
@@ -1627,7 +1634,7 @@ footer span {
   flex-shrink: 0;
 }
 [data-theme="brutalist"] .about-header span {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 400;
   letter-spacing: 0.04em;
   color: var(--text-muted);
@@ -1643,14 +1650,14 @@ footer span {
 [data-theme="brutalist"] .about-left {
   padding: 0.6rem clamp(1.5rem, 5vw, 3.5rem);
   border-right: 1px solid var(--border);
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
 }
 [data-theme="brutalist"] .about-left .about-prose {
   font-family: var(--font-body);
   font-weight: 400;
-  font-size: 0.75rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 [data-theme="brutalist"] .about-left .about-prose p + p {
@@ -1667,7 +1674,7 @@ footer span {
 }
 [data-theme="brutalist"] .skills-table-title {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1675,7 +1682,7 @@ footer span {
 }
 [data-theme="brutalist"] .skills-mono {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-primary);
   line-height: 1.8;
 }
@@ -1685,7 +1692,7 @@ footer span {
 }
 [data-theme="brutalist"] .about-right {
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
 }
 [data-theme="brutalist"] .data-row {
@@ -1701,20 +1708,20 @@ footer span {
 }
 [data-theme="brutalist"] .data-row-label {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 [data-theme="brutalist"] .data-row-value {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   line-height: 1.5;
   color: var(--text-primary);
 }
 
 [data-theme="brutalist"] .status-bar {
-  display: flex;
+  display: none;
   justify-content: space-between;
   align-items: center;
   position: fixed;
@@ -1803,7 +1810,7 @@ footer span {
   font-family: var(--font-body);
   font-style: italic;
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--text-secondary);
   line-height: 1.6;
   max-width: 50ch;
