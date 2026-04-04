@@ -5,9 +5,9 @@ Multi-page portfolio site with shared CSS/JS (no build step).
 
 ```
 index.html              - Main landing page (hero, work cards, about, contact)
-logifuture.html         - Logifuture project breakdown (~3 sub-projects)
-coffin-likker.html      - Coffin-Likker project breakdown (3 sub-projects)
-lost-satellite.html     - Lost Satellite Studios breakdown (1 project + screenshot gallery)
+casino_games.html       - Logifuture project breakdown (~3 sub-projects)
+my_games.html           - My Games project breakdown (3 sub-projects)
+eve_of_destruction.html - Lost Satellite Studios breakdown (1 project + screenshot gallery)
 css/
   shared.css            - All shared styles (variables, nav, layout, components)
   project.css           - Project page-specific styles (hero, sections, gallery)
@@ -96,7 +96,7 @@ playwright-cli screenshot --filename=screenshot.png
 
 For project pages:
 ```bash
-playwright-cli open http://localhost:8080/logifuture.html
+playwright-cli open http://localhost:8080/casino_games.html
 playwright-cli screenshot --filename=screenshot.png
 ```
 
