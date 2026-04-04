@@ -50,7 +50,7 @@ These are called without null checks — would throw if undefined and script loa
 |---------|-------|-------|
 | GSAP registration | 1-7 | Registers SplitText + Physics2DPlugin |
 | Constants | 8-17 | Unified (no mobile overrides) |
-| Tween pressure monitor | 19-20 | activeBatchCount / MAX_ACTIVE_BATCHES |
+| Batch tracking | 19 | activeBatchCount (diagnostic only, no gating) |
 | DESTRUCTIBLE_SELECTOR | 22-42 | 28 CSS selectors targeting destructible text |
 | splitAllText() | 50-75 | SplitText.create() per element, caches parent color |
 | revertAllText() | 77-83 | Clears splits/char arrays |
@@ -67,7 +67,6 @@ These are called without null checks — would throw if undefined and script loa
 | Name | Value | Description |
 |------|-------|-------------|
 | BLAST_RADIUS | 40 | Impact radius (px) |
-| MAX_SHATTERED | 300 | Max concurrent shattered chars |
 | SCATTER_DURATION | 1.2 | Scatter time (s) |
 | REFORM_PAUSE | 0.8 | Pause before reform (s) |
 | CHAR_LAND_DURATION | 0.12 | Drop-in time per char (s) |
@@ -80,7 +79,6 @@ These are called without null checks — would throw if undefined and script loa
 | ANGLE_SPREAD | 60 | Scatter angle variance (deg) |
 | MAX_ROTATION | 720 | Max rotation scatter (deg) |
 | GRID_CELL_SIZE | 80 | Spatial grid cell size (2x BLAST_RADIUS) |
-| MAX_ACTIVE_BATCHES | 6 | Tween pressure cap (defers impacts when exceeded) |
 
 ### Global API
 ```
@@ -96,7 +94,7 @@ window.TextDestruction = {
 ### Key Mechanisms
 - **Document-relative cache**: Stores {el, docX, docY} per visible char. Positions are document-relative (docY = screenY + scrollY), so the cache never needs rebuilding on scroll — only on init, resize, and theme change.
 - **Spatial grid**: Cache entries are indexed into 80px grid cells (key: "col,row"). `getCharsInBlastRadius()` checks only 9 cells (3x3 neighborhood) for O(1) average-case hit detection instead of O(n) linear scan.
-- **Tween pressure monitor**: `activeBatchCount` tracks in-flight scatter batches. `onProjectileAt()` returns early when `activeBatchCount >= MAX_ACTIVE_BATCHES` (6), preventing runaway tween creation. This replaces all previous platform-specific throttles.
+- **Batch tracking**: `activeBatchCount` tracks in-flight scatter batches for diagnostic purposes. No gating — all impacts proceed regardless of active batch count.
 - **Shatter**: Physics2D scatter with gravity + rotation + color flash on all platforms.
 - **Reform**: Left-to-right DOM order, staggered CHAR_STAGGER with WORD_EXTRA_STAGGER at word boundaries. Cleanup chunked (40 chars/RAF) on all platforms.
 

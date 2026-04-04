@@ -162,9 +162,7 @@ async function testMobileDesktopParity(browser) {
     MIN_VELOCITY: MIN_VELOCITY,
     MAX_VELOCITY: MAX_VELOCITY,
     SCATTER_DURATION: SCATTER_DURATION,
-    MAX_ACTIVE_BATCHES: MAX_ACTIVE_BATCHES,
     BLAST_RADIUS: BLAST_RADIUS,
-    MAX_SHATTERED: MAX_SHATTERED,
   }));
   await desktopCtx.close();
 
@@ -182,9 +180,7 @@ async function testMobileDesktopParity(browser) {
     MIN_VELOCITY: MIN_VELOCITY,
     MAX_VELOCITY: MAX_VELOCITY,
     SCATTER_DURATION: SCATTER_DURATION,
-    MAX_ACTIVE_BATCHES: MAX_ACTIVE_BATCHES,
     BLAST_RADIUS: BLAST_RADIUS,
-    MAX_SHATTERED: MAX_SHATTERED,
   }));
 
   // Compare all constants

@@ -8,7 +8,6 @@ gsap.registerPlugin(SplitText, Physics2DPlugin);
 
 // --- Tuneable Constants ---
 var BLAST_RADIUS       = 40;
-var MAX_SHATTERED      = 300;
 var SCATTER_DURATION   = 1.2;
 var REFORM_PAUSE       = 0.8;
 var CHAR_LAND_DURATION = 0.12;
@@ -21,9 +20,8 @@ var MAX_VELOCITY       = 500;
 var ANGLE_SPREAD       = 60;
 var MAX_ROTATION       = 720;
 
-// --- Tween pressure monitor ---
+// --- Batch tracking (diagnostic only, no gating) ---
 var activeBatchCount = 0;       // scatter batches currently animating
-var MAX_ACTIVE_BATCHES = 6;     // defer new impacts when overloaded
 
 var DESTRUCTIBLE_SELECTOR = [
   'h1', 'h2', 'h3', 'h4',
@@ -119,7 +117,7 @@ var spatialGrid = {};                   // key: "col,row" -> array of cache entr
 
 function scheduleEagerCacheWarm() {
   // Defer rebuild while scatter batches are in-flight to avoid layout thrashing
-  if (!cacheRebuilding && activeBatchCount === 0) {
+  if (!cacheRebuilding) {
     cacheRebuilding = true;
     requestAnimationFrame(function() { rebuildCharCache(); });
   }
@@ -174,7 +172,7 @@ function rebuildCharCache() {
 }
 
 function getCharsInBlastRadius(screenX, screenY) {
-  if (cacheStale && activeBatchCount === 0) {
+  if (cacheStale) {
     rebuildCharCache();
   }
 
@@ -236,8 +234,6 @@ function shatterChars(hits, impactScreenX, impactScreenY) {
   var origColors = [];
 
   hits.forEach(function(hit) {
-    if (currentShattered >= MAX_SHATTERED) return;
-
     var el = hit.el;
     el.dataset.shattered = '1';
     currentShattered++;
@@ -326,26 +322,14 @@ function scheduleTypingReform(chars) {
     gsap.set(els, { x: 0, y: -DROP_DISTANCE, rotation: 0, opacity: 0 });
 
     function reformComplete() {
-      // Chunk cleanup across frames to avoid DOM write storms
-      var CHUNK = 40;
-      var idx = 0;
-      function cleanChunk() {
-        var end = Math.min(idx + CHUNK, els.length);
-        for (var m = idx; m < end; m++) {
-          els[m].dataset.shattered = '0';
-          els[m].style.color = els[m].dataset.originalColor || '';
-          els[m].style.display = '';
-        }
-        idx = end;
-        if (idx < els.length) {
-          requestAnimationFrame(cleanChunk);
-        } else {
-          currentShattered -= els.length;
-          cacheStale = true;
-          scheduleEagerCacheWarm();
-        }
+      for (var m = 0; m < els.length; m++) {
+        els[m].dataset.shattered = '0';
+        els[m].style.color = els[m].dataset.originalColor || '';
+        els[m].style.display = '';
       }
-      cleanChunk();
+      currentShattered -= els.length;
+      cacheStale = true;
+      scheduleEagerCacheWarm();
     }
 
     // Separate tweens for y (power2.out) and opacity (linear) for richer visual
@@ -415,7 +399,6 @@ window.TextDestruction = {
 
   onProjectileAt: function(screenX, screenY) {
     if (!isArmed) return;
-    if (activeBatchCount >= MAX_ACTIVE_BATCHES) return; // pressure relief
     var hits = getCharsInBlastRadius(screenX, screenY);
     if (hits.length > 0) {
       shatterChars(hits, screenX, screenY);

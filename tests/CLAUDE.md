@@ -1,6 +1,6 @@
 # Tests Reference Map
 
-Overview: 14 Playwright test files (~5,400 lines). Three categories: destruction correctness/integration/regression (4 files), performance benchmarks (2 files), and visual/interaction regression tests (8 files). All require `npx http-server -p 8080 -c-1` running locally. All use Chromium.
+Overview: 15 Playwright test files (~5,900 lines). Three categories: destruction correctness/integration/regression (4 files), performance/diagnostic benchmarks (3 files), and visual/interaction regression tests (8 files). All require `npx http-server -p 8080 -c-1` running locally. All use Chromium.
 
 ## Running Tests
 
@@ -30,7 +30,7 @@ Run full destruction suite: `node tests/run-destruction-suite.js`
 |-------|-------|-------------------|
 | Spatial Grid Accuracy | 20 test points | `getCharsInBlastRadius()` returns identical results to brute-force linear scan |
 | Document-Relative Coords | 30 checks (3 scroll states x 10 entries) | Cache entries map to correct screen positions after scrolling |
-| Tween Pressure Monitor | 4 checks | `activeBatchCount` never exceeds MAX_ACTIVE_BATCHES (6), returns to 0 after completion |
+| Batch Tracking | 4 checks | `activeBatchCount` fires and returns to 0 after completion |
 | Cache Lifecycle | 6 checks | Shatter -> reform -> cacheStale -> rebuild -> reformed chars back in grid |
 
 **Key technique**: Brute-force reference scan runs before grid lookup (non-destructive read vs destructive splice). Cache rebuilt between test points.
@@ -77,6 +77,31 @@ Run full destruction suite: `node tests/run-destruction-suite.js`
 **CLI flags**: `--update-baseline`, `--viewport desktop|mobile|all`, `--tolerance N`.
 
 **Exit**: 0 = pass/baseline created, 1 = regression, 2 = crash.
+
+## Diagnostic Tests
+
+### gsap-diagnostic-test.js (~480 lines)
+
+**Purpose**: Instruments GSAP to count tween creation, accumulation, duplicates, and cleanup during text destruction. Purely diagnostic — always exits 0, outputs informative JSON.
+
+**Setup**: Chromium headless, iPhone 14 (390x844, 3x DPR), 4x CPU throttle.
+
+#### Scenarios
+| Scenario | What It Measures |
+|----------|-----------------|
+| single_impact | Exact GSAP calls per impact, tween lifecycle through scatter/reform/settle |
+| accumulation | Tween count growth across 10 impacts at 300ms intervals |
+| lifecycle | Time-series of tween count every 500ms for 6s after 3 impacts |
+| rapid_fire | 20 impacts in 2s — peak tween load, duplicate detection |
+| duplicates | Same-location re-shatter — detects multiple tweens on same element |
+
+**GSAP Instrumentation**: Wraps `gsap.to`, `gsap.fromTo`, `gsap.set`, `gsap.delayedCall`, `gsap.killTweensOf` to log every call. Queries `gsap.globalTimeline.getChildren()` for total tween tree.
+
+**Output**: JSON to stdout with per-scenario snapshots + summary (gsapCallsPerImpact, peakConcurrentTweens, tweensCleanUpProperly, duplicateTweensDetected, estimatedMobileCost, recommendations).
+
+**Exit**: Always 0 (diagnostic only).
+
+---
 
 ## Performance Tests
 
@@ -148,7 +173,7 @@ Run full destruction suite: `node tests/run-destruction-suite.js`
 | cache_rebuild | 336-383 | rebuildCharCache() cost after resize | maxFrame <=50ms |
 | dense_burst | 385-480 | 6 rapid impacts, burst vs scatter phases | p95 <=35ms, dropped <=30%, Script <=800ms |
 | overlap_scatter_reform | 482-551 | Triple wave overlap (scatter+reform) | maxFrame <=50ms, p95 <=35ms |
-| high_count_reform | 553-620 | Reform at near MAX_SHATTERED chars | maxFrame <=60ms, p95 <=30ms |
+| high_count_reform | 553-620 | Reform at high char count | maxFrame <=60ms, p95 <=30ms |
 | figure8_scroll_fire | 622-688 | Scroll + destruction simultaneously | maxFrame <=60ms, p95 <=35ms, avg <=25ms, dropped <=40% |
 | sustained_annihilation | 690-797 | All text destroyed repeatedly | overlap: maxFrame <=70ms, p95 <=40ms, avg <=25ms, dropped <=40% |
 

@@ -111,7 +111,7 @@ Seven scenarios:
 - **cache_rebuild**: Forces `cacheStale = true` then impacts to trigger `rebuildCharCache()`. Measures the `getBoundingClientRect()` loop cost. Threshold: maxFrameMs > 50.
 - **dense_burst**: 6 rapid-fire impacts at 100ms intervals across #about. Measures overlapping physics2D tweens. Thresholds: p95 > 35, droppedFrames > 30%, ScriptDurationMs > 800.
 - **overlap_scatter_reform**: 3 staggered impacts on hero (h1 -> hero-desc -> tidbits) creating triple wave overlap (scatter + reform simultaneously). Thresholds: maxFrameMs > 50, p95 > 35.
-- **high_count_reform**: 8-10 impacts to shatter near MAX_SHATTERED chars, then measures the reform animation window. Thresholds: maxFrameMs > 60, p95 > 30.
+- **high_count_reform**: 8-10 impacts to shatter a large number of chars, then measures the reform animation window. Thresholds: maxFrameMs > 60, p95 > 30.
 - **figure8_scroll_fire**: Simultaneous scrolling + destruction across the full page height (figure-8 Lissajous pattern). Tests scroll-triggered cache invalidation, overlapping scatter+reform across viewport changes, and compound scroll+destruction cost. Thresholds: maxFrameMs > 60, p95 > 35, avg > 25, droppedFrames > 40%.
 - **sustained_annihilation**: Destroys all text in #about every 0.3s for 6 cycles using a 60px impact grid. Measures overlapping scatter+reform waves at extreme frequency. Thresholds: overlap maxFrameMs > 70, p95 > 40, avg > 25, droppedFrames > 40%.
 

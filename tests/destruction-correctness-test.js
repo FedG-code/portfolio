@@ -322,7 +322,7 @@ async function testPressureMonitor(page) {
     return { name: 'pressure-monitor', passed: false, tests: [{ name: 'setup', passed: false, detail: 'no target' }] };
   }
 
-  // Fire 12 rapid impacts (2x MAX_ACTIVE_BATCHES) in one evaluate
+  // Fire 12 rapid impacts and verify they all proceed (no pressure gating)
   var afterRapidFire = await page.evaluate(({ cx, cy }) => {
     var points = [];
     for (var i = 0; i < 12; i++) {
@@ -331,16 +331,15 @@ async function testPressureMonitor(page) {
     points.forEach(function(p) { TextDestruction.onProjectileAt(p.x, p.y); });
     return {
       activeBatchCount: activeBatchCount,
-      maxBatches: MAX_ACTIVE_BATCHES,
       shattered: currentShattered
     };
   }, { cx: aboutCenter.x, cy: aboutCenter.y });
 
-  // Test: activeBatchCount <= MAX_ACTIVE_BATCHES
-  var bounded = afterRapidFire.activeBatchCount <= afterRapidFire.maxBatches;
-  log((bounded ? 'PASS' : 'FAIL') + '  pressure/bounded -- activeBatchCount=' +
-      afterRapidFire.activeBatchCount + ' (max=' + afterRapidFire.maxBatches + ')');
-  tests.push({ name: 'bounded', passed: bounded, detail: 'count=' + afterRapidFire.activeBatchCount });
+  // Test: batches are being tracked
+  var tracked = afterRapidFire.activeBatchCount > 0;
+  log((tracked ? 'PASS' : 'FAIL') + '  pressure/batches-tracked -- activeBatchCount=' +
+      afterRapidFire.activeBatchCount);
+  tests.push({ name: 'batches-tracked', passed: tracked, detail: 'count=' + afterRapidFire.activeBatchCount });
 
   // Test: some impacts were actually processed
   var hadImpact = afterRapidFire.shattered > 0;
