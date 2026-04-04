@@ -582,26 +582,8 @@
 
       // Scroll-on-drag (mobile only)
       if (isMobile()) {
-        if (isTouchDragging) {
-          var normY = touchScreenY / window.innerHeight;
-          var progress;
-          if (normY > SCROLL_DOWN_THRESHOLD) {
-            progress = (normY - SCROLL_DOWN_THRESHOLD) / (1 - SCROLL_DOWN_THRESHOLD);
-            scrollVelocity = MAX_SCROLL_SPEED * progress * progress;
-          } else if (normY < SCROLL_UP_THRESHOLD) {
-            progress = (SCROLL_UP_THRESHOLD - normY) / SCROLL_UP_THRESHOLD;
-            scrollVelocity = -MAX_SCROLL_SPEED * progress * progress;
-          } else {
-            scrollVelocity *= SCROLL_DECAY;
-          }
-        } else {
-          scrollVelocity *= SCROLL_DECAY;
-        }
-        if (Math.abs(scrollVelocity) > 0.5) {
-          window.scrollBy(0, scrollVelocity);
-        } else {
-          scrollVelocity = 0;
-        }
+        // Scroll-on-drag disabled (temporary)
+        scrollVelocity = 0;
       }
 
       // Roll
