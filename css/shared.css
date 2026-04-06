@@ -1523,6 +1523,9 @@ footer span {
   [data-theme="cinematic"] .theme-switcher {
     top: 0.75rem;
   }
+  [data-theme="cinematic"] .hero h1 {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
 }
 
 /* ========== BRUTALIST THEME OVERRIDES ========== */
