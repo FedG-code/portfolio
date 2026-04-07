@@ -13,8 +13,8 @@ reveals.forEach(el => observer.observe(el));
 
 // Theme switcher
 const themeSwitcher = document.getElementById('themeSwitcher');
-const themes = ['bold', 'cinematic', 'brutalist', 'retro', 'neon'];
-let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'bold');
+const themes = ['brutalist', 'bold', 'retro', 'cinematic', 'neon'];
+let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'brutalist');
 if (currentIndex === -1) currentIndex = 0;
 
 

@@ -64,6 +64,13 @@ var MAX_BLUR            = 8;
 var MAX_OVERLAY_OPACITY = 0.3;
 var MAX_GLOW_SIZE       = 30;
 
+// Attractor (drag-me hint) constants
+var ATTRACTOR_LS_KEY    = 'portfolio-card-attractor-seen';
+var ATTRACTOR_FIRST_MS  = 10000;
+var ATTRACTOR_TOUCH_MS  = 3500;
+var ATTRACTOR_BOUNCE_Y  = _isMobHand ? -22 : -40;
+var ATTRACTOR_LABEL_OFFSET = _isMobHand ? 18 : 26;
+
 /* ═══════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════ */
@@ -79,6 +86,17 @@ var dragState = null;
 var animState = 'IDLE'; // IDLE | DRAGGING | RETURNING | PLAYING | TRANSITIONING
 var _activePointerId = null;   // track first pointer to ignore second touch
 var _liftedCardId   = -1;     // card ID in tap-lifted state (-1 = none)
+
+var attractorState = {
+  firstLandTimer: null,
+  postTouchTimer: null,
+  active: false,
+  disabled: false,
+  cardId: -1,
+  labelEl: null,
+  tween: null,
+  planeObserver: null,
+};
 
 var handContainer = document.getElementById('handContainer');
 handContainer.style.transformStyle = 'preserve-3d';
@@ -170,6 +188,7 @@ function layoutCards() {
   cardOrder.forEach(function(cardId, slot) {
     var el = elMap[cardId];
     if (!el || cardId === dragCardId) return;
+    if (attractorState.active && cardId === attractorState.cardId) return;
     var isHovered = el.classList.contains('hover-active');
     var pos = getRestPosition(slot, total);
     var lift = isHovered ? -HOVER_LIFT : 0;
@@ -326,6 +345,12 @@ function onPointerDown(e) {
   if (!cardEl) return;
   e.preventDefault();
 
+  // Attractor: card press counts as interaction. If the first-land timer is
+  // still running, cancel it and arm the post-touch timer. If the attractor
+  // is already visible, stop it so its tween doesn't fight the drag transform.
+  onAttractorCardInteraction();
+  if (attractorState.active) stopAttractor();
+
   // Store previous lift state then clear it
   var prevLift = _liftedCardId;
   dismissLift();
@@ -375,6 +400,7 @@ function onPointerMove(e) {
   var dx = e.clientX - dragState.startClientX;
   var dy = e.clientY - dragState.startClientY;
   if (!dragState.hasMoved && Math.abs(dx) + Math.abs(dy) < 5) return;
+  if (!dragState.hasMoved) disableAttractorPermanently();
   dragState.hasMoved = true;
   var handRect = handContainer.getBoundingClientRect();
   var cardLeftInHand = e.clientX - dragState.grabX - handRect.left;
@@ -462,6 +488,7 @@ document.body.addEventListener('pointerover', function(e) {
   });
   if (cardEl && !cardEl.classList.contains('dragging')) {
     cardEl.classList.add('hover-active');
+    onAttractorCardInteraction();
     layoutCards();
   }
 }, true);
@@ -475,6 +502,180 @@ document.body.addEventListener('pointerout', function(e) {
     layoutCards();
   }
 }, true);
+
+/* ═══════════════════════════════════════════════
+   ATTRACTOR (drag-me hint)
+   ═══════════════════════════════════════════════ */
+function onAttractorCardInteraction() {
+  // Any card hover/touch cancels the first-land timer and arms the
+  // one-shot post-touch timer. No-ops once the attractor is disabled,
+  // already active, or past the first-land window.
+  if (attractorState.disabled) return;
+  if (attractorState.active) return;
+  if (attractorState.firstLandTimer === null) return;
+  clearTimeout(attractorState.firstLandTimer);
+  attractorState.firstLandTimer = null;
+  if (attractorState.postTouchTimer !== null) return; // one-shot
+  attractorState.postTouchTimer = setTimeout(function() {
+    attractorState.postTouchTimer = null;
+    startAttractor();
+  }, ATTRACTOR_TOUCH_MS);
+}
+
+function cancelAttractorTimers() {
+  if (attractorState.firstLandTimer !== null) {
+    clearTimeout(attractorState.firstLandTimer);
+    attractorState.firstLandTimer = null;
+  }
+  if (attractorState.postTouchTimer !== null) {
+    clearTimeout(attractorState.postTouchTimer);
+    attractorState.postTouchTimer = null;
+  }
+}
+
+function armFirstLandTimer() {
+  if (attractorState.disabled) return;
+  if (attractorState.active) return;
+  if (attractorState.firstLandTimer !== null) return;
+  if (attractorState.postTouchTimer !== null) return;
+  if (isPlaneActive()) return;
+  attractorState.firstLandTimer = setTimeout(function() {
+    attractorState.firstLandTimer = null;
+    startAttractor();
+  }, ATTRACTOR_FIRST_MS);
+}
+
+function getAttractorTargetCardId() {
+  // Center-most visible card in the fan.
+  if (!cardOrder.length) return -1;
+  return cardOrder[Math.floor(cardOrder.length / 2)];
+}
+
+function startAttractor() {
+  if (attractorState.disabled) return;
+  if (attractorState.active) return;
+  if (isPlaneActive()) return;
+  if (animState !== 'IDLE') return;
+
+  var cardId = getAttractorTargetCardId();
+  if (cardId === -1) return;
+  var el = handContainer.querySelector('.card[data-card-id="' + cardId + '"]');
+  if (!el) return;
+
+  var slot = cardOrder.indexOf(cardId);
+  var total = cardOrder.length;
+  var pos = getRestPosition(slot, total);
+
+  attractorState.active = true;
+  attractorState.cardId = cardId;
+
+  // Build label as a child of the card so it follows the bounce tween.
+  // Positioned above the card's own top edge; counter-rotated so the text
+  // reads upright even if the target card has a non-zero fan angle.
+  var label = document.createElement('div');
+  label.className = 'attractor-label';
+  label.textContent = 'drag me!';
+  label.style.left = '50%';
+  label.style.top  = (-ATTRACTOR_LABEL_OFFSET) + 'px';
+  label.style.transform = 'translateX(-50%) rotate(' + (-pos.angle) + 'deg)';
+  el.appendChild(label);
+  attractorState.labelEl = label;
+
+  // Bounce the card. Take GSAP ownership of the transform by setting the
+  // current x/y/rotation first, then run the timeline. layoutCards() will
+  // skip this card while active so it doesn't fight the tween.
+  //
+  // If the card is already lifted (hover or tap-lift), start from its lifted
+  // y and skip the up phase — drop straight into the bounce.out descent, then
+  // enter the normal infinite loop.
+  el.style.transition = 'none';
+  el.style.transformOrigin = 'center bottom';
+  el.style.zIndex = 25;
+
+  var isLifted = el.classList.contains('hover-active');
+  var startY = isLifted ? (pos.py - HOVER_LIFT) : pos.py;
+
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  gsap.set(el, { x: pos.px, y: startY, rotation: pos.angle });
+  if (!reduced) {
+    var buildLoop = function() {
+      return gsap.timeline({ repeat: -1, repeatDelay: 0.8 })
+        .to(el, { y: pos.py + ATTRACTOR_BOUNCE_Y, duration: 0.14, ease: 'power1.out' })
+        .to(el, { y: pos.py,                       duration: 0.9,  ease: 'bounce.out' }, '-=0.04');
+    };
+    if (isLifted) {
+      // Intro descent from lifted y, then hand off to the infinite loop.
+      attractorState.tween = gsap.timeline({
+        onComplete: function() {
+          if (!attractorState.active) return;
+          attractorState.tween = buildLoop();
+        },
+      }).to(el, { y: pos.py, duration: 0.9, ease: 'bounce.out' }, 0)
+        .to({}, { duration: 0.8 }); // pause to match loop repeatDelay
+    } else {
+      attractorState.tween = buildLoop();
+    }
+  }
+}
+
+function stopAttractor() {
+  if (!attractorState.active) return;
+  attractorState.active = false;
+  if (attractorState.tween) {
+    attractorState.tween.kill();
+    attractorState.tween = null;
+  }
+  if (attractorState.labelEl && attractorState.labelEl.parentNode) {
+    attractorState.labelEl.parentNode.removeChild(attractorState.labelEl);
+  }
+  attractorState.labelEl = null;
+  var prevCardId = attractorState.cardId;
+  attractorState.cardId = -1;
+  var el = handContainer.querySelector('.card[data-card-id="' + prevCardId + '"]');
+  if (el) {
+    el.style.zIndex = '';
+  }
+  layoutCards();
+}
+
+function disableAttractorPermanently() {
+  if (attractorState.disabled) return;
+  attractorState.disabled = true;
+  cancelAttractorTimers();
+  stopAttractor();
+  try { localStorage.setItem(ATTRACTOR_LS_KEY, '1'); } catch (e) {}
+  if (attractorState.planeObserver) {
+    attractorState.planeObserver.disconnect();
+    attractorState.planeObserver = null;
+  }
+}
+
+function initAttractor() {
+  try {
+    if (localStorage.getItem(ATTRACTOR_LS_KEY) === '1') {
+      attractorState.disabled = true;
+      return;
+    }
+  } catch (e) {}
+
+  // Watch the plane-active class on <html>. Plane on => suppress; plane off
+  // => re-arm the first-land timer (if still not disabled and no timer/attractor
+  // is already in flight).
+  attractorState.planeObserver = new MutationObserver(function() {
+    if (attractorState.disabled) return;
+    if (isPlaneActive()) {
+      cancelAttractorTimers();
+      stopAttractor();
+    } else {
+      armFirstLandTimer();
+    }
+  });
+  attractorState.planeObserver.observe(document.documentElement, {
+    attributes: true, attributeFilter: ['class'],
+  });
+
+  armFirstLandTimer();
+}
 
 /* ═══════════════════════════════════════════════
    EVENT LISTENERS
@@ -526,6 +727,7 @@ window._cardHandOnThemeChange = function() {
    INIT
    ═══════════════════════════════════════════════ */
 buildCards();
+initAttractor();
 
 // Pop-up entrance animation: cards start below viewport and slide up with stagger
 (function() {

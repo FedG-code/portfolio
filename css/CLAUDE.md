@@ -71,7 +71,8 @@ All variables defined in lines 3-26:
 | PAGE CONTAINER | 20-28 | .page-container absolute, inset 0, z-index 5, overflow-y auto, padding-bottom 220px |
 | DRAG BLUR OVERLAY | 30-40 | .drag-blur-overlay fixed, backdrop-filter blur(0px), will-change |
 | HAND CONTAINER | 42-59 | .hand-container bottom 0, translateX(-50%), height 400px (768px+: 260px), max-width 700px |
-| PERSPECTIVE + FLY | 61-74 | .perspective-container, .fly-overlay fixed, z-index 60/500 |
+| ATTRACTOR LABEL | 61-81 | .attractor-label absolute, font-mono, var(--accent), z-index 30, pointer-events none |
+| PERSPECTIVE + FLY | 83-96 | .perspective-container, .fly-overlay fixed, z-index 60/500 |
 | CARD BASE | 76-105 | .card 220x320px (768px+: 132x192), cursor grab, transition 0.55s cubic-bezier |
 | CARD INNER | 107-246 | .card-inner radius 14px, .card-title h3, .card-art height 155px, .card-art-icon, .card-inner--home, .type-bar, .card-textbox, .accent-strip |
 | MOBILE CARD SCALING | 248-261 | @media 768px: radius 9px, font-sizes reduced |

@@ -32,12 +32,12 @@ js/
   - Retro: Shrikhand, Bitter, IBM Plex Mono
   - Neon: Sora, Space Mono
   - Font CSS variables (`--font-serif`, `--font-body`, `--font-mono`) are redefined per theme in `shared.css`
-- **Theme system**: Five themes cycle via button: `bold -> cinematic -> brutalist -> retro -> neon -> bold`
-  - `data-theme` attribute on `<html>` controls the active theme (`bold` default)
+- **Theme system**: Five themes cycle via button: `brutalist -> bold -> retro -> cinematic -> neon -> brutalist`
+  - `data-theme` attribute on `<html>` controls the active theme (`brutalist` default)
   - Each theme defines its own CSS variable block in `shared.css` (`:root` for bold, `[data-theme="cinematic"]`, etc.)
   - Theme-specific overrides (hardcoded colours, border-radius, font weights, etc.) go in `[data-theme="<name>"]` selector blocks after the variable blocks
-  - `js/shared.js` has `const themes = ['bold', 'cinematic', 'brutalist', 'retro', 'neon']` — the switcher button cycles through and persists to `localStorage`
-  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash). Also migrates stored `coral`/`slate` values to `bold`.
+  - `js/shared.js` has `const themes = ['brutalist', 'bold', 'retro', 'cinematic', 'neon']` — the switcher button cycles through and persists to `localStorage`
+  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash). Also migrates stored `coral`/`slate` values to `brutalist`.
   - See [css/CLAUDE.md](css/CLAUDE.md) for per-theme design notes and line ranges.
 - **Nav**: Removed from all pages. Navigation is handled by the card-hand system only. Nav CSS is archived in `backup/nav-styles.css`.
 - **Alternate HTML layouts**:
@@ -49,6 +49,7 @@ js/
 - **JS features**: Scroll reveal (IntersectionObserver), theme switcher with localStorage
 - **Text Destruction**: See [js/CLAUDE.md](js/CLAUDE.md) for detailed destruction.js documentation (mechanics, constants, mobile-gated values, impact throttle, design fallback).
 - **Card-hand system**: See [js/CLAUDE.md](js/CLAUDE.md) for card-hand.js and page-transition.js documentation (play animation phases, SPA navigation, title matching, .reveal vs card handoff, known issues).
+- **Attractor (drag-me hint)**: Center card bobs with a "drag me!" label after 10s of inactivity, or 3.5s after a hover/tap. Permanently disabled via localStorage key `portfolio-card-attractor-seen` once any real drag is observed. See [js/CLAUDE.md](js/CLAUDE.md) "Attractor System" section for timers, suppression rules, and cleanup hooks.
 - **Fly-swap alignment pitfall**: Character positions differ between inline text and `display: inline-block` spans (`.destruct-char`). Any code that measures character positions for the fly animation (`measureDirect` in text-rearrange.js) must use `charsClass: 'destruct-char'` so measurements match the final split state. Similarly, `onThemeChange()` must run before the target title is revealed during cleanup — see [js/CLAUDE.md](js/CLAUDE.md) "transitionToHome Cleanup Ordering" and "Measurement Invariant" sections.
 - **Project pages**: Shared template - theme switcher, back link, project hero, repeatable sub-project sections, footer
 

@@ -27,7 +27,7 @@ External: GSAP core, SplitText, Physics2DPlugin, Three.js r128, GLTFLoader
 | Section | Lines | Notes |
 |---------|-------|-------|
 | Scroll reveal (IntersectionObserver) | 1-11 | threshold 0.1, rootMargin '0px 0px -40px 0px', staggered 60ms delay, unobserves after visible |
-| Theme switcher setup | 14-17 | themes = ['bold','cinematic','brutalist','retro','neon'], reads data-theme attr |
+| Theme switcher setup | 14-17 | themes = ['brutalist','bold','retro','cinematic','neon'], reads data-theme attr |
 | updateLabel() | 21-25 | Shows NEXT theme name on button |
 | Click handler | 27-35 | Cycles index, sets data-theme, persists to localStorage('portfolio-theme'), fires 3 callbacks |
 
@@ -207,25 +207,26 @@ GSAP core (timeline, to, set), SplitText (measureDirect)
 
 ---
 
-## card-hand.js (546 lines)
+## card-hand.js (~730 lines)
 
 ### Section Map
 | Section | Lines | Notes |
 |---------|-------|-------|
-| CARDS array | 0-40 | 4 card objects with id, accent, title, pageUrl, artImage, etc. |
-| Constants | 42-61 | Responsive dimensions (mobile vs desktop) |
-| State variables | 63-84 | dragState, animState, cardOrder, activePageCardId, etc. |
-| createCardHTML() + freezeGif() + buildCards() | 86-150 | DOM construction, GIF->PNG freeze |
-| Fan geometry | 152-175 | fanX(), fanAngle(), fanArcY(), getRestPosition() |
-| layoutCards() | 177-197 | Applies transforms to card elements |
-| Slot detection + proximity | 199-239 | getSlotForX(), getCardCenter(), calcProximity(), isInPlayZone() |
-| Proximity feedback | 242-280 | applyProximityFeedback(), resetProximityFeedback(), hexToRGB() |
-| Touch helpers | 282-319 | isPlaneActive(), findNearestCardInRange(), liftCard(), dismissLift() |
-| Drag handlers | 321-467 | onPointerDown(), onPointerMove(), onPointerUp() |
-| Hover handlers | 469-494 | pointerover/pointerout |
-| Event listeners | 496-528 | Pointer events, dragstart, scroll, theme callback |
-| Theme change callback | 530-540 | window._cardHandOnThemeChange |
-| Init | 542-546 | buildCards() + layoutCards() |
+| CARDS array | 0-44 | 4 card objects with id, accent, title, pageUrl, artImage, etc. |
+| Constants | 46-72 | Responsive dimensions + attractor constants |
+| State variables | 74-96 | dragState, animState, cardOrder, activePageCardId, attractorState |
+| createCardHTML() + freezeGif() + buildCards() | 98-146 | DOM construction, GIF->PNG freeze |
+| Fan geometry | 148-171 | fanX(), fanAngle(), fanArcY(), getRestPosition() |
+| layoutCards() | 173-194 | Applies transforms; skips dragged AND active-attractor card |
+| Slot detection + proximity | 196-236 | getSlotForX(), getCardCenter(), calcProximity(), isInPlayZone() |
+| Proximity feedback | 238-276 | applyProximityFeedback(), resetProximityFeedback(), hexToRGB() |
+| Touch helpers | 278-315 | isPlaneActive(), findNearestCardInRange(), liftCard(), dismissLift() |
+| Drag handlers | 317-484 | onPointerDown(), onPointerMove(), onPointerUp() |
+| Hover handlers | 486-505 | pointerover/pointerout |
+| Attractor (drag-me hint) | 507-660 | See "Attractor System" section below |
+| Event listeners | 662-693 | Pointer events, dragstart, scroll, theme callback |
+| Theme change callback | 697-705 | window._cardHandOnThemeChange |
+| Init | 707-712 | buildCards() + initAttractor() + entrance animation |
 
 ### CARDS Array Structure (each object)
 ```
@@ -277,6 +278,43 @@ GSAP core (timeline, to, set), SplitText (measureDirect)
 ### Cross-File Dependencies
 - Calls `window.prefetchPage()` (from page-transition.js) on pointer down
 - Checks `isPlaneActive()` — reads `plane-active` CSS class (set by plane.js)
+
+### Attractor System (drag-me hint)
+
+A one-shot tutorial hint that bobs the center card and shows a `drag me!` label when a new user hasn't figured out the drag mechanic. Permanently disabled (across reloads) the first time any successful drag is observed.
+
+**Constants** (card-hand.js L66-72):
+| Name | Value | Notes |
+|------|-------|-------|
+| `ATTRACTOR_LS_KEY` | `'portfolio-card-attractor-seen'` | localStorage flag (set to `"1"` on first drag) |
+| `ATTRACTOR_FIRST_MS` | 10000 | First-land timer |
+| `ATTRACTOR_TOUCH_MS` | 3500 | Post-touch (hover/tap) timer |
+| `ATTRACTOR_BOUNCE_Y` | -40 desktop / -22 mobile | Bounce amplitude (px) |
+| `ATTRACTOR_LABEL_OFFSET` | 26 desktop / 18 mobile | Label offset above card top (px) |
+
+**State** (`attractorState` object, L86-95): `firstLandTimer`, `postTouchTimer`, `active`, `disabled`, `cardId`, `labelEl`, `tween`, `planeObserver`.
+
+**Timer logic:**
+1. `initAttractor()` runs at startup. If localStorage flag is set → `disabled = true`, returns. Otherwise wires a `MutationObserver` on `<html>` class (to react to `plane-active`) and arms the first-land timer.
+2. `armFirstLandTimer()` early-returns if disabled/active/already-armed/plane-active.
+3. `onAttractorCardInteraction()` — called from `onPointerDown` AND desktop `pointerover`. Cancels first-land and arms one-shot `ATTRACTOR_TOUCH_MS` timer. Post-touch timer does NOT restart on subsequent touches.
+4. Either timer firing calls `startAttractor()`.
+5. `onPointerMove` crossing the drag threshold calls `disableAttractorPermanently()` — writes localStorage, cancels timers, calls `stopAttractor()`, disconnects the observer.
+
+**Visual:**
+- `startAttractor()` picks `cardOrder[Math.floor(cardOrder.length / 2)]` as the target (center of visible fan, typically id 1 Eve of Destruction on index.html with 3 project cards).
+- Appends `.attractor-label` div **as a child of the target `.card`** so it rides with the bounce. Positioned `left: 50%; top: -ATTRACTOR_LABEL_OFFSET` with inline `transform: translateX(-50%) rotate(-pos.angle)` — counter-rotation keeps the text upright even if the target card has a non-zero fan angle. Uses `var(--font-mono)` and `var(--accent)`.
+- Calls `gsap.set(el, { x, y, rotation })` to take GSAP ownership of the card transform, then runs a two-phase `gsap.timeline({ repeat: -1, repeatDelay: 0.8 })`: `y → py + BOUNCE_Y` over 0.14s `power1.out` (snappy liftoff), then `y → py` over 0.9s `bounce.out` (settling drop) with a `-=0.04` overlap so the descent kicks in before the up tween's tail, eliminating the peak hang. `attractorState.tween` holds the timeline — `stopAttractor()` calls `.kill()` on it the same as a tween.
+- **Already-lifted intro**: if the target card has `hover-active` at the moment `startAttractor()` runs (hover or tap-lift), the up phase is skipped. GSAP starts the card at `py - HOVER_LIFT` and runs a one-shot intro timeline (0.9s `bounce.out` descent + 0.8s pause). Its `onComplete` swaps `attractorState.tween` with the normal infinite loop so subsequent iterations behave identically to the cold-start path.
+- `layoutCards()` skips the attractor card while active so hover-on-other-cards doesn't fight the tween.
+- `prefers-reduced-motion: reduce` → label still appears, no bounce tween.
+
+**Cleanup hooks:**
+- `onPointerDown` on any card while attractor is active → `stopAttractor()` (prevents tween/drag transform conflict). If the pointerdown becomes a real drag, `disableAttractorPermanently()` fires next.
+- Plane toggle via MutationObserver: class added → cancel timers + stopAttractor. Class removed → rearm first-land timer (if not disabled).
+- `playCard()` path is transitively covered (successful drag → `hasMoved = true` → permanent disable before `playCard()` is ever called).
+
+**CSS:** `.attractor-label` rule in `css/cards.css` (just above `.perspective-container`).
 
 ---
 

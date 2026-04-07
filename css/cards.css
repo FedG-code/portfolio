@@ -58,6 +58,29 @@
   }
 }
 
+/* ========== ATTRACTOR LABEL (drag-me hint) ========== */
+.attractor-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  text-transform: lowercase;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 30;
+  text-shadow: 0 0 12px var(--accent-glow, rgba(0,0,0,0.2));
+}
+@media (max-width: 768px) {
+  .attractor-label {
+    font-size: 0.7rem;
+  }
+}
+
 /* ========== PERSPECTIVE + FLY OVERLAY ========== */
 .perspective-container {
   position: fixed;
