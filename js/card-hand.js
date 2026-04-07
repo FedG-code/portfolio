@@ -10,6 +10,7 @@ var CARDS = [
     text: 'Developed casino game features across web and mobile platforms, shipping live products to players worldwide.',
     pageUrl: 'casino_games.html',
     artImage: 'assets/spin+.gif',
+    artThumb: 'assets/spin+img.png',
   },
   {
     id: 1, accent: 'green',
@@ -19,6 +20,7 @@ var CARDS = [
     text: 'Combat, enemies and movement for a narrative-driven metroidvania in Godot.',
     pageUrl: 'eve_of_destruction.html',
     artImage: 'assets/ult+bossfightgif.gif',
+    artThumb: 'assets/ult+bossfightimg.png',
   },
   {
     id: 2, accent: 'purple',
@@ -28,6 +30,7 @@ var CARDS = [
     text: 'Stealth-horror project focused on visibility, AI behavior, and environmental tension. Set in the bayou.',
     pageUrl: 'my_games.html',
     artImage: 'assets/visionsystem.gif',
+    artThumb: 'assets/visionsystemimg.png',
   },
   {
     id: 3, accent: 'gold',
@@ -99,7 +102,7 @@ function createCardHTML(c) {
   }
 
   var artContent = c.artImage
-    ? '<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="card-art-img" alt="' + c.title + '" data-gif="' + c.artImage + '">'
+    ? '<img src="' + c.artThumb + '" class="card-art-img" alt="' + c.title + '" data-gif="' + c.artImage + '" data-thumb="' + c.artThumb + '">'
     : '<span class="card-art-icon">' + c.icon + '</span>';
 
   return '<div class="card-inner">' +
@@ -112,23 +115,7 @@ function createCardHTML(c) {
 }
 
 function freezeGif(img) {
-  if (img._freezing) return;
-  img._freezing = true;
-  var offscreen = new Image();
-  offscreen.onload = function() {
-    var canvas = document.createElement('canvas');
-    canvas.width = offscreen.naturalWidth;
-    canvas.height = offscreen.naturalHeight;
-    canvas.getContext('2d').drawImage(offscreen, 0, 0);
-    try { img.src = canvas.toDataURL('image/png'); }
-    catch(e) { img.src = img.dataset.gif; }
-    img._freezing = false;
-  };
-  offscreen.onerror = function() {
-    img.src = img.dataset.gif;
-    img._freezing = false;
-  };
-  offscreen.src = img.dataset.gif;
+  if (img.dataset.thumb) img.src = img.dataset.thumb;
 }
 
 function buildCards() {
@@ -142,10 +129,6 @@ function buildCards() {
     el.style.transformOrigin = 'center bottom';
     el.innerHTML = createCardHTML(c);
     handContainer.appendChild(el);
-
-    // Freeze GIF to first frame (off-screen load, no event listener needed)
-    var img = el.querySelector('.card-art-img');
-    if (img) { freezeGif(img); }
   });
 }
 
@@ -543,4 +526,31 @@ window._cardHandOnThemeChange = function() {
    INIT
    ═══════════════════════════════════════════════ */
 buildCards();
-layoutCards();
+
+// Pop-up entrance animation: cards start below viewport and slide up with stagger
+(function() {
+  var cardEls = handContainer.querySelectorAll('.card');
+  var total = cardOrder.length;
+  cardOrder.forEach(function(cid, slot) {
+    var el = null;
+    cardEls.forEach(function(e) { if (parseInt(e.dataset.cardId) === cid) el = e; });
+    if (!el) return;
+    var pos = getRestPosition(slot, total);
+    el.style.transition = 'none';
+    el.style.transformOrigin = 'center bottom';
+    gsap.set(el, { x: pos.px, y: pos.py + 300, rotation: pos.angle, opacity: 0 });
+  });
+  requestAnimationFrame(function() {
+    cardOrder.forEach(function(cid, slot) {
+      var el = null;
+      cardEls.forEach(function(e) { if (parseInt(e.dataset.cardId) === cid) el = e; });
+      if (!el) return;
+      var pos = getRestPosition(slot, total);
+      gsap.to(el, {
+        x: pos.px, y: pos.py, rotation: pos.angle, opacity: 1,
+        duration: 0.55, delay: slot * 0.12, ease: 'power2.out',
+        onComplete: function() { el.style.transition = ''; }
+      });
+    });
+  });
+})();
