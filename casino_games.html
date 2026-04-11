@@ -20,7 +20,8 @@
 <link rel="stylesheet" href="css/cards.css">
 <script>
   var t = localStorage.getItem('portfolio-theme');
-  if (t) document.documentElement.setAttribute('data-theme', t);
+  if (!t) t = window.matchMedia('(max-width: 768px)').matches ? 'bold' : 'brutalist';
+  document.documentElement.setAttribute('data-theme', t);
 </script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>

@@ -2,7 +2,11 @@
 (function () {
   'use strict';
 
-  var THEMES = ['bold', 'brutalist', 'retro', 'cinematic', 'neon'];
+  // Desktop default is brutalist, mobile default is bold — default theme sits first in the bar.
+  var IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
+  var THEMES = IS_MOBILE
+    ? ['bold', 'brutalist', 'retro', 'cinematic', 'neon']
+    : ['brutalist', 'bold', 'retro', 'cinematic', 'neon'];
   var LABELS = {
     bold: 'Bold',
     brutalist: 'Brutalist',
@@ -16,11 +20,11 @@
   // render them inline for speed. NOTE: if you change a --theme-*-accent in shared.css,
   // update the matching entry here.
   var PREVIEW = {
-    bold:      { accent: '#ff3d00', bg: '#f4f4f4', text: '#111',    sub: '#555',    chips: ['#ff3d00', '#ffe100', '#111',    '#f4f4f4'] },
+    bold:      { accent: '#ff3d00', bg: '#f4f4f4', text: '#111',    sub: '#555',    chips: ['#ff3d00', '#111',    '#f4f4f4'] },
     brutalist: { accent: '#0000ff', bg: '#fff',    text: '#000',    sub: '#333',    chips: ['#0000ff', '#ff0000', '#000',    '#fff']    },
     retro:     { accent: '#1A5C52', bg: '#FDF6EC', text: '#1A1A16', sub: '#6D6A5E', chips: ['#1A5C52', '#D94230', '#1A1A16', '#FDF6EC'] },
     cinematic: { accent: '#D6001C', bg: '#0A0A0A', text: '#E8E6E1', sub: '#9A9590', chips: ['#D6001C', '#E8E6E1', '#9A9590', '#0A0A0A'] },
-    neon:      { accent: '#c9f059', bg: '#0a0a0c', text: '#e8e6e3', sub: '#8a8a99', chips: ['#c9f059', '#59b8f0', '#e8e6e3', '#0a0a0c'] }
+    neon:      { accent: '#c9f059', bg: '#0a0a0c', text: '#e8e6e3', sub: '#8a8a99', chips: ['#c9f059', '#e8e6e3', '#0a0a0c'] }
   };
 
   function buildToolbar() {
