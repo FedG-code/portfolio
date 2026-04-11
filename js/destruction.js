@@ -56,7 +56,7 @@ function splitAllText() {
 
   var elements = document.querySelectorAll(DESTRUCTIBLE_SELECTOR);
   elements.forEach(function(el) {
-    if (el.closest('.theme-switcher, .plane-toggle, .btn, .work-expand')) return;
+    if (el.closest('.toolbar, .btn, .work-expand')) return;
     if (el.offsetParent === null) return;
 
     var instance = SplitText.create(el, {

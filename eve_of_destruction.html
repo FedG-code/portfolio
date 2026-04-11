@@ -20,7 +20,8 @@
 <link rel="stylesheet" href="css/cards.css">
 <script>
   var t = localStorage.getItem('portfolio-theme');
-  if (t) document.documentElement.setAttribute('data-theme', t);
+  if (!t) t = window.matchMedia('(max-width: 768px)').matches ? 'bold' : 'brutalist';
+  document.documentElement.setAttribute('data-theme', t);
 </script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>
@@ -39,9 +40,6 @@
 <div class="hand-container" id="handContainer"></div>
 <div class="perspective-container" id="perspectiveContainer"></div>
 <div class="fly-overlay" id="flyOverlay"></div>
-
-<!-- THEME SWITCHER -->
-<button class="theme-switcher" id="themeSwitcher">Cinematic</button>
 
 <!-- PROJECT HERO -->
 <section class="project-hero">
@@ -195,6 +193,7 @@
 </section>
 
 
+<script src="js/toolbar.js"></script>
 <script src="js/shared.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"></script>

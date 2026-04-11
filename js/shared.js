@@ -11,27 +11,17 @@ const observer = new IntersectionObserver((entries) => {
 window.revealObserver = observer;
 reveals.forEach(el => observer.observe(el));
 
-// Theme switcher
-const themeSwitcher = document.getElementById('themeSwitcher');
+// Theme switcher (direct-select via toolbar swatches)
 const themes = ['bold', 'brutalist', 'retro', 'cinematic', 'neon'];
-let currentIndex = themes.indexOf(document.documentElement.getAttribute('data-theme') || 'bold');
-if (currentIndex === -1) currentIndex = 0;
 
-
-// Update button label to show the *other* theme
-const updateLabel = () => {
-  const next = themes[(currentIndex + 1) % themes.length];
-  themeSwitcher.textContent = next.charAt(0).toUpperCase() + next.slice(1);
-};
-updateLabel();
-
-themeSwitcher.addEventListener('click', () => {
-  currentIndex = (currentIndex + 1) % themes.length;
-  document.documentElement.setAttribute('data-theme', themes[currentIndex]);
-  localStorage.setItem('portfolio-theme', themes[currentIndex]);
-  updateLabel();
+function setTheme(name) {
+  if (themes.indexOf(name) === -1) return;
+  document.documentElement.setAttribute('data-theme', name);
+  localStorage.setItem('portfolio-theme', name);
+  if (window.Toolbar && window.Toolbar.syncActive) window.Toolbar.syncActive(name);
   if (window.TextDestruction) TextDestruction.onThemeChange();
   if (window._planeOnThemeChange) window._planeOnThemeChange();
   if (window._cardHandOnThemeChange) window._cardHandOnThemeChange();
-});
+}
+window.setTheme = setTheme;
 

@@ -5,7 +5,13 @@ Overview: 6 JS files (~3,100 lines). No build step, no modules — all globals. 
 ## Dependency Graph
 
 ```
-shared.js (theme switcher)
+toolbar.js (DOM: swatches, plane slot, hover preview)
+  ├─ wires → window.setTheme(t) on swatch click
+  └─ exports → window.Toolbar.syncActive(t)
+
+shared.js (setTheme(name) — direct theme switch)
+  ├─ called by → toolbar.js swatch click
+  ├─ fires → window.Toolbar.syncActive(name)
   ├─ fires → TextDestruction.onThemeChange()
   ├─ fires → window._planeOnThemeChange()
   └─ fires → window._cardHandOnThemeChange()
@@ -21,25 +27,53 @@ External: GSAP core, SplitText, Physics2DPlugin, Three.js r128, GLTFLoader
 
 ---
 
-## shared.js (37 lines)
+## shared.js (27 lines)
 
 ### Complete Reference
 | Section | Lines | Notes |
 |---------|-------|-------|
-| Scroll reveal (IntersectionObserver) | 1-11 | threshold 0.1, rootMargin '0px 0px -40px 0px', staggered 60ms delay, unobserves after visible |
-| Theme switcher setup | 14-17 | themes = ['bold','brutalist','retro','cinematic','neon'], reads data-theme attr |
-| updateLabel() | 21-25 | Shows NEXT theme name on button |
-| Click handler | 27-35 | Cycles index, sets data-theme, persists to localStorage('portfolio-theme'), fires 3 callbacks |
+| Scroll reveal (IntersectionObserver) | 1-12 | threshold 0.1, rootMargin '0px 0px -40px 0px', staggered 60ms delay, unobserves after visible |
+| Theme list | 15 | themes = ['bold','brutalist','retro','cinematic','neon'] |
+| setTheme(name) | 17-26 | Validates name, sets data-theme, persists to localStorage('portfolio-theme'), fires Toolbar.syncActive + 3 theme-change callbacks |
+| window.setTheme export | 27 | Global accessor invoked by toolbar.js swatch clicks |
 
 ### Global Exports
-- `window.revealObserver` (line 10) — IntersectionObserver instance
+- `window.revealObserver` (line 11) — IntersectionObserver instance
+- `window.setTheme(name)` (line 27) — direct theme switch; no cycling logic, name must be in `themes` array
 
-### Theme Change Hooks Fired (in order)
-1. `window.TextDestruction.onThemeChange()` (line 32)
-2. `window._planeOnThemeChange()` (line 33)
-3. `window._cardHandOnThemeChange()` (line 34)
+### Theme Change Hooks Fired (in order, inside setTheme)
+1. `window.Toolbar.syncActive(name)` — updates swatch `.active` class + aria-pressed (null-checked)
+2. `window.TextDestruction.onThemeChange()` (null-checked)
+3. `window._planeOnThemeChange()` (null-checked)
+4. `window._cardHandOnThemeChange()` (null-checked)
 
-These are called without null checks — would throw if undefined and script loads before the others.
+---
+
+## toolbar.js (147 lines)
+
+### Purpose
+Builds the fixed right-edge `.toolbar` element injected into `document.body` on every live page. Contains five theme swatch buttons (direct-select, not cycling), a divider, a `#toolbar-plane-slot` marker div that plane.js adopts its button into, and a hover preview panel (desktop-only via `(hover: hover) and (pointer: fine)` media query).
+
+### Constants
+| Name | Value | Notes |
+|------|-------|-------|
+| `THEMES` | `['bold','brutalist','retro','cinematic','neon']` | Rendered in this order top-to-bottom |
+| `LABELS` | `{bold: 'Bold', ...}` | aria-label + preview panel name |
+| `PREVIEW` | Per-theme `{accent, bg, text, sub, chips[4]}` | Inline hex values for preview panel chips — mirrors the `--theme-*-accent` CSS constants (keep in sync if CSS changes) |
+
+### Functions
+| Function | Notes |
+|----------|-------|
+| `buildToolbar()` | Creates `#toolbar` with role=toolbar, swatches, divider, plane slot, preview panel; wires click + hover; appends to body |
+| `wireSwatchClicks(swatches)` | Delegates click on `.swatch-btn`, reads `data-theme-id`, calls `window.setTheme(t)` |
+| `wireHoverPreview(...)` | Desktop-only — updates preview panel content on mouseover of non-active swatches, hides on mouseleave |
+| `syncActive(name)` | Toggles `.active` class + `aria-pressed` on swatch buttons; hides preview — exported as `window.Toolbar.syncActive` |
+
+### Global Exports
+- `window.Toolbar = { syncActive }` — called by `setTheme()` in shared.js
+
+### Load Order Requirement
+Must be loaded **before** `shared.js` (so `window.Toolbar.syncActive` exists when setTheme first fires) **and before** `plane.js` (so `#toolbar-plane-slot` exists when `createToggleButton()` runs). All four live HTML pages load scripts in this order: `toolbar.js` → `shared.js` → `plane.js`.
 
 ---
 
@@ -112,7 +146,7 @@ GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
 | Mobile detection | 29-35 | isMobile() with _isMobileCached |
 | State variables | 37-80 | enabled, scene/camera/renderer, plane model, mouse/touch, projectiles[], fire interval |
 | Iframe avoidance | 82-125 | getAvoidanceTarget() keeps plane outside iframe buffered regions |
-| Toggle button UI | 127-214 | createToggleButton(), updateButtonLabel(), attractor bounce |
+| Toggle button UI | ~125-161 | `planeIcon` SVG (paper plane), `createToggleButton()` builds `.plane-btn` with aria-label + aria-pressed, adopts into `#toolbar-plane-slot` (body fallback). `updateButtonLabel()` toggles `.active` + aria-pressed on state change. No icon swap — active state is pure CSS recolor via `.plane-btn.active { color: var(--accent); background: var(--accent-soft); }` |
 | Toggle handler | 216-247 | SessionStorage persist, syncs TextDestruction.init/destroy, plane-active class |
 | start() / stop() | 249-271 | Control animation loop + canvas visibility |
 | Dynamic script loading | 273-298 | CDN Three.js r128 + GLTFLoader |
