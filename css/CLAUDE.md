@@ -2,7 +2,7 @@
 
 Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic, brutalist, retro, neon). Pattern: base component styles followed by theme override blocks.
 
-## shared.css (2607 lines)
+## shared.css (2576 lines)
 
 ### Section Map
 
@@ -20,19 +20,18 @@ Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic,
 | WORK CARDS | 280-491 | .work-grid, .work-card, .work-card-header, .work-icon, .work-expand, .work-image-placeholder (warm/cool/fresh), .work-details, .work-stats |
 | ABOUT | 493-562 | .about-content grid (1.2fr 1fr), .about-prose, .about-box, .chip-grid |
 | APPROACH | 564-608 | .approach-cards grid, .approach-card |
-| CONTACT | 609-677 | .contact, .btn primary/secondary |
-| FOOTER | 678-689 | footer styles |
-| DOODLE DECORATION | 690-723 | .doodle positioning and animation |
-| ANIMATIONS | 724-748 | @keyframes: fadeUp, pulse, nudgeBounce |
-| 3D PLANE OVERLAY | 749-756 | #plane-canvas fixed overlay |
-| THEME LAYOUT TOGGLES | 757-765 | .status-bar, .hero-brutalist, .about-brutalist, .hero-panel display toggles |
-| NEON THEME OVERRIDES | 766-860 | Font weights 600-700, sharp corners, grain overlay, doodle hidden |
-| RESPONSIVE (general) | 861-895 | @media 900px, 768px, 600px breakpoints |
-| Destruction system | 873-881 | .destruct-char, .destruct-word rules |
-| BOLD THEME OVERRIDES | 897-1195 | Hero circle ::after, uppercase h1, work/approach/contact overrides |
-| CINEMATIC THEME OVERRIDES | 1197-1520 | Dark red accent #D6001C, Syne/Segoe UI/Commit Mono, uppercase h1 |
-| BRUTALIST THEME OVERRIDES | 1521-2205 | Blue accent #0038FF, Space Mono/Literata, single-screen flex, .hero-brutalist grid, .status-bar |
-| RETRO THEME OVERRIDES | 2207-2607 | Cream bg, red #D94230, teal #1A5C52, Shrikhand/Bitter, hero split grid, .hero-panel |
+| CONTACT | 609-672 | .contact, .btn primary/secondary |
+| DOODLE DECORATION | 674-707 | .doodle positioning and animation |
+| ANIMATIONS | 708-732 | @keyframes: fadeUp, pulse, nudgeBounce |
+| 3D PLANE OVERLAY | 733-740 | #plane-canvas fixed overlay |
+| THEME LAYOUT TOGGLES | 741-749 | .status-bar, .hero-brutalist, .about-brutalist, .hero-panel display toggles |
+| NEON THEME OVERRIDES | 750-844 | Font weights 600-700, sharp corners, grain overlay, doodle hidden |
+| RESPONSIVE (general) | 845-884 | @media 900px, 768px, 600px breakpoints |
+| Destruction system | 857-865 | .destruct-char, .destruct-word rules |
+| BOLD THEME OVERRIDES | 885-1182 | Hero circle ::after, uppercase h1, work/approach/contact overrides |
+| CINEMATIC THEME OVERRIDES | 1183-1502 | Dark red accent #D6001C, Syne/Segoe UI/Commit Mono, uppercase h1 |
+| BRUTALIST THEME OVERRIDES | 1503-2184 | Blue accent #0038FF, Space Mono/Literata, single-screen flex, .hero-brutalist grid, .status-bar |
+| RETRO THEME OVERRIDES | 2185-2576 | Cream bg, red #D94230, teal #1A5C52, Shrikhand/Bitter, hero split grid, .hero-panel |
 
 ### Custom Properties (defined in :root)
 

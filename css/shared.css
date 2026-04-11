@@ -46,7 +46,7 @@
   --font-mono: 'Space Mono', monospace;
 }
 
-body, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn, footer {
+body, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn {
   transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
@@ -671,18 +671,6 @@ section { padding: 7rem 0; }
   box-shadow: 0 8px 30px #e85d2640;
 }
 
-/* ========== FOOTER ========== */
-footer {
-  padding: 2rem 0;
-  border-top: 1px solid var(--border);
-  text-align: center;
-}
-
-footer span {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
 /* ========== DOODLE DECORATION ========== */
 .doodle {
   position: absolute;
@@ -1165,11 +1153,6 @@ footer span {
   border-radius: 0;
 }
 
-/* ── Footer ── */
-[data-theme="bold"] footer {
-  font-family: var(--font-mono);
-}
-
 /* ── Hide neon grid bg / doodles ── */
 [data-theme="bold"] .hero::before { display: none; }
 
@@ -1487,12 +1470,6 @@ footer span {
   background: var(--bg-card);
   border-color: var(--accent);
   color: var(--accent);
-}
-
-/* ── Footer ── */
-[data-theme="cinematic"] footer {
-  border-top: 1px solid var(--border);
-  font-family: var(--font-mono);
 }
 
 /* ── Blur overlay ── */
@@ -2138,10 +2115,6 @@ footer span {
   background: var(--bg);
 }
 
-[data-theme="brutalist"] footer {
-  display: none;
-}
-
 [data-theme="brutalist"] .work-image-placeholder {
   border: 1px solid var(--border);
 }
@@ -2482,15 +2455,6 @@ footer span {
 }
 [data-theme="retro"] .tidbit-value {
   color: #F0EBE0;
-}
-
-/* Footer */
-[data-theme="retro"] footer {
-  background: #1A5C52;
-  border-top: none;
-}
-[data-theme="retro"] footer span {
-  color: rgba(240,235,224,0.5);
 }
 
 /* Theme Switcher */
