@@ -23,6 +23,12 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --radius: 0px;
   --radius-sm: 0px;
+  /* Cross-theme swatch accent identities (NEVER overridden per theme) */
+  --theme-bold-accent: #ff3d00;
+  --theme-brutalist-accent: #0000ff;
+  --theme-retro-accent: #dc322f;
+  --theme-cinematic-accent: #c9a84c;
+  --theme-neon-accent: #c9f059;
 }
 
 [data-theme="neon"] {
