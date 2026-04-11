@@ -1039,6 +1039,19 @@ section { padding: 7rem 0; }
   }
 }
 
+[data-theme="neon"] .toolbar {
+  border-radius: 16px 0 0 16px;
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow, rgba(201, 240, 89, 0.15)),
+              0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="neon"] .toolbar .preview-panel {
+  border-radius: 16px;
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow, rgba(201, 240, 89, 0.15));
+}
+
 /* ========== BOLD THEME OVERRIDES ========== */
 
 /* ── Hero ── */
@@ -1335,6 +1348,10 @@ section { padding: 7rem 0; }
     right: -25vw;
     top: 60%;
   }
+}
+
+[data-theme="bold"] .toolbar {
+  border-radius: 12px 0 0 12px;
 }
 
 /* ========== CINEMATIC THEME OVERRIDES ========== */
@@ -1655,6 +1672,16 @@ section { padding: 7rem 0; }
   [data-theme="cinematic"] .hero h1 {
     font-size: clamp(2rem, 10vw, 3rem);
   }
+}
+
+[data-theme="cinematic"] .toolbar {
+  border-radius: 14px 0 0 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="cinematic"] .toolbar .preview-panel {
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* ========== BRUTALIST THEME OVERRIDES ========== */
@@ -2339,6 +2366,19 @@ section { padding: 7rem 0; }
   }
 }
 
+[data-theme="brutalist"] .toolbar {
+  border-width: 2px;
+  border-color: var(--border);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 var(--border);
+}
+
+[data-theme="brutalist"] .toolbar .preview-panel {
+  border-width: 2px;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 var(--border);
+}
+
 /* ========== RETRO THEME OVERRIDES ========== */
 
 [data-theme="retro"] {
@@ -2710,6 +2750,29 @@ section { padding: 7rem 0; }
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+[data-theme="retro"] .toolbar {
+  border-width: 2px;
+  border-color: var(--pop);
+  border-radius: 8px 0 0 8px;
+  box-shadow: 3px 3px 0 var(--pop);
+}
+
+[data-theme="retro"] .toolbar .swatch-btn.active .swatch-dot {
+  box-shadow: 0 0 0 2.5px var(--pop);
+}
+
+[data-theme="retro"] .toolbar .plane-btn.active {
+  color: var(--pop);
+  background: var(--pop-soft, rgba(26, 92, 82, 0.1));
+}
+
+[data-theme="retro"] .toolbar .preview-panel {
+  border-width: 2px;
+  border-color: var(--pop);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--pop);
 }
 
 /* Responsive */
