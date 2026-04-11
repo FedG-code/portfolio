@@ -124,91 +124,40 @@
 
   var canvasContainer = document.getElementById('plane-canvas');
   var toggleBtn = null;
-  var crosshairIcon = null;
-  var labelSpan = null;
-  var bounceInterval = null;
-  var bounceTimeout = null;
-  var bounceDelayId = null;
 
-  function startBounce() {
-    stopBounce();
-    triggerBounce();
-    bounceInterval = setInterval(triggerBounce, 3000);
-  }
-
-  function triggerBounce() {
-    toggleBtn.classList.add('bouncing');
-    bounceTimeout = setTimeout(function() {
-      toggleBtn.classList.remove('bouncing');
-    }, 1200);
-  }
-
-  function stopBounce() {
-    if (bounceDelayId) clearTimeout(bounceDelayId);
-    if (bounceInterval) clearInterval(bounceInterval);
-    if (bounceTimeout) clearTimeout(bounceTimeout);
-    bounceDelayId = null;
-    bounceInterval = null;
-    bounceTimeout = null;
-    if (toggleBtn) toggleBtn.classList.remove('bouncing');
-  }
+  var planeIcon =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2' +
+      'c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2' +
+      ' 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>' +
+    '</svg>';
 
   // --- Toggle Button ---
   function createToggleButton() {
     toggleBtn = document.createElement('button');
-    toggleBtn.className = 'plane-toggle';
-    toggleBtn.innerHTML =
-      '<svg class="plane-toggle-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
-        '<circle cx="8" cy="8" r="3.5"/>' +
-        '<line x1="8" y1="0.5" x2="8" y2="3.5"/>' +
-        '<line x1="8" y1="12.5" x2="8" y2="15.5"/>' +
-        '<line x1="0.5" y1="8" x2="3.5" y2="8"/>' +
-        '<line x1="12.5" y1="8" x2="15.5" y2="8"/>' +
-      '</svg>' +
-      '<span class="plane-toggle-label"></span>';
-
-    crosshairIcon = toggleBtn.querySelector('.plane-toggle-icon');
-    labelSpan = toggleBtn.querySelector('.plane-toggle-label');
-
-    if (enabled) {
-      crosshairIcon.style.display = 'none';
-      labelSpan.textContent = 'Stop';
-    } else {
-      labelSpan.textContent = 'Fly';
-      if (!sessionStorage.getItem('plane-attractor-seen')) {
-        toggleBtn.classList.add('attractor');
-        bounceDelayId = setTimeout(function() { startBounce(); }, 1500);
-      }
-    }
-
-    // If nav is already scroll-hidden (e.g. page reloaded while scrolled), start hidden
-    var nav = document.querySelector('nav');
-    if (nav && nav.classList.contains('scroll-hidden')) {
-      toggleBtn.classList.add('scroll-hidden');
-    }
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'plane-btn';
+    toggleBtn.setAttribute('aria-label', 'Toggle paper plane overlay');
+    toggleBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    toggleBtn.innerHTML = planeIcon;
+    if (enabled) toggleBtn.classList.add('active');
 
     toggleBtn.addEventListener('click', toggle);
 
-    toggleBtn.addEventListener('pointerenter', function() {
-      if (toggleBtn.classList.contains('attractor')) {
-        stopBounce();
-        toggleBtn.classList.remove('attractor');
-        sessionStorage.setItem('plane-attractor-seen', '1');
-      }
-    });
-
-    document.body.appendChild(toggleBtn);
+    // Adopt into toolbar slot (toolbar.js runs first). Fallback: append to body.
+    var slot = document.getElementById('toolbar-plane-slot');
+    if (slot) {
+      slot.appendChild(toggleBtn);
+    } else {
+      document.body.appendChild(toggleBtn);
+    }
   }
 
   function updateButtonLabel() {
     if (!toggleBtn) return;
-    if (enabled) {
-      crosshairIcon.style.display = 'none';
-      labelSpan.textContent = 'Stop';
-    } else {
-      crosshairIcon.style.display = '';
-      labelSpan.textContent = 'Fly';
-    }
+    toggleBtn.classList.toggle('active', enabled);
+    toggleBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   }
 
   function toggle() {
@@ -217,8 +166,6 @@
     updateButtonLabel();
 
     if (enabled) {
-      toggleBtn.classList.remove('attractor');
-      stopBounce();
       document.documentElement.classList.add('plane-active');
       if (!initialized) {
         init();
@@ -438,7 +385,7 @@
   function onMobileMouseDown(e) {
     if (!running || !planeGroup || !planeGroup.visible) return;
     if (e.button !== 0) return;
-    if (e.target.closest('.plane-toggle, nav, .theme-switcher')) return;
+    if (e.target.closest('.toolbar')) return;
 
     var planeScreen = worldToScreen(planeGroup.position.x, planeGroup.position.z);
     var dx = e.clientX - planeScreen.x;
@@ -518,7 +465,7 @@
   function onMouseDown(e) {
     if (!running || !planeGroup || !planeGroup.visible) return;
     if (e.button !== 0) return;
-    if (e.target.closest('.plane-toggle, nav, .theme-switcher')) return;
+    if (e.target.closest('.toolbar')) return;
     fireProjectiles();
     clearInterval(fireIntervalId);
     fireIntervalId = setInterval(fireProjectiles, FIRE_INTERVAL * 1000);
