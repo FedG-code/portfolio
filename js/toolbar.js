@@ -18,9 +18,9 @@
   var PREVIEW = {
     bold:      { accent: '#ff3d00', bg: '#f4f4f4', text: '#111',    sub: '#555',    chips: ['#ff3d00', '#ffe100', '#111',    '#f4f4f4'] },
     brutalist: { accent: '#0000ff', bg: '#fff',    text: '#000',    sub: '#333',    chips: ['#0000ff', '#ff0000', '#000',    '#fff']    },
-    retro:     { accent: '#dc322f', bg: '#fff8eb', text: '#3b2e1a', sub: '#7a6955', chips: ['#dc322f', '#2aa198', '#3b2e1a', '#fdf6e3'] },
-    cinematic: { accent: '#c9a84c', bg: '#16161e', text: '#e8e8ec', sub: '#8888a0', chips: ['#c9a84c', '#e8d5a0', '#e8e8ec', '#0d0d12'] },
-    neon:      { accent: '#c9f059', bg: '#111118', text: '#e0ffe0', sub: '#7aaa7a', chips: ['#c9f059', '#59b8f0', '#e0ffe0', '#0a0a0f'] }
+    retro:     { accent: '#1A5C52', bg: '#FDF6EC', text: '#1A1A16', sub: '#6D6A5E', chips: ['#1A5C52', '#D94230', '#1A1A16', '#FDF6EC'] },
+    cinematic: { accent: '#D6001C', bg: '#0A0A0A', text: '#E8E6E1', sub: '#9A9590', chips: ['#D6001C', '#E8E6E1', '#9A9590', '#0A0A0A'] },
+    neon:      { accent: '#c9f059', bg: '#0a0a0c', text: '#e8e6e3', sub: '#8a8a99', chips: ['#c9f059', '#59b8f0', '#e8e6e3', '#0a0a0c'] }
   };
 
   function buildToolbar() {
