@@ -2,7 +2,7 @@
 
 Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic, brutalist, retro, neon). Pattern: base component styles followed by theme override blocks.
 
-## shared.css (2576 lines)
+## shared.css (2570 lines)
 
 ### Section Map
 
@@ -11,10 +11,9 @@ Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic,
 | Universal reset + :root variables | 1-26 | --bg, --bg-warm, --bg-card, --border, --border-hover, --text-primary, --text-secondary, --text-muted, --accent, --accent-soft, --accent-mid, --pop, --pop-soft, --cream, --accent-glow, --font-serif, --font-body, --font-mono, --ease-out, --ease-spring, --radius, --radius-sm |
 | [data-theme="neon"] variables | 28-47 | Dark grays, lime accent (#c9f059), blue pop (#59b8f0), Sora/Space Mono fonts |
 | Global transitions | 49-51 | body, .work-card, .approach-card transitions |
-| .theme-switcher | 53-74 | Fixed positioning, sizing, hover states |
-| PLANE ACTIVE | 76-81 | html.plane-active styles (user-select: none) |
-| PLANE TOGGLE | 83-127 | .plane-toggle button, attractor state, bounce animation |
-| Global html/body/links | 128-148 | Base typography, .container max-width 1140px |
+| RIGHT-EDGE TOOLBAR | 59-183 | .toolbar fixed-right container, .swatches stack, .swatch-btn[data-theme-id] dots, .plane-btn active state, .preview-panel (desktop hover only), responsive @768px shrink, prefers-reduced-motion disable |
+| PLANE ACTIVE | ~185 | html.plane-active styles (user-select: none) |
+| Global html/body/links | ~190 | Base typography, .container max-width 1140px |
 | HERO | 150-257 | .hero min-height 100vh, .hero-badge fadeUp, .hero h1 clamp(3rem-6.5rem), .hero-body grid, .hero-tidbits |
 | SECTIONS | 258-279 | section padding 7rem, .section-label, .section-heading |
 | WORK CARDS | 280-491 | .work-grid, .work-card, .work-card-header, .work-icon, .work-expand, .work-image-placeholder (warm/cool/fresh), .work-details, .work-stats |
@@ -22,7 +21,7 @@ Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic,
 | APPROACH | 564-608 | .approach-cards grid, .approach-card |
 | CONTACT | 609-672 | .contact, .btn primary/secondary |
 | DOODLE DECORATION | 674-707 | .doodle positioning and animation |
-| ANIMATIONS | 708-732 | @keyframes: fadeUp, pulse, nudgeBounce |
+| ANIMATIONS | ~708 | @keyframes: fadeUp, pulse |
 | 3D PLANE OVERLAY | 733-740 | #plane-canvas fixed overlay |
 | THEME LAYOUT TOGGLES | 741-749 | .status-bar, .hero-brutalist, .about-brutalist, .hero-panel display toggles |
 | NEON THEME OVERRIDES | 750-844 | Font weights 600-700, sharp corners, grain overlay, doodle hidden |
@@ -42,6 +41,7 @@ All variables defined in lines 3-26:
 - `--text-primary`, `--text-secondary`, `--text-muted` -- text colors
 - `--accent`, `--accent-soft`, `--accent-mid`, `--accent-glow` -- accent color + opacity variants
 - `--pop`, `--pop-soft` -- pop color (same as accent in bold theme)
+- `--theme-bold-accent`, `--theme-brutalist-accent`, `--theme-retro-accent`, `--theme-cinematic-accent`, `--theme-neon-accent` -- cross-theme swatch identity colors (used by `.toolbar .swatch-dot`, never overridden per theme)
 - `--cream` -- cream background
 - `--font-serif`, `--font-body`, `--font-mono` -- font stacks
 - `--ease-out`, `--ease-spring` -- easing functions
@@ -57,7 +57,7 @@ All variables defined in lines 3-26:
 ### Responsive Breakpoints
 
 - max-width: 900px -- hero-body 1fr, about-content 1fr
-- max-width: 768px -- plane-toggle adjustments
+- max-width: 768px -- .toolbar shrink (smaller swatches + plane icon)
 - max-width: 600px -- overflow-x: hidden
 
 ## cards.css (864 lines)
