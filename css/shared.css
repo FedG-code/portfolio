@@ -439,10 +439,6 @@ section { padding: 7rem 0; }
 .work-image-placeholder.cool { background: linear-gradient(135deg, #d4e4f9, #d8e8fc); }
 .work-image-placeholder.fresh { background: linear-gradient(135deg, #d4f9e4, #d8fce8); }
 
-[data-theme="slate"] .work-image-placeholder.warm { background: linear-gradient(135deg, #e8ddd4, #ece1d8); }
-[data-theme="slate"] .work-image-placeholder.cool { background: linear-gradient(135deg, #d4dde8, #d8e1ec); }
-[data-theme="slate"] .work-image-placeholder.fresh { background: linear-gradient(135deg, #d4e8dd, #d8ece1); }
-
 .work-image {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -1323,7 +1319,6 @@ footer span {
   overflow: hidden;
 }
 
-/* Hide coral doodles */
 [data-theme="cinematic"] .doodle { display: none; }
 
 /* ── Section Labels & Headings ── */

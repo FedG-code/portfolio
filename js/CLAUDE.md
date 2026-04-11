@@ -27,7 +27,7 @@ External: GSAP core, SplitText, Physics2DPlugin, Three.js r128, GLTFLoader
 | Section | Lines | Notes |
 |---------|-------|-------|
 | Scroll reveal (IntersectionObserver) | 1-11 | threshold 0.1, rootMargin '0px 0px -40px 0px', staggered 60ms delay, unobserves after visible |
-| Theme switcher setup | 14-17 | themes = ['brutalist','bold','retro','cinematic','neon'], reads data-theme attr |
+| Theme switcher setup | 14-17 | themes = ['bold','brutalist','retro','cinematic','neon'], reads data-theme attr |
 | updateLabel() | 21-25 | Shows NEXT theme name on button |
 | Click handler | 27-35 | Cycles index, sets data-theme, persists to localStorage('portfolio-theme'), fires 3 callbacks |
 

@@ -126,5 +126,4 @@ All variables defined in lines 3-26:
 
 ## Uncertainties
 
-- Lines 442-444 in shared.css have `[data-theme="slate"]` rules -- appears unused/legacy (slate was renamed to bold)
 - NEON section boundaries (lines 849-860) have image/icon tweaks that could be grouped with responsive or with neon overrides -- boundary is ambiguous
