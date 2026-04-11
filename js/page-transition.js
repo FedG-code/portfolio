@@ -560,7 +560,14 @@ function transitionToProject(cardEl, cardId, cardData, titleEl, artEl, titleRect
       // Reset both window and container scroll before measuring so
       // getBoundingClientRect returns coordinates at the top of the page.
       // Safe because the home page is already faded to opacity 0 by now.
-      window.scrollTo(0, 0);
+      // IMPORTANT: html has `scroll-behavior: smooth`, which makes
+      // window.scrollTo async — measurement on the next line would read
+      // the old scroll position. Force instant with behavior: 'instant'.
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
       pageContainer.scrollTop = 0;
 
       var targetTitleRect = targetTitle ? targetTitle.getBoundingClientRect() : null;
