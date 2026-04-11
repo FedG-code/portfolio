@@ -8,7 +8,7 @@
   // 1. Plane mode toggle. The state read is deferred so plane.js's own click
   //    handler runs first and flips the `plane-active` class on <html>.
   document.addEventListener('click', function (e) {
-    if (!e.target.closest('.plane-toggle')) return;
+    if (!e.target.closest('.toolbar .plane-btn')) return;
     setTimeout(function () {
       var on = document.documentElement.classList.contains('plane-active');
       gtag('event', 'plane_mode_toggle', { state: on ? 'on' : 'off' });
@@ -17,7 +17,7 @@
 
   // 2. Theme switch. Same deferral so we read the theme after shared.js sets it.
   document.addEventListener('click', function (e) {
-    if (!e.target.closest('.theme-switcher')) return;
+    if (!e.target.closest('.toolbar .swatch-btn')) return;
     setTimeout(function () {
       var theme = document.documentElement.getAttribute('data-theme') || 'unknown';
       gtag('event', 'theme_change', { theme: theme });

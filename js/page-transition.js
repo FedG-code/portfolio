@@ -36,7 +36,7 @@ function extractPageContent(doc) {
   var clone = body.cloneNode(true);
 
   var removeSelectors = [
-    'nav', '.theme-switcher', 'footer', 'script',
+    'nav', '.toolbar', 'footer', 'script',
     '#plane-canvas', '.blur-overlay', '.project-nav',
     '#handContainer', '#dragBlurOverlay', '#pageContainer',
     '#perspectiveContainer', '#flyOverlay'
@@ -70,7 +70,7 @@ function bootstrapFromProjectPage() {
   // Collect project content nodes (everything that isn't SPA infrastructure)
   var infraIds = ['plane-canvas', 'dragBlurOverlay', 'pageContainer',
                   'handContainer', 'perspectiveContainer', 'flyOverlay',
-                  'themeSwitcher', 'statusBar'];
+                  'toolbar', 'statusBar'];
   var body = document.body;
   var nodesToMove = [];
 
@@ -78,7 +78,7 @@ function bootstrapFromProjectPage() {
     var child = body.children[i];
     if (child.tagName === 'SCRIPT') continue;
     if (child.id && infraIds.indexOf(child.id) !== -1) continue;
-    if (child.tagName === 'BUTTON' && (child.classList.contains('theme-switcher') || child.classList.contains('plane-toggle'))) continue;
+    if (child.id === 'toolbar') continue;
     nodesToMove.push(child);
   }
 
