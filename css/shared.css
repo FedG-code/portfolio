@@ -2261,6 +2261,22 @@ section { padding: 7rem 0; }
     box-shadow: 4px 4px 0 var(--border);
   }
 }
+@media (max-width: 768px) {
+  [data-theme="brutalist"] .toolbar-tab {
+    border-width: 2px;
+    border-color: var(--border);
+    border-radius: 0;
+    box-shadow: -4px 4px 0 var(--border);
+    margin-right: -4px;
+    z-index: 2;
+  }
+  [data-theme="brutalist"] .toolbar.open .toolbar-panel {
+    border-width: 2px;
+    border-color: var(--border);
+    border-radius: 0;
+    box-shadow: -4px 4px 0 var(--border);
+  }
+}
 
 [data-theme="brutalist"] .toolbar .preview-panel {
   border-width: 2px;
@@ -2614,6 +2630,22 @@ section { padding: 7rem 0; }
     border-color: var(--pop);
     border-radius: 8px 0 0 8px;
     box-shadow: 3px 3px 0 var(--pop);
+  }
+}
+@media (max-width: 768px) {
+  [data-theme="retro"] .toolbar-tab {
+    border-width: 2px;
+    border-color: var(--pop);
+    border-radius: 8px 0 0 8px;
+    box-shadow: -3px 3px 0 var(--pop);
+    margin-right: -4px;
+    z-index: 2;
+  }
+  [data-theme="retro"] .toolbar.open .toolbar-panel {
+    border-width: 2px;
+    border-color: var(--pop);
+    border-radius: 0;
+    box-shadow: -3px 3px 0 var(--pop);
   }
 }
 
