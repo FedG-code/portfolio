@@ -106,10 +106,9 @@ body, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn {
 }
 
 .toolbar .swatch-btn.active .swatch-dot {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 5px;
-  box-shadow: 0 0 0 2.5px var(--accent);
 }
 
 /* Individual swatch dot colours (cross-theme constants) */
@@ -258,7 +257,7 @@ body, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn {
   }
 
   .toolbar .swatch-dot { width: 18px; height: 18px; }
-  .toolbar .swatch-btn.active .swatch-dot { width: 22px; height: 22px; }
+  .toolbar .swatch-btn.active .swatch-dot { width: 26px; height: 26px; }
   .toolbar .plane-btn svg { width: 18px; height: 18px; }
   .toolbar .swatches { gap: 10px; }
 }
@@ -2650,7 +2649,6 @@ section { padding: 7rem 0; }
 }
 
 [data-theme="retro"] .toolbar .swatch-btn.active .swatch-dot {
-  box-shadow: 0 0 0 2.5px var(--pop);
 }
 
 [data-theme="retro"] .toolbar .plane-btn.active {
