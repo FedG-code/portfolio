@@ -198,9 +198,65 @@ body, .work-card, .approach-card, .about-box, .tidbit, .chip, .btn {
   .toolbar .plane-btn { transition: none; }
 }
 
-/* Mobile: shrink + hide while dragging a card */
+/* Mobile: collapsible edge tab */
 @media (max-width: 768px) {
-  .toolbar { padding: 14px 8px; }
+  .toolbar {
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    transform: translateY(-50%) translateX(var(--toolbar-slide, 55px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .toolbar.open { --toolbar-slide: 0px; }
+
+  .toolbar-tab {
+    width: 20px;
+    height: 44px;
+    margin-right: -1px;
+    position: relative;
+    z-index: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-right: none;
+    border-top-left-radius: var(--radius);
+    border-bottom-left-radius: var(--radius);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: var(--accent);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .toolbar-tab-chevron { transition: transform 0.3s ease; }
+  .toolbar.open .toolbar-tab-chevron { transform: rotate(180deg); }
+
+  .toolbar-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-right: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .toolbar.open .toolbar-panel {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+
   .toolbar .swatch-dot { width: 18px; height: 18px; }
   .toolbar .swatch-btn.active .swatch-dot { width: 22px; height: 22px; }
   .toolbar .plane-btn svg { width: 18px; height: 18px; }
@@ -942,6 +998,18 @@ section { padding: 7rem 0; }
   border-radius: 16px;
   border-color: var(--accent);
   box-shadow: 0 0 20px var(--accent-glow, rgba(201, 240, 89, 0.15));
+}
+[data-theme="neon"] .toolbar-tab {
+  border-color: var(--accent);
+  border-right: none;
+  border-radius: 16px 0 0 16px;
+}
+[data-theme="neon"] .toolbar-panel {
+  border-color: var(--accent);
+}
+[data-theme="neon"] .toolbar.open .toolbar-panel {
+  box-shadow: 0 0 20px var(--accent-glow, rgba(201, 240, 89, 0.15)),
+              0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 /* ========== BOLD THEME OVERRIDES ========== */

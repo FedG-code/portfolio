@@ -62,6 +62,52 @@
     slot.id = 'toolbar-plane-slot';
     toolbar.appendChild(slot);
 
+    // Mobile: wrap swatches + divider + plane-slot inside .toolbar-panel,
+    // prepend .toolbar-tab with chevron SVG
+    if (IS_MOBILE) {
+      var tab = document.createElement('div');
+      tab.className = 'toolbar-tab';
+      tab.setAttribute('aria-label', 'Toggle theme switcher');
+      tab.setAttribute('aria-expanded', 'false');
+      tab.innerHTML =
+        '<svg class="toolbar-tab-chevron" width="5" height="14" viewBox="0 0 6 18">' +
+        '<path d="M5 1L1 9L5 17" stroke="currentColor" stroke-width="2" ' +
+        'fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+      var panel = document.createElement('div');
+      panel.className = 'toolbar-panel';
+      panel.appendChild(swatches);
+      panel.appendChild(divider);
+      panel.appendChild(slot);
+
+      toolbar.innerHTML = '';
+      toolbar.appendChild(tab);
+      toolbar.appendChild(panel);
+
+      // Toggle open/close
+      tab.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = toolbar.classList.toggle('open');
+        tab.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+
+      // Close on outside tap
+      document.addEventListener('click', function (e) {
+        if (!toolbar.contains(e.target) && toolbar.classList.contains('open')) {
+          toolbar.classList.remove('open');
+          tab.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && toolbar.classList.contains('open')) {
+          toolbar.classList.remove('open');
+          tab.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
     // Preview panel (hover, desktop only)
     var preview = document.createElement('div');
     preview.className = 'preview-panel';
@@ -75,13 +121,13 @@
 
     document.body.appendChild(toolbar);
 
-    wireSwatchClicks(swatches);
+    wireSwatchClicks(swatches, toolbar);
     wireHoverPreview(toolbar, swatches, preview);
 
     return toolbar;
   }
 
-  function wireSwatchClicks(swatches) {
+  function wireSwatchClicks(swatches, toolbar) {
     swatches.addEventListener('click', function (e) {
       var btn = e.target.closest('.swatch-btn');
       if (!btn) return;
