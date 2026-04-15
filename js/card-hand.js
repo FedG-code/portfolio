@@ -437,22 +437,27 @@ function onPointerUp(e) {
 
   if (!wasMoved) {
     if (img && img.dataset.gif) { freezeGif(img); }
+
+    // Desktop click, or mobile second-tap on already-lifted card → play
+    var shouldPlay = !isTouch || prevLiftedCardId === cardId;
+    if (shouldPlay) {
+      disableAttractorPermanently();
+      animState = 'PLAYING';
+      el.classList.remove('dragging');
+      el.classList.add('playing');
+      dragState = null;
+      playCard(el, cardId);
+      return;
+    }
+
+    // Mobile first-tap → lift
     el.classList.remove('dragging');
     el.style.transition = '';
     el.style.transformOrigin = 'center bottom';
     el.style.zIndex = '';
     dragState = null;
     animState = 'IDLE';
-    // Touch: tap-to-lift toggle
-    if (isTouch) {
-      if (prevLiftedCardId === cardId) {
-        // Tapped the already-lifted card — stay unlifted
-      } else {
-        liftCard(el, cardId);
-      }
-    } else {
-      layoutCards();
-    }
+    liftCard(el, cardId);
     return;
   }
   if (isInPlayZone(el)) {
