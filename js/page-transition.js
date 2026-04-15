@@ -192,14 +192,14 @@ function playCard(cardEl, cardId) {
 
   var tl = gsap.timeline();
 
-  // Phase 1: Center (0->500ms)
+  // Phase 1: Center (0->300ms)
   tl.to(cardEl, {
     x: centerX, y: centerY, rotation: 0,
-    duration: 0.5, ease: 'power3.out',
+    duration: 0.3, ease: 'power3.out',
   });
 
-  // Phase 2: Wriggle (500ms->1500ms)
-  var WRIGGLE_DURATION = 1.0;
+  // Phase 2: Wriggle (300ms->1000ms)
+  var WRIGGLE_DURATION = 0.7;
   var wriggleState = { progress: 0 };
   tl.to(wriggleState, {
     progress: 1, duration: WRIGGLE_DURATION, ease: 'power2.in',
@@ -224,15 +224,15 @@ function playCard(cardEl, cardId) {
     }
   });
 
-  // Phase 3: Expand to fill viewport (1500ms->2000ms)
+  // Phase 3: Expand to fill viewport (650ms->950ms)
   tl.to(cardEl, {
     scale: expandScale, rotation: 0, x: centerX, y: centerY,
-    duration: 0.5, ease: 'power3.out',
+    duration: 0.3, ease: 'power3.out',
   });
-  tl.to(inner, { boxShadow: '0 0 0px transparent', duration: 0.15 }, '-=0.3');
+  tl.to(inner, { boxShadow: '0 0 0px transparent', duration: 0.12 }, '-=0.2');
   tl.to(dragBlurOverlay, {
-    backdropFilter: 'blur(0px)', webkitBackdropFilter: 'blur(0px)', background: 'rgba(0,0,0,0)', duration: 0.2,
-  }, '-=0.25');
+    backdropFilter: 'blur(0px)', webkitBackdropFilter: 'blur(0px)', background: 'rgba(0,0,0,0)', duration: 0.15,
+  }, '-=0.18');
 
   // Phase 4: Decompose — fade decorative elements (guarded for Home card)
   var decomposeEls = [
@@ -242,14 +242,14 @@ function playCard(cardEl, cardId) {
   ].filter(Boolean);
 
   if (decomposeEls.length) {
-    tl.to(decomposeEls, { opacity: 0, duration: 0.15, ease: 'power1.out' });
-    tl.to(inner, { borderColor: 'transparent', duration: 0.15, ease: 'power1.out' }, '<');
+    tl.to(decomposeEls, { opacity: 0, duration: 0.1, ease: 'power1.out' });
+    tl.to(inner, { borderColor: 'transparent', duration: 0.1, ease: 'power1.out' }, '<');
   } else {
-    tl.to(inner, { borderColor: 'transparent', duration: 0.15, ease: 'power1.out' });
+    tl.to(inner, { borderColor: 'transparent', duration: 0.1, ease: 'power1.out' });
   }
 
   // Phase 5: Brief pause
-  tl.to({}, { duration: 0.2 });
+  tl.to({}, { duration: 0.1 });
 
   // Phase 6: Begin page transition
   tl.call(function() {
