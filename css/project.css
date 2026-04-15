@@ -367,6 +367,10 @@
 [data-theme="brutalist"] .work-image-placeholder.warm { background: #DDD8CE; }
 [data-theme="brutalist"] .work-image-placeholder.cool { background: #D0D4DC; }
 [data-theme="brutalist"] .work-image-placeholder.fresh { background: #CED8D0; }
+
+[data-theme="brutalist"] .project-section--spaced-top {
+  padding-top: 7rem;
+}
 /* ═══════════════════════════════════════════════════════
    RETRO THEME — project.css overrides
    ═══════════════════════════════════════════════════════ */

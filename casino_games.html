@@ -66,7 +66,7 @@
       </div>
       <div class="tidbit">
         <p class="tidbit-label">Stack</p>
-        <p class="tidbit-value">PixiJS, Node.js</p>
+        <p class="tidbit-value">PixiJS, Unity, Node.js</p>
       </div>
     </div>
   </div>
@@ -113,12 +113,57 @@
   </div>
 </section>
 
-<!-- SECTION 02: MINI GAMES -->
+<!-- SECTION 1.5: UNITY GAMES -->
 <section class="project-section">
   <div class="container">
 
-    <h2 class="section-heading reveal">Sportsbook Mini Games</h2>
+    <h2 class="section-heading reveal">Unity Games</h2>
     <div class="project-content project-content--reversed reveal">
+      <div class="project-images-duo">
+        <img class="work-image" src="assets/hitfor6.gif" alt="Hit for Six gameplay" loading="lazy">
+        <img class="work-image" src="assets/hopit.gif" alt="Hop It gameplay" loading="lazy">
+      </div>
+      <div class="project-text">
+        <p>
+          Hit for Six and Hop It are the two Unity titles I shipped at Logifuture for an initiative trying the
+          Unity engine — one is a 3D cricket simulation game and the other is a 2D crash-style frog game. On Hit
+          for Six every animation is reducible to a single numeric seed. QA copies the seed when something looks
+          wrong, pastes it into a debug field to reproduce the exact delivery, then drops it into a plain CSV
+          blacklist. In production the game silently skips blacklisted seeds and retries. I also built a little
+          Unity tool for setting up the cricket deliveries — you drag the trajectory handles around in the
+          editor, the scatter zones reshuffle their landing points live as you move them, and the whole thing
+          bakes out to an animation when you're done.
+        </p>
+        <p>
+          On Hop It, if a player closes the tab mid-bet the game reopens <strong>exactly where they left off</strong>:
+          frog position, stake, track state, all rebuilt from the backend's init payload in a single branch of
+          the entry state. The thing I'm proudest of is the crashes. There's a range of loss animations, and my favourite
+          them lerps the entire scene into a storm palette for about 0.7 seconds, darkening sky, water, banks,
+          and pads through instanced shader params, then eases back. SFX are authored as animation events, so
+          when the animator retimes any of those sequences the sound moves with it and I could tune the feel of
+          each crash.
+        </p>
+        <div class="work-stats">
+          <div class="work-stat">
+            <span class="work-stat-num">2</span>
+            <span class="work-stat-label">Unity Releases</span>
+          </div>
+          <div class="work-stat">
+            <span class="work-stat-num">60k</span>
+            <span class="work-stat-label">Daily Players</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 02: MINI GAMES -->
+<section class="project-section project-section--spaced-top">
+  <div class="container">
+
+    <h2 class="section-heading reveal">Sportsbook Mini Games</h2>
+    <div class="project-content reveal">
       <div class="project-images-duo">
         <img class="work-image" src="assets/spinmini.gif" alt="Spin and Win Mini gameplay" loading="lazy">
         <img class="work-image" src="assets/ttsmini.gif" alt="Take the Shot Mini gameplay" loading="lazy">
@@ -155,7 +200,7 @@
   <div class="container">
 
     <h2 class="section-heading reveal">Sweet Smash</h2>
-    <div class="project-content reveal">
+    <div class="project-content project-content--reversed reveal">
       <div>
         <img class="work-image" src="assets/sweetsmash.gif" alt="Sweet Smash gameplay" loading="lazy">
       </div>
@@ -192,7 +237,7 @@
   <div class="container">
 
     <h2 class="section-heading reveal">Fruit Slash</h2>
-    <div class="project-content project-content--reversed reveal">
+    <div class="project-content reveal">
       <div>
         <img class="work-image" src="assets/fruitslash.gif" alt="Fruit Slash gameplay" loading="lazy">
       </div>
