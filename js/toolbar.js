@@ -2,11 +2,11 @@
 (function () {
   'use strict';
 
-  // Desktop default is brutalist, mobile default is bold — default theme sits first in the bar.
+  // Default theme is bold and sits first in the bar. Cinematic/neon are archived:
+  // their CSS, labels and preview data are kept — add them back here (and in
+  // shared.js + the <head> scripts) to re-enable.
   var IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
-  var THEMES = IS_MOBILE
-    ? ['bold', 'brutalist', 'retro', 'cinematic', 'neon']
-    : ['brutalist', 'bold', 'retro', 'cinematic', 'neon'];
+  var THEMES = ['bold', 'brutalist', 'retro'];
   var LABELS = {
     bold: 'Bold',
     brutalist: 'Brutalist',

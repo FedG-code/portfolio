@@ -20,7 +20,8 @@
 <link rel="stylesheet" href="css/cards.css">
 <script>
   var t = localStorage.getItem('portfolio-theme');
-  if (!t) t = window.matchMedia('(max-width: 768px)').matches ? 'bold' : 'brutalist';
+  // Only enabled themes; cinematic/neon are archived (CSS kept) and fall back to bold.
+  if (['bold', 'brutalist', 'retro'].indexOf(t) === -1) t = 'bold';
   document.documentElement.setAttribute('data-theme', t);
 </script>
 <!-- Google tag (gtag.js) -->
@@ -43,12 +44,6 @@
 <div class="perspective-container" id="perspectiveContainer"></div>
 <div class="fly-overlay" id="flyOverlay"></div>
 
-<!-- BRUTALIST STATUS BAR (hidden by default, shown for brutalist theme) -->
-<div class="status-bar" id="statusBar">
-  <span>STATUS: OPEN TO OPPORTUNITIES</span>
-  <span>LONDON, UK &middot; 2026</span>
-</div>
-
 <div class="spa-page active" id="page-home">
 
 <!-- HERO -->
@@ -58,7 +53,6 @@
 
   <!-- Default layout (bold/cinematic/neon/retro) -->
   <div class="container hero-default">
-    <div class="hero-badge">Open to opportunities</div>
     <h1>
       <span class="serif-line"><em>Never</em> shipped a</span>
       <span class="serif-line">bo<span class="kern-ri">r</span>ing product.</span>

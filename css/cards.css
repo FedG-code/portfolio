@@ -704,25 +704,6 @@ html.card-dragging body {
   color: #5C584F;
 }
 
-/* Blue status stripe on home card — echoes the index status bar */
-[data-theme="brutalist"] .card-inner--home::after {
-  content: 'OPEN TO OPPORTUNITIES';
-  position: absolute;
-  bottom: 22%;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  padding: 3px 10px;
-  background: #0038FF;
-  color: white;
-  font-family: 'Space Mono', monospace;
-  font-size: 5.5px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-align: center;
-}
-
 /* ── Accent Strips: hidden in brutalist ── */
 [data-theme="brutalist"] .accent-strip { display: none !important; }
 

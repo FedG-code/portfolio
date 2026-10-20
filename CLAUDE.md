@@ -32,19 +32,18 @@ js/
   - Retro: Shrikhand, Bitter, IBM Plex Mono
   - Neon: Sora, Space Mono
   - Font CSS variables (`--font-serif`, `--font-body`, `--font-mono`) are redefined per theme in `shared.css`
-- **Theme system**: Five themes cycle via button: `bold -> brutalist -> retro -> cinematic -> neon -> bold`
+- **Theme system**: Three enabled themes via toolbar swatches: `bold` (default), `brutalist`, `retro`. **Cinematic and neon are archived**: their CSS/fonts/preview data are kept but they're removed from the theme lists in `js/shared.js`, `js/toolbar.js`, and the `<head>` scripts. To re-enable, add them back to all three.
   - `data-theme` attribute on `<html>` controls the active theme (`bold` default)
   - Each theme defines its own CSS variable block in `shared.css` (`:root` for bold, `[data-theme="cinematic"]`, etc.)
   - Theme-specific overrides (hardcoded colours, border-radius, font weights, etc.) go in `[data-theme="<name>"]` selector blocks after the variable blocks
-  - `js/shared.js` has `const themes = ['bold', 'brutalist', 'retro', 'cinematic', 'neon']` — the switcher button cycles through and persists to `localStorage`
-  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash).
+  - `js/shared.js` has `const themes = ['bold', 'brutalist', 'retro']` — toolbar swatches select directly and persist to `localStorage`
+  - **Persistence**: inline `<script>` in `<head>` of every page reads `localStorage.getItem('portfolio-theme')` and sets `data-theme` before CSS loads (prevents flash). Unknown/archived stored values fall back to `bold`.
   - See [css/CLAUDE.md](css/CLAUDE.md) for per-theme design notes and line ranges.
 - **Nav**: Removed from all pages. Navigation is handled by the card-hand system only. Nav CSS is archived in `backup/nav-styles.css`.
 - **Alternate HTML layouts**:
   - `.hero-default` / `.hero-brutalist` — dual-layout hero
   - `.about-default` / `.about-brutalist` — dual-layout about
   - `.hero-panel` — retro teal panel
-  - `.status-bar` — brutalist status bar (hidden by default)
 - **Work cards**: `<a>` links in `index.html` that navigate to individual project pages; hover highlight effect (accent border + lift + shadow)
 - **JS features**: Scroll reveal (IntersectionObserver), theme switcher with localStorage
 - **Text Destruction**: See [js/CLAUDE.md](js/CLAUDE.md) for detailed destruction.js documentation (mechanics, constants, mobile-gated values, impact throttle, design fallback).

@@ -12,7 +12,8 @@ window.revealObserver = observer;
 reveals.forEach(el => observer.observe(el));
 
 // Theme switcher (direct-select via toolbar swatches)
-const themes = ['bold', 'brutalist', 'retro', 'cinematic', 'neon'];
+// Archived (CSS kept, not selectable): 'cinematic', 'neon'
+const themes = ['bold', 'brutalist', 'retro'];
 
 function setTheme(name) {
   if (themes.indexOf(name) === -1) return;

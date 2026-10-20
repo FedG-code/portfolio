@@ -20,7 +20,8 @@
 <link rel="stylesheet" href="css/cards.css">
 <script>
   var t = localStorage.getItem('portfolio-theme');
-  if (!t) t = window.matchMedia('(max-width: 768px)').matches ? 'bold' : 'brutalist';
+  // Only enabled themes; cinematic/neon are archived (CSS kept) and fall back to bold.
+  if (['bold', 'brutalist', 'retro'].indexOf(t) === -1) t = 'bold';
   document.documentElement.setAttribute('data-theme', t);
 </script>
 <!-- Google tag (gtag.js) -->

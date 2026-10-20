@@ -33,7 +33,7 @@ External: GSAP core, SplitText, Physics2DPlugin, Three.js r128, GLTFLoader
 | Section | Lines | Notes |
 |---------|-------|-------|
 | Scroll reveal (IntersectionObserver) | 1-12 | threshold 0.1, rootMargin '0px 0px -40px 0px', staggered 60ms delay, unobserves after visible |
-| Theme list | 15 | themes = ['bold','brutalist','retro','cinematic','neon'] |
+| Theme list | 16 | themes = ['bold','brutalist','retro'] (cinematic/neon archived — CSS kept, not selectable) |
 | setTheme(name) | 17-26 | Validates name, sets data-theme, persists to localStorage('portfolio-theme'), fires Toolbar.syncActive + 3 theme-change callbacks |
 | window.setTheme export | 27 | Global accessor invoked by toolbar.js swatch clicks |
 
@@ -52,12 +52,12 @@ External: GSAP core, SplitText, Physics2DPlugin, Three.js r128, GLTFLoader
 ## toolbar.js (147 lines)
 
 ### Purpose
-Builds the fixed right-edge `.toolbar` element injected into `document.body` on every live page. Contains five theme swatch buttons (direct-select, not cycling), a divider, a `#toolbar-plane-slot` marker div that plane.js adopts its button into, and a hover preview panel (desktop-only via `(hover: hover) and (pointer: fine)` media query).
+Builds the fixed right-edge `.toolbar` element injected into `document.body` on every live page. Contains three theme swatch buttons (direct-select, not cycling), a divider, a `#toolbar-plane-slot` marker div that plane.js adopts its button into, and a hover preview panel (desktop-only via `(hover: hover) and (pointer: fine)` media query).
 
 ### Constants
 | Name | Value | Notes |
 |------|-------|-------|
-| `THEMES` | `['bold','brutalist','retro','cinematic','neon']` | Rendered in this order top-to-bottom |
+| `THEMES` | `['bold','brutalist','retro']` | Rendered in this order top-to-bottom. Cinematic/neon archived (LABELS/PREVIEW entries kept for re-enable) |
 | `LABELS` | `{bold: 'Bold', ...}` | aria-label + preview panel name |
 | `PREVIEW` | Per-theme `{accent, bg, text, sub, chips[4]}` | Inline hex values for preview panel chips — mirrors the `--theme-*-accent` CSS constants (keep in sync if CSS changes) |
 

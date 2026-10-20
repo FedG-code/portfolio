@@ -1,6 +1,6 @@
 # CSS Reference Map
 
-Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic, brutalist, retro, neon). Pattern: base component styles followed by theme override blocks.
+Brief overview: 3 CSS files totaling ~3,900 lines. Five themes defined (bold, cinematic, brutalist, retro, neon); only bold (default), brutalist, retro are enabled — cinematic/neon CSS is archived in place. Pattern: base component styles followed by theme override blocks.
 
 ## shared.css (2570 lines)
 
@@ -23,13 +23,13 @@ Brief overview: 3 CSS files totaling ~3,900 lines. Five themes (bold, cinematic,
 | DOODLE DECORATION | 674-707 | .doodle positioning and animation |
 | ANIMATIONS | ~708 | @keyframes: fadeUp, pulse |
 | 3D PLANE OVERLAY | 733-740 | #plane-canvas fixed overlay |
-| THEME LAYOUT TOGGLES | 741-749 | .status-bar, .hero-brutalist, .about-brutalist, .hero-panel display toggles |
+| THEME LAYOUT TOGGLES | 741-749 | .hero-brutalist, .about-brutalist, .hero-panel display toggles |
 | NEON THEME OVERRIDES | 750-844 | Font weights 600-700, sharp corners, grain overlay, doodle hidden |
 | RESPONSIVE (general) | 845-884 | @media 900px, 768px, 600px breakpoints |
 | Destruction system | 857-865 | .destruct-char, .destruct-word rules |
 | BOLD THEME OVERRIDES | 885-1182 | Hero circle ::after, uppercase h1, work/approach/contact overrides |
 | CINEMATIC THEME OVERRIDES | 1183-1502 | Dark red accent #D6001C, Syne/Segoe UI/Commit Mono, uppercase h1 |
-| BRUTALIST THEME OVERRIDES | 1503-2184 | Blue accent #0038FF, Space Mono/Literata, single-screen flex, .hero-brutalist grid, .status-bar |
+| BRUTALIST THEME OVERRIDES | 1503-2184 | Blue accent #0038FF, Space Mono/Literata, single-screen flex, .hero-brutalist grid |
 | RETRO THEME OVERRIDES | 2185-2576 | Cream bg, red #D94230, teal #1A5C52, Shrikhand/Bitter, hero split grid, .hero-panel |
 
 ### Custom Properties (defined in :root)
@@ -52,7 +52,6 @@ All variables defined in lines 3-26:
 - `.hero-default` (display: block) / `.hero-brutalist` (display: none by default, shown in brutalist)
 - `.about-default` / `.about-brutalist` (same pattern)
 - `.hero-panel` (display: none, shown in retro)
-- `.status-bar` (display: none, shown in brutalist)
 
 ### Responsive Breakpoints
 

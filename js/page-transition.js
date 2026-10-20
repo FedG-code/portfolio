@@ -70,7 +70,7 @@ function bootstrapFromProjectPage() {
   // Collect project content nodes (everything that isn't SPA infrastructure)
   var infraIds = ['plane-canvas', 'dragBlurOverlay', 'pageContainer',
                   'handContainer', 'perspectiveContainer', 'flyOverlay',
-                  'toolbar', 'statusBar'];
+                  'toolbar'];
   var body = document.body;
   var nodesToMove = [];
 
@@ -107,12 +107,6 @@ function bootstrapFromProjectPage() {
       if (!homePage) throw new Error('No #page-home in index.html');
       homePage.classList.remove('active');
       body.insertBefore(homePage, pageContainer);
-
-      // Grab status bar if present
-      var statusBar = doc.getElementById('statusBar');
-      if (statusBar && !document.getElementById('statusBar')) {
-        body.insertBefore(statusBar, homePage);
-      }
 
       // Re-init text destruction for newly-injected home content
       if (window.TextDestruction && TextDestruction.onThemeChange) {
