@@ -25,7 +25,7 @@ var CARDS = [
   {
     id: 2, accent: 'purple',
     title: 'My Games',
-    typeLeft: 'Coffin-Likker', typeRight: 'Solo Developer',
+    typeLeft: 'Solo Dev', typeRight: 'Unity',
     icon: '\u2620',
     text: 'Stealth-horror project focused on visibility, AI behavior, and environmental tension. Set in the bayou.',
     pageUrl: 'my_games.html',
