@@ -30,7 +30,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | Switch | another case's hash while one is open switches cases |
 | Media | Casino two-clip part plays hitfor6 + hopit, split side by side on the one screen, clear of the bubble; stat chips 300k / #1; Eve overview plays knightboss.mp4; Play trailer zooms in (embed > 75% of the stage width), Esc zooms back out; Rally: big frame loops rally.mp4, "Play with sound" zooms in with an unmuted `<video>`, Esc closes; gallery University bay plays the big frame's clip (Climbing, then Rally after leaving its case) |
 | University | `#university-projects/case/rally` opens Rally; a small frame (tap, and real clicks above the labels, in any order) rotates to big and the URL names the game; from the homepage a small frame rotates first, then the case opens on it |
-| Phone | 412x700 touch: Learn more opens Casino without moving the scroll (48px stays 48px), bubble shown |
+| Phone | 390x664 touch: Learn more opens Casino as one screen (stage at the top, Back / Next and the parts bar in view); a left swipe on the bubble goes to the next part; All projects restores the 400px gallery stage |
 | Project files | redirect into the scene (also `#fishing` -> `/case/fishing`); `?flat` stays plain; `index.html?flat#<id>/case` goes to the plain page; no WebGL ends on the plain page |
 | Reduced motion | the case cuts in, clip paused with controls |
 
