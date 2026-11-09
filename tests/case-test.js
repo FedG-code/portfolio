@@ -100,6 +100,10 @@ const st = p => p.evaluate(() => ({
   const clickFrame = async (pg, name) => { const r = await pg.evaluate(n => { const l = [...document.querySelectorAll('.pin.tl')].find(e => e.textContent === n); const b = l.getBoundingClientRect(); return { x: b.left + 40, y: b.top - 25 }; }, name); await pg.mouse.click(r.x, r.y); };
   await clickFrame(p, 'Climbing Game'); await p.waitForTimeout(900); s = await st(p);
   check('clicking a small frame in the case rotates it to the big spot (Climbing part)', s.key === 'Climbing Game' && s.hash === '#university-projects/case/climbing' && s.bubble, s);
+  // any small frame, in any order (hidden selection outlines used to steal clicks: Climbing never came back)
+  const seq = [];
+  for (const n of ['Fishing Game', 'Rally Game', 'Climbing Game', 'Fishing Game', 'Climbing Game']) { await clickFrame(p, n); await p.waitForTimeout(900); seq.push([n, (await st(p)).key]); }
+  check('each small frame clicked becomes the big one', seq.every(([n, k]) => n === k), seq);
   // from the homepage: clicking the small Rally frame rotates first, then pushes in and opens Rally
   await p.goto('about:blank'); await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
   await p.click('.key[data-i="4"]'); await p.waitForTimeout(2200);

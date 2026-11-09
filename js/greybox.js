@@ -121,7 +121,9 @@ function Stage(host, w, h, o){
   function pick(cx, cy, objs){
     var r = R.domElement.getBoundingClientRect(); nd.set((cx - r.left)/r.width*2 - 1, -(cy - r.top)/r.height*2 + 1);
     ray.setFromCamera(nd, cam);
-    var h = ray.intersectObjects(objs, true)[0], o = h && h.object;
+    /* surfaces only: r128's raycaster also returns hidden objects, and outline lines count as hit up to a unit away,
+       so a hidden selection outline of one screen would steal clicks meant for its neighbour */
+    var h = ray.intersectObjects(objs, true).filter(function(x){ for (var q = x.object; q; q = q.parent) if (!q.visible) return false; return x.object.isMesh; })[0], o = h && h.object;
     while (o && !o.userData.hit) o = o.parent;
     return o ? o.userData.hit : null;
   }

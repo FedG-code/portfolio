@@ -55,7 +55,8 @@ const state = p => p.evaluate(() => ({
   let p = await (await b.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
   await p.goto(BASE + 'index.html'); await p.waitForTimeout(1200);
   await p.focus('.key[data-i="0"]');
-  await p.keyboard.press('ArrowRight'); await p.keyboard.press('ArrowRight'); await p.waitForTimeout(1700);
+  await p.keyboard.press('ArrowRight'); await p.keyboard.press('ArrowRight');
+  await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden && document.querySelector('.live').textContent; }, null, { timeout: 6000 }).catch(() => {}); await p.waitForTimeout(200);
   let s = await state(p);
   check('arrow keys select Eve of Destruction', s.key === 'Eve of Destruction' && s.active.indexOf('Eve of Destruction') === 0, s);
   check('live region says only the section name', s.live === 'Eve of Destruction', s.live);
@@ -79,7 +80,7 @@ const state = p => p.evaluate(() => ({
   check('All projects: section bar back, focus on the Eve button, no case in the URL', s.active.indexOf('Eve of Destruction') === 0 && !/\/case/.test(p.url()) && await p.evaluate(() => document.querySelector('.ckeys').hidden), { active: s.active, url: p.url() });
 
   // University Projects: three items, each opens its game in the scene
-  await p.click('.key[data-i="4"]'); await p.waitForTimeout(1800);
+  await p.click('.key[data-i="4"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
   await p.waitForSelector('.bub .its .itb', { timeout: 4000 }).catch(() => {});
   check('University Projects bubble lists three items with Open', await p.evaluate(() => [...document.querySelectorAll('.bub .its .itb')].map(a => a.getAttribute('href')).join() === 'university_projects.html#climbing,university_projects.html#rally,university_projects.html#fishing'));
   await p.click('.bub .itb[data-k="1"]');
@@ -91,21 +92,21 @@ const state = p => p.evaluate(() => ({
   check('browser Back closes the case, focus on the University button', (await state(p)).active.indexOf('University Projects') === 0 && await p.evaluate(() => document.querySelector('.ckeys').hidden));
 
   // Over the Hill opens its case
-  await p.click('.key[data-i="1"]'); await p.waitForTimeout(1800);
+  await p.click('.key[data-i="1"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
   await p.click('.bub .openb');
   await p.waitForFunction(() => location.hash === '#over-the-hill/case', null, { timeout: 5000 }).catch(() => {});
   check('Over the Hill opens its case', /#over-the-hill\/case$/.test(p.url()), p.url());
 
   // Clicking a capture opens its page like Learn more; a drag still scrubs
   await p.goto(BASE + 'index.html'); await p.waitForTimeout(1200);
-  await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800);
+  await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
   check('bubble button reads Learn more', (await p.textContent('.bub .openb')).trim().indexOf('Learn more') === 0);
   check('no dolly track label', !(await p.$('.dbg')));
   const bx = await p.locator('.st').boundingBox();
   await p.mouse.move(bx.x + bx.width * .3, bx.y + bx.height * .9); await p.mouse.down();
-  await p.mouse.move(bx.x + bx.width * .8, bx.y + bx.height * .9, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(1800);
+  await p.mouse.move(bx.x + bx.width * .8, bx.y + bx.height * .9, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
   check('dragging the stage still scrubs and snaps', (await state(p)).key !== 'Other Games' && p.url().indexOf('index.html') > 0, (await state(p)).key);
-  await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800);
+  await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
   await p.waitForSelector('.vov:not([hidden])', { timeout: 4000 }).catch(() => {});
   const ov = await p.locator('.vov:not([hidden])').first().boundingBox();
   await p.mouse.click(ov.x + ov.width / 2, ov.y + ov.height / 2);

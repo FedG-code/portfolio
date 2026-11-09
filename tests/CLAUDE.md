@@ -29,7 +29,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | Parts | Next / Back, bar click, ArrowRight (focus follows), live region "Part 2 of N: The brief", feedbot.co.uk tag |
 | Switch | another case's hash while one is open switches cases |
 | Media | Casino two-clip part plays hitfor6 + hopit; stat chips 300k / #1; Eve overview plays knightboss.mp4; Play trailer zooms in (embed > 75% of the stage width), Esc zooms back out |
-| University | `#university-projects/case/rally` opens Rally; a small frame (tap, and a real click above its label) rotates to big and the URL names the game; from the homepage a small frame rotates first, then the case opens on it |
+| University | `#university-projects/case/rally` opens Rally; a small frame (tap, and real clicks above the labels, in any order) rotates to big and the URL names the game; from the homepage a small frame rotates first, then the case opens on it |
 | Project files | redirect into the scene (also `#fishing` -> `/case/fishing`); `?flat` stays plain; `index.html?flat#<id>/case` goes to the plain page; no WebGL ends on the plain page |
 | Reduced motion | the case cuts in, clip paused with controls |
 

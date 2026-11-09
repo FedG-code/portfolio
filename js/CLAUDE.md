@@ -73,7 +73,7 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 | `setupSlots()` / `rotateTo(k, dur)` / `rotateBay(s, k, dur)` | University frames: `sec.order[k]` = slot of item k (slot 0 = big). Rotation tweens position + scale, updates `sec.scr[k].scx/sy/sw` (so `pushTarget` follows) and the selection outline's margin. `rotateBay` is the gallery's rotate-first before the push. |
 | popstate | `#<id>/case`: open (or switch from another case); anything else: close. |
 
-Gotchas: while a case is open the stage doesn't scrub but clicks still reach `tap()` (gallery's drag `start` checks `inCase()`); the case bubble is `#case-bubble` (`.bub.cbub`), the gallery's is `#guide-bubble`; phone puts the case bubble in `.cmb` under the stage.
+Gotchas: `st.pick` (greybox.js) only counts visible meshes: r128 raycasts hidden objects too, and line outlines are hit up to a unit away, so a hidden selection outline used to steal clicks meant for the next frame. While a case is open the stage doesn't scrub but clicks still reach `tap()` (gallery's drag `start` checks `inCase()`); the case bubble is `#case-bubble` (`.bub.cbub`), the gallery's is `#guide-bubble`; phone puts the case bubble in `.cmb` under the stage.
 
 ---
 
