@@ -71,7 +71,7 @@ function parse(doc, p){
 window.CaseMode = function(X){
   var st = X.st, T = X.T, clock = X.clock, host = X.host, m = X.m, plr = X.plr, bd = X.body, RM = X.RM, H = GB.STAND_H;
   var on = false, S = -1, p = null, sec = null, D = null, cur = 0, busy = false, dead = false, pushedState = false, trailerOn = false, tw = null;
-  var order = null, slots = null, extra = null, mainScr = null, look = new T.Vector3();
+  var order = null, slots = null, split = false, mainScr = null, look = new T.Vector3();
 
   /* UI: bubble, link tags, trailer button + player + close, two clip overlays */
   var bub = el('div', 'bub cbub', '<p class="h"><span class="bh"></span><span class="bp"></span></p><div class="t"></div><dl class="cstats" hidden></dl>' +
@@ -89,7 +89,7 @@ window.CaseMode = function(X){
   function onKey(e){ if (e.key === 'Escape' && trailerOn){ e.preventDefault(); closeTrailer(); } }
   document.addEventListener('keydown', onKey);
 
-  /* screens: the bay's main one shows the part's capture; a second, smaller one appears for two-clip parts */
+  /* the bay's screen shows the part's capture; a two-clip part splits it in two, side by side (Casino: Unity games, sportsbook minis) */
   function setImg(g, src, px){
     var u = g.userData, key = src + (px ? '#px' : '');
     if (u.cur === key) return; u.cur = key;
@@ -102,26 +102,30 @@ window.CaseMode = function(X){
     if (t.image && t.image.width) ready(); else t.__wait.push(ready);
   }
   var cn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
-  function rectOf(g, proj){
-    var u = g.userData, k = g.scale.x, x = g.position.x, y = g.position.y, iw = u.iw*k, ih = u.ih*k;
+  function rectOf(g, proj, full){
+    var u = g.userData, k = g.scale.x, x = g.position.x, y = g.position.y, iw = (full ? u.w : u.iw)*k, ih = (full ? u.h : u.ih)*k;
     cn[0].set(x - iw/2, y - ih/2, .04); cn[1].set(x + iw/2, y - ih/2, .04); cn[2].set(x - iw/2, y + ih/2, .04); cn[3].set(x + iw/2, y + ih/2, .04);
     var ps = cn.map(proj), xs = ps.map(function(q){ return q[0]; }), ys = ps.map(function(q){ return q[1]; });
     return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys), w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys)};
   }
   function fit(e, r){ e.style.transform = 'translate(' + r.x.toFixed(1) + 'px,' + r.y.toFixed(1) + 'px)'; e.style.width = r.w.toFixed(1) + 'px'; e.style.height = r.h.toFixed(1) + 'px'; }
-  ovs.forEach(function(o, k){ st.pin(o, null, 0, 0, {rect:function(proj){ var g = k ? extra : mainScr; if (g && g.visible) fit(o, rectOf(g, proj)); }}); });
+  ovs.forEach(function(o, k){ st.pin(o, null, 0, 0, {rect:function(proj){
+    if (!mainScr) return;
+    if (!split){ if (!k) fit(o, rectOf(mainScr, proj)); return; }
+    var r = rectOf(mainScr, proj, true), hw = r.w/2; fit(o, {x:r.x + k*hw, y:r.y, w:hw, h:r.h});
+  }}); });
   st.pin(yt, null, 0, 0, {rect:function(proj){ if (mainScr) fit(yt, rectOf(mainScr, proj)); }});
   st.pin(play, null, 0, 0, {rect:function(proj){ if (!mainScr) return; var r = rectOf(mainScr, proj); play.style.transform = 'translate(' + (r.x + r.w/2 - play.offsetWidth/2).toFixed(1) + 'px,' + (r.y + r.h/2 - play.offsetHeight/2).toFixed(1) + 'px)'; }});
   st.pin(close, null, 0, 0, {rect:function(){ close.style.transform = 'translate(' + (X.c.w - close.offsetWidth - 10) + 'px,10px)'; }});
   st.pin(tags, null, 0, 0, {rect:function(proj){
-    if (!mainScr) return; var r = rectOf(mainScr, proj);
+    if (!mainScr) return; var r = rectOf(mainScr, proj, split);
     tags.style.transform = 'translate(' + Math.max(8, r.x).toFixed(1) + 'px,' + Math.min(X.c.h - tags.offsetHeight - 6, r.y + r.h + 10).toFixed(1) + 'px)';
   }});
   /* desktop bubble: left of the screen, above the guide's head, its tail pointing down at it */
   var head = new T.Vector3();
   if (!m) st.pin(bub, null, 0, 0, {rect:function(proj){
     if (!mainScr) return;
-    var hd = proj(head.set(plr.position.x, plr.position.y + 1.15, plr.position.z)), r = rectOf(mainScr, proj);
+    var hd = proj(head.set(plr.position.x, plr.position.y + 1.15, plr.position.z)), r = rectOf(mainScr, proj, split);
     var right = Math.max(r.x - 14, hd[0] + 60), w = clamp(right - 12, 300, 500), x = clamp(right - w, 10, X.c.w - w - 10);
     bub.style.width = w + 'px';
     var t = bub.querySelector('.t'); t.style.maxHeight = Math.max(120, hd[1] - 30 - (bub.offsetHeight - t.offsetHeight)) + 'px';
@@ -234,13 +238,9 @@ window.CaseMode = function(X){
     var b = D.beats[i];
     if (order && b.item != null) rotateTo(b.item, RM ? 0 : .45);
     if (!order){
-      var two = b.caps.length > 1, c0 = b.caps[0];
+      var c0 = b.caps[0];
+      setSplit(talk && b.caps.length > 1);
       if (c0) setImg(mainScr, c0.img, c0.px);
-      if (two){
-        if (!extra){ extra = st.screen({img:b.caps[1].img, ar:16/9}, m ? 1.3 : 1.75); }
-        var ms = sec.scr[0]; extra.position.set(ms.scx + ms.sw/2 + .3 + (m ? .65 : .875), ms.sy - .2, .03); extra.visible = true;
-        setImg(extra, b.caps[1].img, b.caps[1].px);
-      } else if (extra) extra.visible = false;
     }
     tags.hidden = !talk || !b.links.length;
     var sv = !b.yt && snd(b);
@@ -249,11 +249,17 @@ window.CaseMode = function(X){
     clips(talk ? b : null);
     st.render();
   }
+  /* split: the still is hidden and the two halves (overlays, clip or still each) fill the screen's frame */
+  function setSplit(on2){
+    split = !!on2; if (mainScr) mainScr.userData.pl.visible = !split;
+    ovs.forEach(function(o){ o.classList.toggle('half', split); });
+  }
   /* the part's clip with sound (Rally): Play shows it zoomed in, with sound */
   function snd(b){ var c = null; (b.caps || []).forEach(function(q){ if (q.sound && !c) c = q; }); return c; }
   function clips(b){
     ovs.forEach(function(o, k){
       var c = !b ? null : !order ? b.caps[k] : k ? null : p.items[order.indexOf(0)];
+      if (c && !c.clip && split){ if (o.getAttribute('data-src') !== c.img){ o.setAttribute('data-src', c.img); o.innerHTML = '<img src="' + c.img + '" alt="">'; } o.hidden = false; return; }
       if (!c || !c.clip){ o.hidden = true; var v0 = o.querySelector('video'); if (v0) v0.pause(); return; }
       if (o.getAttribute('data-src') !== c.clip){
         o.setAttribute('data-src', c.clip); o.classList.toggle('px', !!c.px);
@@ -263,8 +269,8 @@ window.CaseMode = function(X){
       var v = o.querySelector('video'); if (v && !RM){ v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
     });
   }
-  function talk(){ bub.hidden = false; if (!RM) GB.restart(bub); show(cur, true); phoneTail(); }
-  function quiet(){ if (!m) bub.hidden = true; tags.hidden = true; play.hidden = true; clips(null); }
+  function talk(){ var was = !bub.hidden; bub.hidden = false; if (!RM && !was) GB.restart(bub); show(cur, true); phoneTail(); }
+  function quiet(){ if (!m) bub.hidden = true; tags.hidden = true; play.hidden = true; clips(null); setSplit(false); }
 
   function go(i, user){
     if (!on || busy || trailerOn || i < 0 || i >= D.beats.length) return;
@@ -291,8 +297,11 @@ window.CaseMode = function(X){
       cur = o.part != null ? o.part : 0;
       if (o.part == null && p.items && k != null) D.groups.forEach(function(g){ if (g.item === k && !cur) cur = g.start; });
       buildBar(); fill(cur);
+      var y0 = window.scrollY;
       X.keys.hidden = true; X.ckeys.hidden = false; X.home.classList.add('incase');
-      if (m){ X.cmb.hidden = false; }
+      /* phone: the bubble shows with the case bar, so the page under the stage changes once and doesn't shrink */
+      if (m){ X.cmb.hidden = false; bub.hidden = false; }
+      if (window.scrollY !== y0) window.scrollTo(0, y0);
       if (o.user){ try { history.pushState({cs:1}, '', '#' + p.id + '/case' + (p.items && k != null ? '/' + p.items[k].href.split('#')[1] : '')); pushedState = true; } catch(e){} }
       if (focusIn){ var fk = keys[D.beats[cur].g]; if (fk) fk.focus({preventScroll:true}); }
       X.live.textContent = p.t + ': ' + D.groups[D.beats[cur].g].t;
@@ -320,17 +329,17 @@ window.CaseMode = function(X){
     busy = true; X.setBusy(true); quiet(); bub.hidden = true;
     var s = S, ae = document.activeElement, refocus = X.home.contains(ae) || !ae || ae === document.body;
     function back(){
-      if (extra) extra.visible = false;
       if (!order) setImg(mainScr, sec.scr[0].sc.userData.src, sec.scr[0].sc.userData.px);
+      var y0 = window.scrollY;
       X.keys.hidden = false; X.ckeys.hidden = true; X.cmb.hidden = true; X.home.classList.remove('incase');
+      if (window.scrollY !== y0) window.scrollTo(0, y0);
       on = false; busy = false;
       if (refocus) X.keyEls[s].focus({preventScroll:true});
     }
     if (RM){ back(); X.atGallery(s); X.standToSpot(s, 0, done); return; }
-    tweenCam(inside(), .6, function(){
-      back(); X.setBusy(true);
-      tweenCam(X.galleryShot(s), .7, function(){ X.atGallery(s); X.standToSpot(s, .15, done); });
-    });
+    /* straight back out to the gallery shot: no push into the screen first (user, 2026-11-09) */
+    back(); X.setBusy(true);
+    tweenCam(X.galleryShot(s), .9, function(){ X.atGallery(s); X.standToSpot(s, .15, done); });
   }
 
   /* ------------------------------ trailer: zoom into the frame ------------------------------ */

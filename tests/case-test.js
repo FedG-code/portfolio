@@ -81,6 +81,10 @@ const st = p => p.evaluate(() => ({
   check('another case link while one is open switches cases', (await st(p)).hash === '#casino-games/case' && await p.evaluate(() => document.querySelector('.ckeys .key[data-g="0"] .rs').textContent) === 'Casino Games');
   await p.click('.ckeys .key[data-g="2"]'); await p.waitForTimeout(700); s = await st(p);
   check('Casino: a two-clip part plays both clips', s.clips.length === 2 && /hitfor6/.test(s.clips[0]) && /hopit/.test(s.clips[1]), s.clips);
+  // both clips share the one screen, side by side (no second screen), and the bubble doesn't cover them
+  const sp = await p.evaluate(() => { const o = [...document.querySelectorAll('.vov.half:not([hidden])')].map(e => e.getBoundingClientRect()), bb = document.querySelector('#case-bubble').getBoundingClientRect();
+    return o.length === 2 ? { n: 2, sameRow: Math.abs(o[0].top - o[1].top) < 2 && Math.abs(o[0].height - o[1].height) < 2, touching: Math.abs(o[0].right - o[1].left) < 2, bubbleClear: bb.right <= o[0].left + 2 } : { n: o.length }; });
+  check('Casino: the two clips split one screen, side by side, clear of the bubble', sp.n === 2 && sp.sameRow && sp.touching && sp.bubbleClear, sp);
   await p.click('.ckeys .key[data-g="1"]'); await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(400);
   const stats = await p.evaluate(() => [...document.querySelectorAll('.cstats dt')].map(d => d.textContent));
   check('Casino: stat chips in the bubble', stats.join() === '300k,#1', stats);
@@ -126,6 +130,17 @@ const st = p => p.evaluate(() => ({
   check('back in the gallery, Rally stays big and its clip plays', gov2 === 'assets/rally.mp4', gov2);
   check('no page errors', !errs.length, errs);
   await p.close();
+
+  // phone: Learn more keeps the page where it is (the swap under the stage used to shrink the page and snap it to the top)
+  const pc = await b.newContext({ viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+  const pp = await pc.newPage();
+  await pp.goto(BASE + 'index.html'); await pp.waitForTimeout(1500);
+  await pp.tap('.key[data-i="3"]'); await pp.waitForTimeout(2500);
+  await pp.evaluate(() => { scrollTo(0, 48); window.__ys = []; addEventListener('scroll', () => __ys.push(Math.round(scrollY))); });
+  await pp.tap('#guide-bubble .openb'); await pp.waitForTimeout(3000);
+  const ph = await pp.evaluate(() => ({ y: scrollY, ys: __ys, hash: location.hash, bubble: !document.querySelector('#case-bubble').hidden }));
+  check('phone: opening a case keeps the scroll position, bubble shown', ph.hash === '#casino-games/case' && ph.y === 48 && ph.ys.every(y => y === 48) && ph.bubble, ph);
+  await pc.close();
 
   // 5. project files
   const pr = await b.newPage();

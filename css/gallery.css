@@ -178,6 +178,9 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .cyt{background:#000; z-index:3 !important}
 .cyt iframe, .cyt video{display:block; width:100%; height:100%; border:0}
 .vov.ctl{pointer-events:auto}
+/* a two-clip part: each half of the screen holds one clip at its own ratio, on the screen's dark frame */
+.vov.half{background:transparent}
+.vov.half img, .vov.half video{object-fit:contain}
 .ckeys{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(140px, 1fr); overflow-x:auto; scrollbar-width:thin}
 .ckeys .key .rt{font-size:16px}
 .ckeys .cback{background:var(--ink); color:var(--p2)}
