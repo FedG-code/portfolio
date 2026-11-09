@@ -59,8 +59,7 @@
 
     <div class="project-content reveal">
       <div>
-        <!-- TODO: showcase video coming; replace this box with it (muted mp4 loop + poster, video[data-src]). -->
-        <div class="work-image-placeholder work-capture-tbc" role="img" aria-label="Climbing Game capture to come"><span>Capture to come</span></div>
+        <figure class="work-figure"><video class="work-image" data-src="assets/climbing.mp4" poster="assets/climbing-poster.jpg" width="960" height="464" muted loop playsinline preload="none" disablepictureinpicture aria-label="Climbing Game: the climber shimmying along and climbing up the ledges of a wall"></video></figure>
       </div>
       <div class="project-text">
         <h4>Hands first</h4>
@@ -112,8 +111,8 @@
 
     <div class="project-content reveal">
       <div>
-        <figure class="work-figure"><!-- TODO: showcase video coming (one for each of the three games); swap this still for it (muted mp4 loop + poster, video[data-src] like the other pages) and use it in the gallery bay too. -->
-        <img class="work-image" src="assets/rally.jpg" alt="Rally Game court: the front wall, the floor and the racket" loading="lazy"><figcaption>An early capture of the court.</figcaption></figure>
+        <!-- data-sound: this clip has audio (the impact sound is one of the layers). The plain page gives it controls; the case in the scene plays it with sound behind a Play button. -->
+        <figure class="work-figure"><video class="work-image" data-src="assets/rally.mp4" poster="assets/rally-poster.jpg" width="960" height="542" data-sound muted loop playsinline controls preload="none" disablepictureinpicture aria-label="Rally Game: returning the ball off the front wall as the feedback layers are added one by one"></video><figcaption>Has sound: the impact audio is one of the layers.</figcaption></figure>
       </div>
       <div class="project-text">
         <h4>Ball flight that is solved, not simulated</h4>
@@ -151,8 +150,7 @@
 
     <div class="project-content reveal">
       <div>
-        <!-- TODO: showcase video coming; swap the island preview for it (or keep the preview as a second figure). -->
-        <figure class="work-figure"><img class="work-image" src="assets/fishing-island.jpg" alt="Top-down preview of a generated island" loading="lazy"><figcaption>A generated island, seen from above in the editor tool.</figcaption></figure>
+        <figure class="work-figure"><video class="work-image" data-src="assets/fishing.mp4" poster="assets/fishing-poster.jpg" width="960" height="474" muted loop playsinline preload="none" disablepictureinpicture aria-label="Fishing Game: casting from the shore, the float drifting, and the weather turning to rain"></video></figure>
       </div>
       <div class="project-text">
         <h4>Fishing with nothing on the hook</h4>
@@ -178,6 +176,7 @@
         <p>
           The island comes from an editor tool I wrote that uses no noise at all. Seeds grow into about 90 irregular regions, which are then marked as sea, coves, hills or chasms and raised with ramps, banks and rolling domes, with a shallow shelf at every shore for the water's foam bands. The same seed and settings always give the same island, and good islands can be saved to a library and kept. The look draws on Proteus and A Short Hike: a low-resolution pixel frame, a palette that changes across a day and night cycle, and weather that glides between clear, haze, fog, overcast and rain.
         </p>
+        <figure class="work-figure"><img class="work-image" src="assets/fishing-island.jpg" alt="Top-down preview of a generated island" loading="lazy"><figcaption>A generated island, seen from above in the editor tool.</figcaption></figure>
       </div>
     </div>
   </div>

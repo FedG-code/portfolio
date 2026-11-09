@@ -34,6 +34,6 @@ One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light
 Classes styled: `.back-link`, `.css`, `.project-content`, `.project-content--reversed`, `.project-content--text`, `.project-hero`, `.project-hero-badge`, `.project-hero-desc`, `.project-hero-title`, `.project-images-duo`, `.project-link`, `.project-meta`, `.project-nav`, `.project-nav-link`, `.project-section`, `.project-text`, `.video-embed`, `.work-capture-tbc`, `.work-figure`, `.work-image`, `.work-image-placeholder`, `.work-stat`, `.work-stat-label`, `.work-stat-num`, `.work-stats`.
 
 - `.project-content` is a 1.2fr/1fr grid (media, text); `--reversed` swaps sides; `--text` is a single reading-width column for text-only blocks. All collapse to one column at 900px.
-- `.work-image` is 16:10 `object-fit: cover` (used on `<video>` loops and `<img>`); inside `.work-figure` it keeps its own ratio and gets a mono caption.
+- `.work-image` is 16:10 `object-fit: cover` (used on `<video>` loops and `<img>`); inside `.work-figure` it keeps its own ratio (University videos carry `width`/`height`) and gets a mono caption. `.project-text .work-figure` (a figure under a paragraph, the Fishing island) is capped at 24rem.
 - `.work-capture-tbc` is the dashed "Capture to come" placeholder.
 - `.project-nav-link.back-link` is the "← All projects" link; `.project-hero-title:focus-visible` shows the focus ring when the title receives focus on arrival from the gallery.

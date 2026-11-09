@@ -20,7 +20,7 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 
 ### Data
 - `H`: city, About lead line and body.
-- `P`: the five project sections in track order (About is section 0 and is not in `P`). Fields: `id` (also the URL hash), `t`, `sub`/`subM` (desktop/phone placard line), `img` (still texture), `clip` (mp4 for the motion overlay), `px` (pixel art: nearest filtering), `ar`, `alt`, `marks` (gizmo chips/boxes in the plain list preview), `href` (project page, or `null` = no Open yet), `blurb`, `spec`, `logs` (bubble facts), `items` (University Projects: three entries, placeholder captures from `phURL()`).
+- `P`: the five project sections in track order (About is section 0 and is not in `P`). Fields: `id` (also the URL hash), `t`, `sub`/`subM` (desktop/phone placard line), `img` (still texture), `clip` (mp4 for the motion overlay), `px` (pixel art: nearest filtering), `ar`, `alt`, `marks` (gizmo chips/boxes in the plain list preview), `href` (project page, or `null` = no Open yet), `blurb`, `spec`, `logs` (bubble facts), `items` (University Projects: three entries, each `img` poster + `clip` loop + `ar`; `phURL()` stands in for a missing `img`). The University overlay plays the clip of the item that is big (`secs[s].order`).
 - Section index (`G.sel`, key `data-i`) = About 0, then `P[i]` is section `i + 1`.
 
 ### Flow
@@ -65,11 +65,11 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 
 | Name | Notes |
 |------|-------|
-| `load(p)` / `parse(doc, p)` | Fetches the project file (cached; scripts don't run) and reads it: part 0 = `.project-hero-desc` with the gallery capture (`p.img/clip/px`, so the push in and out is one shot); then one part per `<p>` in `.project-content div.project-text`. Bar groups = `h2` sections when there are 2+, else the `h4`s (Over the Hill). Captures = the block's `video[data-src]` / `img.work-image` (max 2, carried forward). `.work-stats` -> chips; `.project-link` -> tags; `.video-embed iframe` -> trailer. University sections map to `items` by id (`item`). |
+| `load(p)` / `parse(doc, p)` | Fetches the project file (cached; scripts don't run) and reads it: part 0 = `.project-hero-desc` with the gallery capture (`p.img/clip/px`, so the push in and out is one shot); then one part per `<p>` in `.project-content div.project-text`. Bar groups = `h2` sections when there are 2+, else the `h4`s (Over the Hill). Captures = the block's `video[data-src]` / `img.work-image` (max 2, carried forward). `.work-stats` -> chips; `.project-link` -> tags; `.video-embed iframe` -> trailer; a `video[data-sound]` capture (Rally) -> "Play with sound" (`snd(b)`). University sections map to `items` by id (`item`). |
 | `enter(s, k, o)` | `o.inside`: start inside the screen; `o.push`: push in first (Forward); `o.cut`: no motion (reduced motion, rebuild); `o.user`: pushes `#<id>/case` to history; `o.part`: start part. Hides the section bar, builds the case bar, low shot (`lowShot()`: from left of the bay's divider to its right end; phone adds the guide's depth), `walkIn()` onto the stand, then `talk()`. If the file fails to load: the plain page (`?flat`). |
 | `show(i, talk)` / `go(i, user)` | Part i: University rotates its game big (`rotateTo`); otherwise `setImg` on the main screen, a second small screen (`extra`) for two captures, clip overlays, tags, Play button. Live region "Part i of N: heading" on user moves only. |
 | `leave()` / `exit(done)` | All projects: `history.back()` if we pushed the state (popstate closes), else replace the hash and close. Push in, restore the screen's own capture, swap bars, pull out to the gallery shot, `standToSpot`. |
-| `trailer()` / `closeTrailer()` | Zoom into the frame (`inside()`), YouTube embed over the screen, Close button + Esc (focus stays on Close: the player frame would keep Esc). |
+| `trailer()` / `closeTrailer()` | Zoom into the frame (`inside()`), YouTube embed (or, for a `data-sound` clip, a `<video controls>` played with sound; muted if the browser refuses) over the screen, Close button + Esc (focus stays on Close: the player frame would keep Esc). |
 | `setupSlots()` / `rotateTo(k, dur)` / `rotateBay(s, k, dur)` | University frames: `sec.order[k]` = slot of item k (slot 0 = big). Rotation tweens position + scale, updates `sec.scr[k].scx/sy/sw` (so `pushTarget` follows) and the selection outline's margin. `rotateBay` is the gallery's rotate-first before the push. |
 | popstate | `#<id>/case`: open (or switch from another case); anything else: close. |
 

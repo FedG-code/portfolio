@@ -106,6 +106,12 @@
   height: auto;
 }
 
+/* a figure under a paragraph (the Fishing island preview): smaller than the column */
+.project-text .work-figure {
+  max-width: 24rem;
+  margin-top: 1.5rem;
+}
+
 .work-figure figcaption {
   font-family: var(--font-mono);
   font-size: 0.7rem;

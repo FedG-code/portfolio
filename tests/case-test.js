@@ -95,6 +95,13 @@ const st = p => p.evaluate(() => ({
   // 4. University
   await p.goto('about:blank'); await p.goto(BASE + 'index.html#university-projects/case/rally'); await ready(p); s = await st(p);
   check('#university-projects/case/rally opens on Rally', s.key === 'Rally Game', s.key);
+  check('Rally: the big frame plays its loop', s.clips.join() === 'assets/rally.mp4', s.clips);
+  check('Rally: Play button reads Play with sound', await p.evaluate(() => { const b = document.querySelector('.cplay'); return !b.hidden && /Play with sound/.test(b.textContent); }));
+  await p.click('.cplay'); await p.waitForTimeout(1200);
+  const rs = await p.evaluate(() => { const v = document.querySelector('.cyt:not([hidden]) video'), r = v && v.getBoundingClientRect(), sr = document.querySelector('.st').getBoundingClientRect(); return { src: v ? v.getAttribute('src') : '', muted: v ? v.muted : null, controls: v ? v.controls : null, fill: r ? r.width / sr.width : 0, bubble: !document.querySelector('#case-bubble').hidden, close: document.activeElement.textContent.trim() }; });
+  check('Rally: Play zooms in and plays the clip with sound', rs.src === 'assets/rally.mp4' && rs.muted === false && rs.controls && rs.fill > .75 && !rs.bubble && /^Close video/.test(rs.close), rs);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(1200);
+  check('Rally: Esc closes the clip and zooms back out', await p.evaluate(() => !document.querySelector('.cyt video') && !document.querySelector('#case-bubble').hidden));
   await p.evaluate(() => window.__caseMode.tap({ s: 4, k: 2 })); await p.waitForTimeout(800); s = await st(p);
   check('clicking the small Fishing screen makes it the big one (Fishing part, URL names it)', s.key === 'Fishing Game' && s.hash === '#university-projects/case/fishing', s);
   // a real click on a small frame (just above its label) inside the case: it rotates to the big spot, no zoom
@@ -108,10 +115,15 @@ const st = p => p.evaluate(() => ({
   // from the homepage: clicking the small Rally frame rotates first, then pushes in and opens Rally
   await p.goto('about:blank'); await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
   await p.click('.key[data-i="4"]'); await p.waitForTimeout(2200);
+  const gov = await p.evaluate(() => { const v = document.querySelector('#gallery .vov:not([hidden]) video'); return v ? v.getAttribute('src') : null; });
+  check('homepage: the University bay plays the big frame\'s clip (Climbing)', gov === 'assets/climbing.mp4', gov);
   await clickFrame(p, 'Rally Game'); await p.waitForTimeout(250);
   const mid = await p.evaluate(() => location.hash);
   await ready(p); s = await st(p);
   check('homepage: a small frame rotates first (no case yet), then the case opens on it', mid === '' && s.key === 'Rally Game' && s.hash === '#university-projects/case/rally', { mid, key: s.key, hash: s.hash });
+  await p.click('.cback'); await p.waitForTimeout(3500);
+  const gov2 = await p.evaluate(() => { const v = document.querySelector('#gallery .vov:not([hidden]) video'); return v ? v.getAttribute('src') : null; });
+  check('back in the gallery, Rally stays big and its clip plays', gov2 === 'assets/rally.mp4', gov2);
   check('no page errors', !errs.length, errs);
   await p.close();
 

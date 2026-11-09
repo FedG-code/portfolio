@@ -40,15 +40,15 @@ var P = [
     href:'casino_games.html', blurb:'Three years at Logifuture shipping live web games in PixiJS and Unity WebGL.',
     spec:[['Studio','Logifuture'],['Role','Game Developer'],['Stack','PixiJS, Unity WebGL'],['Year','2023 to 2026']],
     logs:['8+ game releases, start to finish','PixiJS and Unity WebGL'] },
-  /* Climbing Game is the main item (big screen); its capture is still a placeholder */
+  /* Climbing Game is the main item (big screen). Each item: poster (img) + muted loop (clip); Rally's clip has sound (the case plays it behind a Play button) */
   { id:'university-projects', t:'University Projects', sub:'Climbing, rally and fishing prototypes in Unity', subM:'Three prototypes in Unity',
     rs:'Three Unity prototypes', href:'university_projects.html',
-    img:null, ar:16/9, alt:'Placeholder for the Climbing Game capture', marks:[{chip:'Climbing Game: capture to come'}],
+    img:null, ar:960/464, alt:'Climbing Game: the climber on a wall of ledges', marks:[{chip:'Climbing Game'}],
     blurb:'Three university prototypes, each built around one action: climbing hand over hand, returning a ball off a wall, and casting a line.',
     spec:[['Studio','University'],['Role','Solo developer'],['Stack','Unity 6, C#'],['Year','2026']],
-    items:[{t:'Climbing Game', href:'university_projects.html#climbing'},
-           {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally.jpg', ar:1043/586},
-           {t:'Fishing Game', href:'university_projects.html#fishing', img:'assets/fishing-island.jpg', ar:1}],
+    items:[{t:'Climbing Game', href:'university_projects.html#climbing', img:'assets/climbing-poster.jpg', clip:'assets/climbing.mp4', ar:960/464},
+           {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally-poster.jpg', clip:'assets/rally.mp4', ar:960/542},
+           {t:'Fishing Game', href:'university_projects.html#fishing', img:'assets/fishing-poster.jpg', clip:'assets/fishing.mp4', ar:960/474}],
     logs:[] },
   { id:'other-games', t:'Other Games', sub:'A stealth game in Unity, plus jam games, since 2025', subM:'Stealth game in Unity, plus jam games',
     img:'assets/visionsystemimg.png', clip:'assets/visionsystem.mp4', ar:800/456, alt:'Top-down stealth game with the guard vision cone drawn on the floor', marks:[{x:43.5,y:9,w:10.5,h:43,l:'Vision cone: HLSL shader'}],
@@ -56,7 +56,7 @@ var P = [
     spec:[['Studio','Independent'],['Role','Solo developer'],['Stack','Unity 6, HLSL'],['Year','2025 onwards']],
     logs:['Guard vision cone: a shader I wrote in HLSL','Built in Unity 6'] }
 ];
-P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ if (!it.img){ it.img = phURL(it.t); it.ar = 16/9; } }); p.img = p.items[0].img; } });
+P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ if (!it.img){ it.img = phURL(it.t); it.ar = 16/9; } }); p.img = p.items[0].img; p.clip = p.items[0].clip; } });
 function idxOf(id){ for (var i = 0; i < P.length; i++) if (P[i].id === id) return i; return -1; }
 
 
@@ -222,19 +222,19 @@ function buildDolly(start){
   var bub = el('div', 'pin bub' + (m ? ' side' : ''), ''); bub.id = 'guide-bubble'; host.appendChild(bub);
   /* motion on the wall: the selected screen's clip plays in an HTML layer pinned over the still texture */
   var ov = el('div', 'pin vov', ''); ov.setAttribute('aria-hidden', 'true'); ov.hidden = true; host.insertBefore(ov, host.querySelector('.pin'));
-  var ovS = -1, ovSrc = '', cn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
+  var ovS = -1, ovK = 0, ovSrc = '', cn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
   st.pin(ov, null, 0, 0, {rect:function(proj){
-    var o = secs[ovS]; if (!o) return; var tg = o.scr[0], u = tg.sc.userData, a0 = tg.scx - u.iw/2, a1 = tg.scx + u.iw/2, y0 = tg.sy - u.ih/2, y1 = tg.sy + u.ih/2;
+    var o = secs[ovS]; if (!o) return; var tg = o.scr[ovK], u = tg.sc.userData, k = tg.sc.scale.x, a0 = tg.scx - u.iw*k/2, a1 = tg.scx + u.iw*k/2, y0 = tg.sy - u.ih*k/2, y1 = tg.sy + u.ih*k/2;
     cn[0].set(a0, y0, .035); cn[1].set(a1, y0, .035); cn[2].set(a0, y1, .035); cn[3].set(a1, y1, .035);
     var ps = cn.map(proj), lx = Math.min.apply(null, ps.map(function(q){ return q[0]; })), rx = Math.max.apply(null, ps.map(function(q){ return q[0]; })), ty = Math.min.apply(null, ps.map(function(q){ return q[1]; })), by = Math.max.apply(null, ps.map(function(q){ return q[1]; }));
     ov.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'; ov.style.width = (rx - lx).toFixed(1) + 'px'; ov.style.height = (by - ty).toFixed(1) + 'px';
   }});
-  /* clips load only when their section is selected */
+  /* clips load only when their section is selected; University: the clip of the game that is big (the case may have swapped them) */
   function showOv(s){
-    var p = s > 0 ? P[s - 1] : null, src = p && !RM ? p.clip : '';
+    var p = s > 0 ? P[s - 1] : null, k = p && p.items && secs[s].order ? secs[s].order.indexOf(0) : 0, c = p && p.items ? p.items[k] : p, src = c && !RM ? c.clip : '';
     if (!src){ hideOv(); return; }
-    if (src !== ovSrc){ ovSrc = src; ov.classList.toggle('px', !!p.px); ov.innerHTML = '<video src="' + src + '" poster="' + p.img + '" muted loop playsinline autoplay preload="auto" disablepictureinpicture></video>'; }
-    ovS = s; ov.hidden = false;
+    if (src !== ovSrc){ ovSrc = src; ov.classList.toggle('px', !!c.px); ov.innerHTML = '<video src="' + src + '" poster="' + c.img + '" muted loop playsinline autoplay preload="auto" disablepictureinpicture></video>'; }
+    ovS = s; ovK = k; ov.hidden = false;
     var v = ov.querySelector('video'); if (v){ v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
   }
   function hideOv(){ ov.hidden = true; ovS = -1; var v = ov.querySelector('video'); if (v) v.pause(); }
