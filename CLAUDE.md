@@ -38,8 +38,7 @@ assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF 
 - **Content rules** (user): no availability line; gambling metrics only inside the Casino case study; don't apply `cv.md` content without asking; no major rewriting of page copy.
 - **Pages**: `over_the_hill.html` (Feedbot, built from cv.md + the sentiment-tracker repo) and `university_projects.html` (Climbing Game = main item, Fishing Game, Rally Game; anchors `#climbing`, `#fishing`, `#rally`). Each university item in the gallery bubble opens its own anchor. **No reference to AI use on the university page** (user rule).
 - **Content still to come**:
-  - **Rally Game showcase video**: the user has one coming. Swap the still (`assets/rally.jpg`) for it on `university_projects.html` (muted mp4 loop + poster) and as the Rally screen/clip in the gallery's University bay.
-  - Climbing Game capture (placeholder screen and "Capture to come" box); Fishing Game gameplay capture (only the island preview exists).
+  - **Showcase videos for all three university projects** (Climbing, Fishing, Rally): the user is making them. When each arrives, convert it to a muted mp4 loop + poster (ffmpeg recipe in `design/HANDOFF.md`) and swap it in on `university_projects.html` (`video[data-src]`, replacing the "Capture to come" box / island preview / court still) and in the gallery's University bay (`items[k].img` = poster, plus a clip; today only `scr[0]` gets a motion overlay, so the small screens need the overlay extended or stay stills).
   - Real game titles (repos only have working names), and confirmation of module/year/solo for each university project.
   - A real Feedbot dashboard capture (needs player data blurred); the page uses the public site's illustrative example.
 
