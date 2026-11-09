@@ -131,15 +131,28 @@ const st = p => p.evaluate(() => ({
   check('no page errors', !errs.length, errs);
   await p.close();
 
-  // phone: Learn more keeps the page where it is (the swap under the stage used to shrink the page and snap it to the top)
-  const pc = await b.newContext({ viewport: { width: 412, height: 700 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+  // phone: Learn more opens the case as one screen: the stage at the top, the bubble (Back / Next showing) and the parts bar inside the window
+  const pc = await b.newContext({ viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   const pp = await pc.newPage();
   await pp.goto(BASE + 'index.html'); await pp.waitForTimeout(1500);
   await pp.tap('.key[data-i="3"]'); await pp.waitForTimeout(2500);
-  const y0 = await pp.evaluate(() => { scrollTo(0, 48); window.__ys = []; addEventListener('scroll', () => __ys.push(Math.round(scrollY))); return Math.round(scrollY); });
-  await pp.tap('#guide-bubble .openb'); await pp.waitForTimeout(3000);
-  const ph = await pp.evaluate(() => ({ y: scrollY, ys: __ys, hash: location.hash, bubble: !document.querySelector('#case-bubble').hidden }));
-  check('phone: opening a case keeps the scroll position, bubble shown', ph.hash === '#casino-games/case' && y0 === 48 && ph.y === 48 && ph.ys.every(y => y === 48) && ph.bubble, { y0, ...ph });
+  await pp.tap('#guide-bubble .openb'); await pp.waitForTimeout(3500);
+  const pv = await pp.evaluate(() => { const r = e => document.querySelector(e).getBoundingClientRect();
+    return { hash: location.hash, st: Math.round(r('.st').top), nav: Math.round(r('#case-bubble .nav').bottom), keys: Math.round(r('.ckeys').bottom), ih: innerHeight, bubble: !document.querySelector('#case-bubble').hidden }; });
+  check('phone: the case fits one screen (stage at the top, Back / Next and the parts bar in view)', pv.hash === '#casino-games/case' && Math.abs(pv.st) <= 8 && pv.nav < pv.keys && pv.keys <= pv.ih + 1 && pv.bubble, pv);
+  // a sideways swipe on the bubble goes to the next part
+  const before = await pp.evaluate(() => document.querySelector('#case-bubble .bh').textContent);
+  await pp.evaluate(() => { const e = document.querySelector('#case-bubble'), r = e.getBoundingClientRect(), y = r.top + 60;
+    const t = x => new Touch({ identifier: 1, target: e, clientX: x, clientY: y });
+    e.dispatchEvent(new TouchEvent('touchstart', { touches: [t(300)], changedTouches: [t(300)], bubbles: true }));
+    e.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: [t(150)], bubbles: true })); });
+  await pp.waitForTimeout(600);
+  const after = await pp.evaluate(() => document.querySelector('#case-bubble .bh').textContent);
+  check('phone: swiping the bubble left goes to the next part', before === 'Overview' && after !== before, { before, after });
+  // All projects: the gallery stage is back to its phone height
+  await pp.tap('.cback'); await pp.waitForTimeout(3000);
+  const gh = await pp.evaluate(() => Math.round(document.querySelector('.st').getBoundingClientRect().height));
+  check('phone: back in the gallery the stage is its gallery height again', Math.abs(gh - 400) <= 4, gh);
   await pc.close();
 
   // 5. project files

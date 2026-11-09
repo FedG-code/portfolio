@@ -93,6 +93,8 @@ function Stage(host, w, h, o){
       p.el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)' + (k < 1 ? ' scale(' + k.toFixed(3) + ')' : '');
     });
   }
+  /* a new stage size on the same renderer (phone case view: a shorter stage) */
+  function resize(nw, nh){ w = nw; h = nh; R.setSize(nw, nh); cam.aspect = nw/nh; cam.updateProjectionMatrix(); render(); }
   function render(){ if (dead) return; if (q){ cancelAnimationFrame(q); q = 0; } R.render(S, cam); placePins(); }
   function later(){ if (q || dead) return; q = requestAnimationFrame(function(){ q = 0; if (!dead){ R.render(S, cam); placePins(); } }); }
   function box(sx, sy, sz, mat, x, y, z, parent){ var mm = new T.Mesh(new T.BoxGeometry(sx, sy, sz), mat); mm.position.set(x, y, z); mm.castShadow = true; mm.receiveShadow = true; (parent || S).add(mm); return mm; }
@@ -133,7 +135,7 @@ function Stage(host, w, h, o){
     S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
     ft.dispose();
   }
-  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, render:render, later:later, box:box, tex:tex, screen:screen, pin:pin, pick:pick, dispose:dispose};
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, pin:pin, pick:pick, dispose:dispose};
 }
 function capsule(T, mat, s){
   var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;

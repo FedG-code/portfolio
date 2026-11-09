@@ -118,8 +118,8 @@ window.CaseMode = function(X){
   st.pin(play, null, 0, 0, {rect:function(proj){ if (!mainScr) return; var r = rectOf(mainScr, proj); play.style.transform = 'translate(' + (r.x + r.w/2 - play.offsetWidth/2).toFixed(1) + 'px,' + (r.y + r.h/2 - play.offsetHeight/2).toFixed(1) + 'px)'; }});
   st.pin(close, null, 0, 0, {rect:function(){ close.style.transform = 'translate(' + (X.c.w - close.offsetWidth - 10) + 'px,10px)'; }});
   st.pin(tags, null, 0, 0, {rect:function(proj){
-    if (!mainScr) return; var r = rectOf(mainScr, proj, split);
-    tags.style.transform = 'translate(' + Math.max(8, r.x).toFixed(1) + 'px,' + Math.min(X.c.h - tags.offsetHeight - 6, r.y + r.h + 10).toFixed(1) + 'px)';
+    if (!mainScr) return; var r = rectOf(mainScr, proj, split), tx = m ? Math.min(X.c.w - tags.offsetWidth - 8, r.x + r.w - tags.offsetWidth) : r.x;
+    tags.style.transform = 'translate(' + Math.max(8, tx).toFixed(1) + 'px,' + Math.min(X.c.h - tags.offsetHeight - 6, r.y + r.h + 10).toFixed(1) + 'px)';
   }});
   /* desktop bubble: left of the screen, above the guide's head, its tail pointing down at it */
   var head = new T.Vector3();
@@ -133,6 +133,26 @@ window.CaseMode = function(X){
     bub.style.setProperty('--tail', clamp(hd[0] - x - 7, 14, w - 30) + 'px');
   }});
   function phoneTail(){ if (!m) return; var hd = st.proj(head.set(plr.position.x + .1, plr.position.y + 1.15, plr.position.z)); bub.style.setProperty('--tail', clamp(hd[0] - 12, 16, X.c.w - 40) + 'px'); }
+
+  /* phone case view: the stage, the bubble (its text scrolls, Back / Next always show) and the parts bar fit one screen,
+     and the page scrolls once so the stage is at the top (user, 2026-11-09: no scrolling to the end to move on) */
+  function phoneView(){
+    var V = window.innerHeight, hs = Math.round(clamp(V*.4, 230, 340));
+    X.setStageH(hs);
+    bub.style.height = Math.max(160, V - hs - X.ckeys.offsetHeight - 16) + 'px';
+    var top = X.host.getBoundingClientRect().top, over = X.ckeys.getBoundingClientRect().bottom - top - V;
+    if (over) bub.style.height = Math.max(160, bub.offsetHeight - over) + 'px';
+    window.scrollTo({top:Math.max(0, top + window.scrollY), behavior:RM ? 'auto' : 'smooth'});
+  }
+  /* phone: swipe the bubble or the stage sideways for Next / Back */
+  if (m) [bub, host].forEach(function(e){
+    var x0 = null, y0 = 0;
+    e.addEventListener('touchstart', function(ev){ x0 = on && ev.touches.length === 1 ? ev.touches[0].clientX : null; if (x0 != null) y0 = ev.touches[0].clientY; }, {passive:true});
+    e.addEventListener('touchend', function(ev){
+      if (x0 == null) return; var t = ev.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5*Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1), true);
+    }, {passive:true});
+  });
 
   /* University: three screens; the current game's is big. Clicking a small one swaps it with the big one */
   function setupSlots(){
@@ -163,12 +183,14 @@ window.CaseMode = function(X){
 
   /* camera: the low shot frames the bay from just left of its left divider (room for the bubble) to its right end */
   function lowShot(){
-    var left = m ? sec.pad.x - 1.1 : sec.l - 2.2, right = m ? sec.scx + sec.sw/2 + .3 : sec.l + sec.bw - .2;
+    /* phone: from the stand to the right edge of the bay's screens (University: all three frames) */
+    var left = m ? sec.pad.x - 1.1 : sec.l - 2.2, right = m ? Math.max.apply(null, sec.scr.map(function(o){ return o.scx + o.sw/2; })) + .3 : sec.l + sec.bw - .2;
     var fov = X.c.fov, asp = X.c.w/X.c.h, half = (right - left)/2, d = half/(Math.tan(fov*Math.PI/360)*asp);
     var cx = (left + right)/2;
     /* phone: the guide stands well in front of the wall, so the camera frames it at its own depth */
-    if (m) d += sec.pad.z;
-    return {p:new T.Vector3(cx + (m ? .1 : .25), m ? 1.3 : .85, d), l:new T.Vector3(cx, m ? 1.7 : 1.6, 0)};
+    /* (the phone case stage is short: pull back a little and look a little higher, so the sign and the guide's feet both show) */
+    if (m) d = d*1.1 + sec.pad.z;
+    return {p:new T.Vector3(cx + (m ? .1 : .25), m ? 1.5 : .85, d), l:new T.Vector3(cx, m ? 1.95 : 1.6, 0)};
   }
   function inside(){ var k = order ? order.indexOf(0) : 0; return X.pushTarget(S, k); }
   function tweenCam(to, dur, done){
@@ -299,9 +321,9 @@ window.CaseMode = function(X){
       buildBar(); fill(cur);
       var y0 = window.scrollY;
       X.keys.hidden = true; X.ckeys.hidden = false; X.home.classList.add('incase');
-      /* phone: the bubble shows with the case bar, so the page under the stage changes once and doesn't shrink */
-      if (m){ X.cmb.hidden = false; bub.hidden = false; }
-      if (window.scrollY !== y0) window.scrollTo(0, y0);
+      /* phone: the bubble shows with the case bar (the page under the stage changes once), then the case fits one screen */
+      if (m){ X.cmb.hidden = false; bub.hidden = false; phoneView(); }
+      else if (window.scrollY !== y0) window.scrollTo(0, y0);
       if (o.user){ try { history.pushState({cs:1}, '', '#' + p.id + '/case' + (p.items && k != null ? '/' + p.items[k].href.split('#')[1] : '')); pushedState = true; } catch(e){} }
       if (focusIn){ var fk = keys[D.beats[cur].g]; if (fk) fk.focus({preventScroll:true}); }
       X.live.textContent = p.t + ': ' + D.groups[D.beats[cur].g].t;
@@ -332,6 +354,7 @@ window.CaseMode = function(X){
       if (!order) setImg(mainScr, sec.scr[0].sc.userData.src, sec.scr[0].sc.userData.px);
       var y0 = window.scrollY;
       X.keys.hidden = false; X.ckeys.hidden = true; X.cmb.hidden = true; X.home.classList.remove('incase');
+      if (m){ X.setStageH(X.galleryH); bub.style.height = ''; }
       if (window.scrollY !== y0) window.scrollTo(0, y0);
       on = false; busy = false;
       if (refocus) X.keyEls[s].focus({preventScroll:true});

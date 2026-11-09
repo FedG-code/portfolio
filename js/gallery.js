@@ -138,9 +138,10 @@ function bubHTML(i, m){
 }
 /* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
 function shot(m, w, avail){
-  var b = m ? {w:358, h:500, fov:50, y:1.5, z:11.2, ly:.35, off:.4} : {w:1192, h:470, fov:34, y:2.15, z:8.6, ly:1.8, off:.7};
+  var b = m ? {w:358, h:500, fov:50, y:1.7, z:11.2, ly:.75, off:.4} : {w:1192, h:470, fov:34, y:2.15, z:8.6, ly:1.8, off:.7};
   /* desktop: the stage fills the window height (name strip above, bar below), within limits */
-  var h = m ? 500 : Math.round(clamp(avail || w * .394, 420, 900));
+  /* phone: 400 tall (was 500: the bubble and the first section buttons now show without scrolling, user 2026-11-09) */
+  var h = m ? 400 : Math.round(clamp(avail || w * .394, 420, 900));
   /* narrower desktops: pull back only part of the way (so the wall isn't tiny) and shrink the pinned HTML to match */
   /* taller than the prototype's stage (window-height desktops): pull back all the way, so the same stretch of wall shows and the extra height is floor and wall */
   var f = (b.w/b.h) / (w/h), z = m || f > 1 ? b.z * f : b.z * Math.sqrt(f), k = m ? 1 : clamp((w/b.w) * (b.z/z) * f, .72, 1);
@@ -379,7 +380,9 @@ function buildDolly(start){
     ZOUT:ZOUT, RM:RM, hideOv:hideOv, pushTarget:pushTarget, standToSpot:standToSpot,
     setBusy:function(v){ busy = v; }, busy:function(){ return busy; },
     galleryShot:function(s){ return {p:new T.Vector3(sx[s] + c.off, c.y, c.z), l:new T.Vector3(sx[s], c.ly, 0)}; },
-    atGallery:function(s){ camX = sx[s]; put(sx[s]); }}) : null;
+    atGallery:function(s){ camX = sx[s]; put(sx[s]); },
+    /* phone case view: a shorter stage; galleryH puts it back */
+    galleryH:c.h, setStageH:function(h){ if (c.h === h) return; c.h = h; host.style.height = h + 'px'; st.resize(c.w, h); }}) : null;
   /* where to start: a returning visitor pulls back out of the screen they opened; a #section link starts on that section;
      #<id>/case opens that case (from a project file, or a shared link): inside its screen, pulling out low */
   var s0 = start && start.sel >= 0 ? start.sel : 0;
