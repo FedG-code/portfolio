@@ -81,7 +81,12 @@ function rove(items, onSel){
 function setRove(items, i){ items.forEach(function(r, j){ r.tabIndex = j === i ? 0 : -1; if (j === i) r.setAttribute('aria-current', 'true'); else r.removeAttribute('aria-current'); r.classList.toggle('on', j === i); }); }
 function remember(p){ try { sessionStorage.setItem(RET_KEY, p.id); } catch(e){} }
 function takeReturn(){ var v = null; try { v = sessionStorage.getItem(RET_KEY); sessionStorage.removeItem(RET_KEY); } catch(e){} return v; }
-function hashIdx(){ return idxOf(decodeURIComponent((location.hash || '').slice(1))); }
+/* #<id> selects a section; #<id>/case opens its case in the scene (#university-projects/case/rally: that game) */
+function hashParts(){ return decodeURIComponent((location.hash || '').slice(1)).split('/'); }
+function hashIdx(){ return idxOf(hashParts()[0]); }
+function hashCase(){ var h = hashParts(), i = idxOf(h[0]); if (i < 0 || h[1] !== 'case') return null; var k = null; if (P[i].items && h[2]) P[i].items.forEach(function(it, j){ if (it.href.split('#')[1] === h[2]) k = j; }); return {s:i + 1, k:k}; }
+/* the plain list's links open the project files as plain pages (they'd otherwise send the visitor back into the scene) */
+function flatHref(h){ return h.replace(/(#|$)/, '?flat$1'); }
 
 /* ------------------------------ state ------------------------------ */
 var home = document.getElementById('gallery');
@@ -97,14 +102,14 @@ function setPV(root, p){
   root.querySelector('.pv-cap').textContent = p.blurb;
   root.querySelector('.pv-spec').innerHTML = specHTML(p.spec);
   var ol = root.querySelector('.pv-open'); if (ol) ol.remove();
-  if (p.href) root.querySelector('.pv').insertAdjacentHTML('beforeend', openLink(p, 'pv-open'));
+  if (p.href) root.querySelector('.pv').insertAdjacentHTML('beforeend', openLink({href:flatHref(p.href)}, 'pv-open'));
   root.querySelector('.pv-view').classList.toggle('go', !!p.href);
 }
 function flatList(){
   var m = home.clientWidth < PHONE;
   G.mode = 'flat'; G.api = null; home.classList.remove('g3d');
   home.innerHTML = abHTML() + '<div class="st no3d"><div class="mn"><div class="menu" role="group" aria-label="Sections">' +
-    P.map(function(p, i){ return '<a class="row' + (i ? '' : ' lead') + '" href="' + (p.href || '#' + p.id) + '" data-i="' + i + '"><span class="rt">' + p.t + '</span><span class="rs">' + (m ? p.subM : p.sub) + '</span></a>'; }).join('') +
+    P.map(function(p, i){ return '<a class="row' + (i ? '' : ' lead') + '" href="' + (p.href ? flatHref(p.href) : '#' + p.id) + '" data-i="' + i + '"><span class="rt">' + p.t + '</span><span class="rs">' + (m ? p.subM : p.sub) + '</span></a>'; }).join('') +
     '</div><figure class="pv"><div class="pv-view"><div class="pv-in"><img alt=""><div class="pv-mk"></div></div></div><figcaption class="pv-cap"></figcaption><dl class="pv-spec"></dl></figure></div></div>';
   var host = home.querySelector('.st'), rows = [].slice.call(host.querySelectorAll('.row'));
   function sel(i){ G.sel = i + 1; setRove(rows, i); setPV(host, P[i]); }
@@ -115,7 +120,7 @@ function flatList(){
   }); });
   rove(rows, function(j){ G.picked = G.moved = true; sel(j); });
   /* clicking the preview capture opens the selected section's page */
-  host.querySelector('.pv-view').addEventListener('click', function(){ var p = P[G.sel - 1]; if (p && p.href){ remember(p); location.href = p.href; } });
+  host.querySelector('.pv-view').addEventListener('click', function(){ var p = P[G.sel - 1]; if (p && p.href){ remember(p); location.href = flatHref(p.href); } });
   var h = hashIdx(); if (h >= 0) G.picked = true; sel(h >= 0 ? h : Math.max(0, G.sel - 1));
   if (h >= 0){ rows[h].focus({preventScroll:true}); G.wantFocus = true; }  /* the row may be hidden (g3d-wait); the gallery takes the focus over */
 }
@@ -131,11 +136,13 @@ function bubHTML(i){
   return '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul><p class="bs"><span>Stack</span> ' + p.spec[2][1] + '</p>' + (p.href ? openLink(p, 'openb') : '');
 }
 /* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
-function shot(m, w){
+function shot(m, w, avail){
   var b = m ? {w:358, h:500, fov:50, y:1.5, z:11.2, ly:.35, off:.4} : {w:1192, h:470, fov:34, y:2.15, z:8.6, ly:1.8, off:.7};
-  var h = m ? 500 : Math.round(clamp(w * .394, 400, 470));
+  /* desktop: the stage fills the window height (name strip above, bar below), within limits */
+  var h = m ? 500 : Math.round(clamp(avail || w * .394, 420, 900));
   /* narrower desktops: pull back only part of the way (so the wall isn't tiny) and shrink the pinned HTML to match */
-  var f = (b.w/b.h) / (w/h), z = m ? b.z * f : b.z * Math.sqrt(f), k = m ? 1 : clamp((w/b.w) * (b.z/z) * f, .72, 1);
+  /* taller than the prototype's stage (window-height desktops): pull back all the way, so the same stretch of wall shows and the extra height is floor and wall */
+  var f = (b.w/b.h) / (w/h), z = m || f > 1 ? b.z * f : b.z * Math.sqrt(f), k = m ? 1 : clamp((w/b.w) * (b.z/z) * f, .72, 1);
   return {w:w, h:h, fov:b.fov, y:b.y, ly:b.ly, off:b.off, z:z, k:k};
 }
 
@@ -149,18 +156,23 @@ function buildDolly(start){
     P.map(function(p, i){ return '<button type="button" class="key' + (i ? '' : ' lead') + '" data-i="' + (i + 1) + '" tabindex="-1"><span class="rt">' + p.t + '</span><span class="rs">' + roleYear(p) + '</span></button>'; }).join('') + '</div>';
   /* phone: the About body text sits under the stage as plain HTML; the sign keeps only the lead line */
   home.innerHTML = '<div class="st" aria-label="Gallery"></div>' +
-    (m ? '<p class="ab-m">' + H.about + '</p>' : '') + keys + '<p class="sr live" aria-live="polite"></p>';
-  var host = home.querySelector('.st'), c = shot(m, host.clientWidth);
+    (m ? '<p class="ab-m">' + H.about + '</p>' : '') + keys +
+    '<div class="cmb" hidden></div><div class="keys ckeys" role="group" aria-label="Parts" hidden></div><p class="sr live" aria-live="polite"></p>';
+  var host = home.querySelector('.st'), kb = home.querySelector('.keys');
+  /* the bar's height before first layout can read far too tall (fonts, empty stage): cap it at its usual size */
+  var avail = window.innerHeight - (host.getBoundingClientRect().top + window.scrollY) - Math.min(kb.offsetHeight, 84) - 16 - 20;
+  var c = shot(m, host.clientWidth, avail);
   host.style.height = c.h + 'px';
   var st = Stage(host, c.w, c.h, {fov:c.fov, k:c.k, sun:[-7, 13, 10], sb:24, fs:110});
   if (!st){ home.classList.remove('g3d'); flatList(); return false; }
   document.documentElement.classList.remove('g3d-wait');  /* visible before anything takes focus */
-  G.mode = m ? 'm' : 'd'; G.w = home.clientWidth;
+  G.mode = m ? 'm' : 'd'; G.w = home.clientWidth; G.h = window.innerHeight;
   var keyEls = [].slice.call(home.querySelectorAll('.key')), live = home.querySelector('.live'), busy = false, pushed = null, clock = new Clock();
   var T = st.T, M = st.M;
   /* section widths: About, then the projects (the lead bay and the three-screen bay are widest) */
-  var BW = [6.4].concat(P.map(function(p, i){ return i === 0 || p.items ? 8.0 : 6.6; })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
-  st.box(x1 - x0 + .3, 3.7, .3, M.wall, (x0 + x1)/2, 1.85, -.15);
+  var BW = [6.4].concat(P.map(function(p, i){ return m ? (i === 0 || p.items ? 8.0 : 6.6) : (i === 0 || p.items ? 9.0 : 7.6); })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
+  var SL = m ? .5 : 1.6;   /* screen's left edge from the bay's left divider (desktop: the stand sits in front of that gap) */
+  st.box(x1 - x0 + .3, 6.4, .3, M.wall, (x0 + x1)/2, 3.2, -.15);
   var x = x0, hits = []; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
   /* every bay has a stand (the player-start pad). On desktop it sits left of the screen, where the guide stands on the
      project page's low shot, so the two line up; the guide talks from its spot on the right. It steps onto the stand
@@ -180,20 +192,21 @@ function buildDolly(start){
       /* one main screen + two small, stacked to its right */
       var mw = m ? 2.7 : 3.3, smw = m ? 1.2 : 1.55, gap = m ? .3 : .4;
       sy = m ? 2.4 : 2.05; sw = mw;
-      var gl = m ? cx - (mw + gap + smw)/2 : l + .5;
+      var gl = m ? cx - (mw + gap + smw)/2 : l + SL;
       scx = gl + mw/2;
       var sx2 = gl + mw + gap + smw/2, sh2 = smw/(16/9), dy2 = sh2/2 + .1;
       p.items.forEach(function(it, k){
         var w = k ? smw : mw, px = k ? sx2 : scx, py = k ? sy + (k === 1 ? dy2 : -dy2) : sy;
         var g = st.screen({img:it.img, ar:it.ar}, w); g.position.set(px, py, .03);
-        var lab = el('span', 'pin tl', it.t); lab.setAttribute('aria-hidden', 'true'); host.appendChild(lab);
-        st.pin(lab, new T.Vector3(px - w/2 - .08, py - g.userData.h/2 - .1, .05), 0, 0, {clamp:false});
+        var lab = el('span', 'pin tl', it.t), lv = new T.Vector3(); lab.setAttribute('aria-hidden', 'true'); host.appendChild(lab);
+        /* follows its screen (the case view swaps the University screens round) */
+        st.pin(lab, null, 0, 0, {clamp:false, get:function(){ var sc = g.scale.x; return lv.set(g.position.x - (w*sc)/2 - .08, g.position.y - (g.userData.h*sc)/2 - .1, .05); }});
         scr3.push({sc:g, scx:px, sy:py, sw:w});
       });
       sc = scr3[0].sc;
     } else {
       sw = i ? 3.7 : 4.7; sy = m ? 2.35 : i ? 1.95 : 2.05;
-      scx = m ? cx : l + .5 + sw/2; sc = st.screen(p, sw); sc.position.set(scx, sy, .03);
+      scx = m ? cx : l + SL + sw/2; sc = st.screen(p, sw); sc.position.set(scx, sy, .03);
       scr3.push({sc:sc, scx:scx, sy:sy, sw:sw});
     }
     st.box(sw*.6, .3, .5, i ? M.prop : M.lead, scx, .15, 1.0);
@@ -295,12 +308,32 @@ function buildDolly(start){
   function open(s, k){
     var p = P[s - 1]; if (busy || s < 1 || !p || !p.href) return;
     var href = p.items && k != null ? p.items[k].href : p.href;
-    remember(p);
-    if (RM){ location.href = href; return; }
-    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true;
-    var p0 = st.cam.position.clone(), l0 = st.look.clone(), tpv = new T.Vector3(), tl = new T.Vector3();
-    pushed = pushTarget(s, k);
-    clock.add(.6, function(q){ var e = eio(q); tpv.copy(p0).lerp(pushed.p, e); tl.copy(l0).lerp(pushed.l, e); st.setCam(tpv, tl); st.render(); }, function(){ location.href = href; });
+    var CS = G.cs;
+    if (!CS){ remember(p); location.href = href; return; }   /* js/case.js missing: the project file as a page */
+    if (window.gtag) gtag('event', 'case_open', {destination:href});
+    if (RM){ G.sel = s; setRove(keyEls, s); CS.enter(s, k, {cut:true, user:true}); return; }
+    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv();
+    var tpv = new T.Vector3(), tl = new T.Vector3();
+    G.sel = s; setRove(keyEls, s);
+    /* University: a small frame first rotates to the big spot, then the camera pushes into it */
+    var rot = p.items && k != null && CS.rotateBay ? CS.rotateBay(s, k, .45) : 0;
+    clock.add(rot, function(){}, function(){
+      var p0 = st.cam.position.clone(), l0 = st.look.clone(), pt = pushTarget(s, k);
+      clock.add(.6, function(q){ var e = eio(q); tpv.copy(p0).lerp(pt.p, e); tl.copy(l0).lerp(pt.l, e); st.setCam(tpv, tl); st.render(); }, function(){ busy = false; CS.enter(s, k, {inside:true, user:true}); });
+    });
+  }
+  /* from the stand, step off and walk to the guide's spot on the right, then talk (bubble, clip) */
+  function standToSpot(s, pause, done){
+    var pd = secs[s].pad, zn = secs[s].zone, dz = Math.hypot(zn.x - pd.x, zn.z - pd.z);
+    busy = true;
+    walk = clock.add(pause, function(){}, function(){
+      walk = clock.add(clamp(dz/5, .5, 1.1), function(q){
+        var dn = clamp(q/.2, 0, 1), e = eio(q);
+        plr.position.set(lerp(pd.x, zn.x, e), GB.STAND_H - (GB.STAND_H - .02)*dn, lerp(pd.z, zn.z, e)); plr.rotation.y = Math.atan2(zn.x - pd.x, zn.z - pd.z);
+        body.position.y = Math.abs(Math.sin(e*dz*1.6))*.07; body.rotation.x = .2*Math.sin(Math.PI*q);
+        st.render();
+      }, function(){ busy = false; select(s, false); if (done) done(); });
+    });
   }
   /* back from the case study: start inside the screen and pull out to the section shot */
   /* ...while the guide walks in from off screen (left), steps up onto the section's stand, then walks over to its spot */
@@ -314,17 +347,7 @@ function buildDolly(start){
     G.sel = s; setRove(keyEls, s); plr.position.set(a.x, .02, a.z);
     st.setCam(pp.p, pp.l); camX = to; st.render();
     clock.add(.6, function(q){ var e = eio(q); tpv.copy(pp.p).lerp(p2, e); tl.copy(pp.l).lerp(l2, e); st.setCam(tpv, tl); st.render(); });
-    var zn = secs[s].zone, dz = Math.hypot(zn.x - pd.x, zn.z - pd.z);
-    function toSpot(){
-      walk = clock.add(.35, function(){}, function(){
-        walk = clock.add(clamp(dz/5, .5, 1.1), function(q){
-          var dn = clamp(q/.2, 0, 1), e = eio(q);
-          plr.position.set(lerp(pd.x, zn.x, e), GB.STAND_H - (GB.STAND_H - .02)*dn, lerp(pd.z, zn.z, e)); plr.rotation.y = Math.atan2(zn.x - pd.x, zn.z - pd.z);
-          body.position.y = Math.abs(Math.sin(e*dz*1.6))*.07; body.rotation.x = .2*Math.sin(Math.PI*q);
-          st.render();
-        }, function(){ busy = false; select(s, false); });
-      });
-    }
+    function toSpot(){ standToSpot(s, .35); }
     walk = clock.add(1.4, function(q){
       var w = clamp(q/.86, 0, 1), up = clamp((q - .82)/.18, 0, 1), dist = eio(w)*rt.tot, o = along(rt, dist);
       plr.position.set(o.x, .02 + (GB.STAND_H - .02)*up, o.z); plr.rotation.y = up > 0 ? lerp(o.ry, m ? .35 : -.45, up) : o.ry;
@@ -335,26 +358,42 @@ function buildDolly(start){
   var ppu = c.w / (2*c.z*Math.tan(c.fov*Math.PI/360)*(c.w/c.h)), dx0 = 0;
   function snap(){ var best = 0; sx.forEach(function(v, j){ if (Math.abs(v - camX) < Math.abs(sx[best] - camX)) best = j; }); select(best, true, true); }
   /* scrubbing: the bubble hides as soon as the camera leaves, so stale facts never slide off with it; the guide walks after the snap */
-  dragX(host, function(){ return busy; }, function(){ clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); dx0 = camX; }, function(dx){ put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); }, snap,
+  /* with a case open the stage doesn't scrub, but clicks still reach it (a small University screen becomes the big one) */
+  var inCase = function(){ return !!(G.cs && G.cs.on()); }, drag = false;
+  dragX(host, function(){ return busy; },
+    function(){ drag = !inCase(); if (!drag) return; clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); dx0 = camX; },
+    function(dx){ if (!drag) return; put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); },
+    function(){ if (drag) snap(); },
     /* clicking a capture opens its page, the same way as Learn more */
-    function(e){ var h = st.pick(e.clientX, e.clientY, hits); if (h && P[h.s - 1].href) open(h.s, h.k); },
-    function(e){ var h = st.pick(e.clientX, e.clientY, hits); host.classList.toggle('over', !!(h && P[h.s - 1].href)); });
+    function(e){ var h = st.pick(e.clientX, e.clientY, hits); if (G.cs && G.cs.on()){ G.cs.tap(h); return; } if (h && P[h.s - 1].href) open(h.s, h.k); },
+    function(e){ var h = st.pick(e.clientX, e.clientY, hits); host.classList.toggle('over', G.cs && G.cs.on() ? G.cs.canTap(h) : !!(h && P[h.s - 1].href)); });
   var wt = 0;
   host.addEventListener('wheel', function(e){
-    var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy) return;
+    var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy || (G.cs && G.cs.on())) return;
     e.preventDefault(); clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); put(clamp(camX + dd/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); clearTimeout(wt); wt = setTimeout(snap, 180);
   }, {passive:false});
   keyEls.forEach(function(kk, s){ kk.addEventListener('click', function(){ act(s); }); });
   rove(keyEls, function(j){ select(j, true, true); });
 
-  /* where to start: a returning visitor pulls back out of the screen they opened; a #section link starts on that section */
+  G.cs = window.CaseMode ? window.CaseMode({st:st, T:T, M:M, clock:clock, host:host, home:home, m:m, c:c, P:P, secs:secs, sx:sx, plr:plr, body:body,
+    live:live, gbub:bub, keys:home.querySelector('.keys:not(.ckeys)'), ckeys:home.querySelector('.ckeys'), cmb:home.querySelector('.cmb'), keyEls:keyEls,
+    ZOUT:ZOUT, RM:RM, hideOv:hideOv, pushTarget:pushTarget, standToSpot:standToSpot,
+    setBusy:function(v){ busy = v; }, busy:function(){ return busy; },
+    galleryShot:function(s){ return {p:new T.Vector3(sx[s] + c.off, c.y, c.z), l:new T.Vector3(sx[s], c.ly, 0)}; },
+    atGallery:function(s){ camX = sx[s]; put(sx[s]); }}) : null;
+  /* where to start: a returning visitor pulls back out of the screen they opened; a #section link starts on that section;
+     #<id>/case opens that case (from a project file, or a shared link): inside its screen, pulling out low */
   var s0 = start && start.sel >= 0 ? start.sel : 0;
-  if (start && start.pull) pullBack(s0); else select(s0, false);
-  if (start && start.focus) keyEls[s0].focus({preventScroll:true});
-  else if (hadFocus) keyEls[s0].focus({preventScroll:true});
+  if (start && start.cs && G.cs){ G.sel = s0; setRove(keyEls, s0); put(sx[s0]); G.cs.enter(s0, start.cs.k, {inside:!start.cs.cut, cut:!!start.cs.cut, part:start.cs.part, focus:start.focus || hadFocus}); }
+  else {
+    if (start && start.pull) pullBack(s0); else select(s0, false);
+    if (start && start.focus) keyEls[s0].focus({preventScroll:true});
+    else if (hadFocus) keyEls[s0].focus({preventScroll:true});
+  }
 
   G.api = {
-    dispose:function(){ clock.killAll(); hideOv(); ov.innerHTML = ''; st.dispose(); },
+    dispose:function(){ if (G.cs) G.cs.dispose(); clock.killAll(); hideOv(); ov.innerHTML = ''; st.dispose(); },
+    caseState:function(){ return G.cs && G.cs.on() ? G.cs.state() : null; },
     /* bfcache: coming back with the camera still pushed into a screen */
     pageshow:function(){ if (pushed){ var s = pushed.s; busy = false; pullBack(s); keyEls[s].focus({preventScroll:true}); } }
   };
@@ -372,12 +411,15 @@ function upgrade(start){
 function boot(){
   if (!home) return;
   var h = hashIdx();
-  var start = {sel:h >= 0 ? h + 1 : 0, focus:h >= 0, pull:h >= 0 && retId === P[h].id};
+  var hc = hashCase();
+  var start = {sel:h >= 0 ? h + 1 : 0, focus:h >= 0, pull:!hc && h >= 0 && retId === P[h].id, cs:hc ? {k:hc.k} : null};
   /* if Three.js isn't here yet, the pull back out of the screen waits for it (unless the visitor moves first) */
   if (!upgrade(start)){ flatList(); G.pull = start.pull; }
   /* the plain list stays hidden behind a placeholder (html.g3d-wait) while Three.js loads; show it if the
      gallery can't be built (no WebGL, script error) or Three.js takes longer than 4s */
   function unwait(){
+    /* a case link (#<id>/case) the scene can't open: the project file as a plain page */
+    var hc = hashCase(); if (hc && G.mode === 'flat'){ var it = P[hc.s - 1]; location.replace(flatHref(it.items && hc.k != null ? it.items[hc.k].href : it.href)); return; }
     var root = document.documentElement; if (!root.classList.contains('g3d-wait')) return;
     root.classList.remove('g3d-wait');
     var r = home.querySelector('.row[aria-current]');
@@ -390,14 +432,16 @@ function boot(){
   document.addEventListener('three-ready', function(){
     if (G.mode !== 'flat') return;
     var had = home.contains(document.activeElement), pull = G.pull && !G.moved; G.pull = false;
-    if (!upgrade({sel:G.picked || had ? G.sel : 0, focus:had || (G.wantFocus && !G.moved), pull:pull})) unwait();
+    var hc = !G.moved && hashCase();
+    if (!upgrade({sel:G.picked || had ? G.sel : 0, focus:had || (G.wantFocus && !G.moved), pull:pull, cs:hc ? {k:hc.k} : null})) unwait();
   });
   /* the phone shot is a breakpoint: rebuild on width changes (not height: phone URL bars resize the viewport) */
   var rt = 0;
   window.addEventListener('resize', function(){
     clearTimeout(rt); rt = setTimeout(function(){
-      if (G.mode === 'flat' || home.clientWidth === G.w) return;
-      upgrade({sel:G.sel, focus:false, pull:false});
+      if (G.mode === 'flat' || (home.clientWidth === G.w && (G.mode === 'm' || Math.abs(window.innerHeight - G.h) < 40))) return;
+      var cs = G.api && G.api.caseState();
+      upgrade({sel:G.sel, focus:false, pull:false, cs:cs ? {k:cs.k, part:cs.part, cut:true} : null});
     }, 150);
   });
   window.addEventListener('pageshow', function(e){ if (e.persisted && G.api) G.api.pageshow(); });

@@ -1,0 +1,142 @@
+/**
+ * Case test: a project's case told in the gallery's scene (js/case.js)
+ *
+ *   - 4 viewports x 5 cases (index.html#<id>/case): case bar shown, section bar hidden, one canvas, bubble shown,
+ *     one bar key per part (+ All projects), no horizontal overflow, no page errors
+ *   - parts: Next / Back, bar click, arrow keys (focus follows), live region; link tags; stat chips
+ *   - media: Casino's two-clip part plays both clips; Eve's trailer zooms the camera into the frame, Esc zooms back out
+ *   - University: a part of another game swaps that game's screen to the big one; the URL names the game
+ *   - project files: with WebGL they redirect into the scene; ?flat and no WebGL keep the plain page;
+ *     index.html?flat#<id>/case sends the visitor to the plain page
+ *   - reduced motion: the case cuts in
+ *
+ * Usage: node tests/case-test.js   (server on BASE, default http://localhost:8080)
+ */
+const { chromium } = require('playwright');
+const BASE = (process.env.BASE || 'http://localhost:8080').replace(/\/$/, '') + '/';
+const GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+const CASES = [['over-the-hill', 6], ['eve-of-destruction', 4], ['casino-games', 6], ['university-projects', 4], ['other-games', 4]];
+
+let failed = 0;
+function check(name, ok, detail) {
+  console.log((ok ? 'PASS  ' : 'FAIL  ') + name + (detail !== undefined ? '  ' + JSON.stringify(detail) : ''));
+  if (!ok) failed++;
+}
+const ready = p => p.waitForFunction(() => { const b = document.querySelector('#case-bubble'); return b && !b.hidden && b.offsetWidth > 0 && !document.querySelector('.ckeys').hidden; }, null, { timeout: 9000 }).catch(() => {});
+const st = p => p.evaluate(() => ({
+  hash: location.hash,
+  canvases: document.querySelectorAll('canvas').length,
+  bar: !!document.querySelector('.ckeys') && !document.querySelector('.ckeys').hidden,
+  sections: !!document.querySelector('.keys:not(.ckeys)') && !document.querySelector('.keys:not(.ckeys)').hidden,
+  parts: document.querySelectorAll('.ckeys .key:not(.cback)').length,
+  key: (document.querySelector('.ckeys .key.on .rt') || {}).textContent || null,
+  head: (document.querySelector('#case-bubble .bh') || {}).textContent || null,
+  part: (document.querySelector('#case-bubble .bp') || {}).textContent || null,
+  bubble: !!document.querySelector('#case-bubble') && !document.querySelector('#case-bubble').hidden,
+  live: (document.querySelector('.live') || {}).textContent || '',
+  active: document.activeElement ? document.activeElement.textContent.trim().slice(0, 40) : null,
+  overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+  clips: [...document.querySelectorAll('.vov:not([hidden]) video')].map(v => v.getAttribute('src')),
+}));
+
+(async () => {
+  let b = await chromium.launch({ args: GL });
+
+  // 1. viewports x cases
+  for (const [w, h] of [[1920, 1080], [1024, 768], [390, 844], [812, 375]]) {
+    const ctx = await b.newContext({ viewport: { width: w, height: h }, isMobile: w < 700, hasTouch: w < 900 });
+    for (const [id, parts] of CASES) {
+      const p = await ctx.newPage(); const errs = [];
+      p.on('pageerror', e => errs.push(e.message));
+      await p.goto(BASE + 'index.html#' + id + '/case'); await ready(p);
+      const s = await st(p);
+      const ok = s.bar && !s.sections && s.canvases === 1 && s.parts === parts && s.bubble && !s.overflow && !errs.length;
+      check(`${w}x${h} ${id}: case in the scene`, ok, ok ? undefined : { ...s, errs });
+      await p.close();
+    }
+    await ctx.close();
+  }
+
+  const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+
+  // 2. parts
+  await p.goto(BASE + 'index.html#over-the-hill/case'); await ready(p);
+  await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(400); let s = await st(p);
+  check('Next: first part of The brief, live region names it', s.key === 'The brief' && s.part === '1 / 2' && /^Part 2 of \d+: The brief/.test(s.live), s);
+  await p.click('#case-bubble [data-step="-1"]'); await p.waitForTimeout(400); s = await st(p);
+  check('Back: overview again', s.key === 'Overview' && s.head === 'Overview', s.key);
+  await p.click('.ckeys .key[data-g="3"]'); await p.waitForTimeout(400); s = await st(p);
+  check('bar click jumps to that part', s.key === 'Sorting bugs from requests', s.key);
+  await p.keyboard.press('ArrowRight'); await p.waitForTimeout(400); s = await st(p);
+  check('arrow key on the bar moves to the next part, focus follows', s.key === 'How the team used it' && s.active.indexOf('How the team used it') === 0, s);
+  const tag = await p.evaluate(() => [...document.querySelectorAll('.ctags a')].map(a => a.getAttribute('href')));
+  check('link tag under the screen (feedbot.co.uk)', tag.indexOf('https://www.feedbot.co.uk') >= 0, tag);
+
+  // 3. media
+  // another case's link while one is open: this one closes, that one opens (same page)
+  await p.goto(BASE + 'index.html#casino-games/case'); await p.waitForTimeout(500); await ready(p);
+  await p.waitForFunction(() => document.querySelector('.ckeys .key.on .rt') && document.querySelector('.ckeys .key[data-g="0"] .rs').textContent === 'Casino Games', null, { timeout: 9000 }).catch(() => {});
+  check('another case link while one is open switches cases', (await st(p)).hash === '#casino-games/case' && await p.evaluate(() => document.querySelector('.ckeys .key[data-g="0"] .rs').textContent) === 'Casino Games');
+  await p.click('.ckeys .key[data-g="2"]'); await p.waitForTimeout(700); s = await st(p);
+  check('Casino: a two-clip part plays both clips', s.clips.length === 2 && /hitfor6/.test(s.clips[0]) && /hopit/.test(s.clips[1]), s.clips);
+  await p.click('.ckeys .key[data-g="1"]'); await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(400);
+  const stats = await p.evaluate(() => [...document.querySelectorAll('.cstats dt')].map(d => d.textContent));
+  check('Casino: stat chips in the bubble', stats.join() === '300k,#1', stats);
+  await p.goto('about:blank'); await p.goto(BASE + 'index.html#eve-of-destruction/case'); await ready(p);
+  check('Eve: the overview plays the gallery clip', (await st(p)).clips[0] === 'assets/knightboss.mp4', (await st(p)).clips);
+  await p.click('.cplay'); await p.waitForTimeout(1200);
+  const tr = await p.evaluate(() => { const f = document.querySelector('.cyt:not([hidden]) iframe'), r = f && f.getBoundingClientRect(), sr = document.querySelector('.st').getBoundingClientRect(); return { src: f ? f.src : '', fill: r ? r.width / sr.width : 0, bubble: !document.querySelector('#case-bubble').hidden }; });
+  check('Eve: Play trailer zooms into the frame, the embed fills the stage', /youtube-nocookie\.com\/embed\/.*autoplay=1/.test(tr.src) && tr.fill > .75 && !tr.bubble, tr);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(1200);
+  check('Eve: Esc closes the trailer and zooms back out', await p.evaluate(() => !document.querySelector('.cyt iframe') && !document.querySelector('#case-bubble').hidden));
+
+  // 4. University
+  await p.goto('about:blank'); await p.goto(BASE + 'index.html#university-projects/case/rally'); await ready(p); s = await st(p);
+  check('#university-projects/case/rally opens on Rally', s.key === 'Rally Game', s.key);
+  await p.evaluate(() => window.__caseMode.tap({ s: 4, k: 2 })); await p.waitForTimeout(800); s = await st(p);
+  check('clicking the small Fishing screen makes it the big one (Fishing part, URL names it)', s.key === 'Fishing Game' && s.hash === '#university-projects/case/fishing', s);
+  // a real click on a small frame (just above its label) inside the case: it rotates to the big spot, no zoom
+  const clickFrame = async (pg, name) => { const r = await pg.evaluate(n => { const l = [...document.querySelectorAll('.pin.tl')].find(e => e.textContent === n); const b = l.getBoundingClientRect(); return { x: b.left + 40, y: b.top - 25 }; }, name); await pg.mouse.click(r.x, r.y); };
+  await clickFrame(p, 'Climbing Game'); await p.waitForTimeout(900); s = await st(p);
+  check('clicking a small frame in the case rotates it to the big spot (Climbing part)', s.key === 'Climbing Game' && s.hash === '#university-projects/case/climbing' && s.bubble, s);
+  // from the homepage: clicking the small Rally frame rotates first, then pushes in and opens Rally
+  await p.goto('about:blank'); await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
+  await p.click('.key[data-i="4"]'); await p.waitForTimeout(2200);
+  await clickFrame(p, 'Rally Game'); await p.waitForTimeout(250);
+  const mid = await p.evaluate(() => location.hash);
+  await ready(p); s = await st(p);
+  check('homepage: a small frame rotates first (no case yet), then the case opens on it', mid === '' && s.key === 'Rally Game' && s.hash === '#university-projects/case/rally', { mid, key: s.key, hash: s.hash });
+  check('no page errors', !errs.length, errs);
+  await p.close();
+
+  // 5. project files
+  const pr = await b.newPage();
+  await pr.goto(BASE + 'my_games.html'); await pr.waitForTimeout(500);
+  check('a project file redirects into the scene', /index\.html#other-games\/case$/.test(pr.url()), pr.url());
+  await pr.goto(BASE + 'university_projects.html#fishing'); await pr.waitForTimeout(500);
+  check('an item anchor redirects to that game', /index\.html#university-projects\/case\/fishing$/.test(pr.url()), pr.url());
+  await pr.goto(BASE + 'over_the_hill.html?flat'); await pr.waitForTimeout(500);
+  check('?flat keeps the plain project page', /over_the_hill\.html\?flat$/.test(pr.url()) && await pr.evaluate(() => !!document.querySelector('.project-section')), pr.url());
+  await pr.goto(BASE + 'index.html?flat#casino-games/case'); await pr.waitForTimeout(800);
+  check('index.html?flat#<id>/case sends the visitor to the plain page', /casino_games\.html\?flat$/.test(pr.url()), pr.url());
+  await pr.close(); await b.close();
+  b = await chromium.launch({ args: ['--disable-webgl', '--disable-3d-apis'] });
+  const pn = await b.newPage();
+  await pn.goto(BASE + 'eve_of_destruction.html'); await pn.waitForTimeout(5500);
+  check('no WebGL: a project file ends up as the plain page', /eve_of_destruction\.html\?flat$|eve_of_destruction\.html$/.test(pn.url()) && await pn.evaluate(() => !!document.querySelector('.project-section')), pn.url());
+  await pn.close(); await b.close();
+
+  // 6. reduced motion
+  b = await chromium.launch({ args: GL });
+  const rm = await b.newContext({ reducedMotion: 'reduce' });
+  const q = await rm.newPage();
+  await q.goto(BASE + 'index.html#casino-games/case'); await q.waitForTimeout(2500);
+  s = await st(q);
+  const rv = await q.evaluate(() => { const v = document.querySelector('.vov:not([hidden]) video'); return v ? { controls: v.controls, paused: v.paused } : null; });
+  check('reduced motion: the case cuts in, clip paused with controls', s.bubble && s.bar && rv && rv.controls && rv.paused, { s, rv });
+  await rm.close(); await b.close();
+
+  console.log(failed ? `\n${failed} check(s) failed` : '\nAll checks passed');
+  process.exit(failed ? 1 : 0);
+})().catch(e => { console.error(e); process.exit(1); });

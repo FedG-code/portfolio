@@ -1,7 +1,7 @@
 # Portfolio Site
 
 ## Structure
-Static site, no build step. The homepage is the **Dolly Gallery** (3D greybox gallery wall, implemented 2026-11-09 from the approved round 4 prototype `design/blockout/dolly-r4.html`); the project pages are separate HTML pages, upgraded to the **On Set** stage (js/onset.js, 2026-11-09).
+Static site, no build step. The homepage is the **Dolly Gallery** (3D greybox gallery wall, implemented 2026-11-09 from the approved round 4 prototype `design/blockout/dolly-r4.html`); each project's case opens **in the same scene** (js/case.js, "On Set", 2026-11-09). The project HTML files are the source of each case's text and the plain fallback pages.
 
 ```
 index.html              - Dolly Gallery homepage (name strip, About, 3D wall + guide, shot list)
@@ -12,18 +12,17 @@ over_the_hill.html      - Over the Hill / Feedbot case study
 university_projects.html - Climbing, Rally and Fishing Game (one page, one section each, in that order)
 css/
   gallery.css           - Homepage only (self-contained, one identity)
-  shared.css            - Project pages: base, tidbits, section headings, reveal (the plain case; tokens = gallery palette + green)
+  shared.css            - Plain project pages: base, tidbits, section headings, reveal (tokens = gallery palette + green)
   project.css           - Project page layout, back link
-  onset.css             - Project pages: the On Set stage (placard, bubble, beat strip, link tags, trailer, folded text)
 js/
   greybox.js            - Shared 3D stage: renderer, Stage, capsule guide, stand, Clock, drag (window.Greybox)
   gallery.js            - The gallery: data, plain list, dolly, guide, open/return
-  onset.js              - Project pages: On Set (the guide tells the case in bubbles, built from the page's HTML)
-  shared.js             - Project pages: scroll reveal, lazy mp4 loops, title focus (plain page)
+  case.js               - A case in the scene: fetches the project file, the guide tells it in bubbles, case bar, trailer, University frames
+  shared.js             - Plain project pages: scroll reveal, lazy mp4 loops, title focus
   analytics.js          - GA4 events
 assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF originals were deleted 2026-11-09; they are in git history)
 tests/gallery-test.js   - Playwright checks for the gallery and the hand-over to/from project pages
-tests/onset-test.js     - Playwright checks for the On Set project pages
+tests/case-test.js      - Playwright checks for the cases in the scene and the project files
 archive/                - Retired code, not loaded anywhere: card hand + theme switcher, paper plane, legacy backups (see archive/README.md)
 ```
 
@@ -37,16 +36,16 @@ archive/                - Retired code, not loaded anywhere: card hand + theme s
 - **Section order** (user): About, Over the Hill, Eve of Destruction, Casino Games, University Projects, Other Games. Over the Hill leads.
 - **Opening a section**: the bubble's "Learn more" button, a click on the capture itself, or Enter on an already-selected section button. All push the camera into the screen first.
 - **One identity**: no theme switcher. **Green is the one signal colour** (user, 2026-11-09; replaced orange): it marks what is selected, what you can act on, and the debug layer. Bright `#2BD957` only on ink or the dark chip; on paper `#0E7F31` for bars/outlines/underlines and `#0B7A2E` for text. Debug marks and selection differ by shape: a debug mark is a thin outline with a mono chip, a selection is a solid bar or a doubled outline (green line + dark line). Archivo (variable width) + IBM Plex Mono.
-- **Stands**: every gallery bay has a stand (the player-start pad, raised, thin green ring) to the left of its screen, the same spot as on the project page. The guide talks from its spot on the right; it steps onto the stand only when it walks in from off screen (coming back from a project page), pauses, then walks to its spot (user, 2026-11-09).
-- **Project pages = On Set** (direction C, user 2026-11-09): low shot of the section's bay; the guide on its stand left of the screen tells the case in its bubble, one paragraph per beat (Back / Next, dots), the screen shows that part's capture; a beat strip under the stage jumps between parts (choosing a part never moves the camera: the bubble and capture change and the guide hops). University Projects = one set, strip = Overview + the three games; `#climbing/#rally/#fishing` land on that game. Media: clips play on the screen; a part with two clips gets a second, smaller screen; stats are chips in the bubble; links are small tags under the screen; Eve's trailer is a Play button over the poster that opens the embed over the screen. The plain HTML stays the source and the no-WebGL / `?flat` page; with the set it is folded into "The whole case as text". The copy is unchanged (a content pass, bullets, Over the Hill first, comes later).
+- **Stands**: every gallery bay has a stand (the player-start pad, raised, thin green ring) to the left of its screen (desktop bays are about 1m wider for it). In the gallery the guide talks from its spot on the right; in a case it stands on the stand. It steps onto the stand only when it walks in from off screen (opening a case); leaving a case it steps off and walks to its spot (user, 2026-11-09).
+- **One page, one scene** (user 2026-11-09): no page load between the gallery and a case. A case = low shot of the section's bay; the guide on the stand tells the case in its bubble, one paragraph per part (Back / Next, dots), the screen shows that part's capture. The section bar becomes the case bar ("← All projects" + the parts); choosing a part never moves the camera (bubble and capture change, the guide hops). University Projects: bar = Overview + the three games; the current game's frame is big; clicking a small frame (in the case: rotate, no zoom; from the gallery: rotate first, then push in) swaps it with the big one; leaving keeps the last game big. Media: clips play on the screen; a part with two clips gets a second, smaller screen; stats are chips in the bubble; links are small tags under the screen; Eve's trailer: Play zooms the camera into the frame and plays it there (Close / Esc zooms back out). No "whole case as text" box (user: in the way). Desktop stage fills the window height. The copy is unchanged (a content pass, bullets, Over the Hill first, comes later).
 - **HTML first**: `index.html` ships About + a plain list; Three.js r128 (cdnjs, async) upgrades it. Without WebGL, or with `?flat`, the list stays.
 - **One WebGL context** on the page. The phone shot is a breakpoint (stage < 640px), not a second canvas.
-- **Open / return**: Open pushes the camera into the screen and sets `sessionStorage['dolly-return'] = id`, then loads the project page, which consumes the key, starts inside its screen and pulls back out while the guide walks in onto the stand (a direct link skips the zoom; the guide still walks in). The back link (`← All projects`) pushes into the project's screen, sets the key, and loads `index.html#<section-id>`; the gallery pulls back out, the guide walks in, and focus goes to that section's button. Rejected, don't bring back: the title flight, and round 2's "lower dolly track" for project pages.
-- **Media**: muted H.264 mp4 loops (ffmpeg recipe in `design/HANDOFF.md`), loaded only when needed: the gallery overlay loads the selected section's clip only; project pages play only the shown part's clip on the set (the folded text's clips load near the viewport, as before).
+- **Open / close**: Learn more (or a click on a capture, or Enter on a selected section) pushes the camera into the screen, the case opens there and the camera pulls back out to the low shot while the guide walks in from off screen onto the stand. URL `index.html#<id>/case` (`#university-projects/case/<game>`), pushed to history: browser Back closes the case. "← All projects" pushes in, pulls out to the gallery shot, the guide steps off the stand and walks to its spot, focus returns to the section's button. Opening `index.html#<id>/case` directly starts inside the screen. Rejected, don't bring back: the title flight, round 2's "lower dolly track", and separate project pages with a page load.
+- **Media**: muted H.264 mp4 loops (ffmpeg recipe in `design/HANDOFF.md`), loaded only when needed: the gallery overlay loads the selected section's clip only; a case plays only the shown part's clips; plain project pages load clips near the viewport.
 - **Content rules** (user): no availability line; gambling metrics only inside the Casino case study; don't apply `cv.md` content without asking; no major rewriting of page copy.
 - **Pages**: `over_the_hill.html` (Feedbot, built from cv.md + the sentiment-tracker repo) and `university_projects.html` (order: Climbing Game = main item, Rally Game, Fishing Game last; anchors `#climbing`, `#rally`, `#fishing`). Each university item in the gallery bubble opens its own anchor. **No reference to AI use on the university page** (user rule).
 - **Content still to come**:
-  - **Showcase videos for all three university projects** (Climbing, Fishing, Rally): the user is making them. When each arrives, convert it to a muted mp4 loop + poster (ffmpeg recipe in `design/HANDOFF.md`) and swap it in on `university_projects.html` (`video[data-src]`, replacing the "Capture to come" box / island preview / court still; the On Set screen picks it up from the HTML. For Climbing also change `data-onset-img="ph:Climbing Game"` on `<body>` to the poster) and in the gallery's University bay (`items[k].img` = poster, plus a clip; today only `scr[0]` gets a motion overlay, so the small screens need the overlay extended or stay stills).
+  - **Showcase videos for all three university projects** (Climbing, Fishing, Rally): the user is making them. When each arrives, convert it to a muted mp4 loop + poster (ffmpeg recipe in `design/HANDOFF.md`) and swap it in on `university_projects.html` (`video[data-src]`, replacing the "Capture to come" box / island preview / court still; the case in the scene reads it from that HTML) and in the gallery's University bay (`items[k].img` = poster, plus a clip; today only `scr[0]` gets a motion overlay, so the small screens need the overlay extended or stay stills).
   - Real game titles (repos only have working names), and confirmation of module/year/solo for each university project.
   - A real Feedbot dashboard capture (needs player data blurred); the page uses the public site's illustrative example.
 
@@ -69,10 +68,10 @@ After visual changes, check whether port 8080 is already serving (`curl -s -o /d
 
 ```bash
 node tests/gallery-test.js
-node tests/onset-test.js
+node tests/case-test.js
 ```
 
-Headless Chromium needs `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` for WebGL (the tests pass them). The plain case (folded text, `?flat`) still uses `.reveal` (opacity 0 until scrolled into view): override it before full-page screenshots. Delete screenshot files after verifying.
+Headless Chromium needs `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` for WebGL (the tests pass them). The plain project pages (`?flat`) still use `.reveal` (opacity 0 until scrolled into view): override it before full-page screenshots. Delete screenshot files after verifying.
 
 ### Playwright Tips
 - **Running JS on page**: `npx playwright-cli eval "() => { ... }"`.
@@ -83,7 +82,7 @@ Headless Chromium needs `--use-gl=angle --use-angle=swiftshader --enable-unsafe-
 - No build tools or bundler: static HTML/CSS/JS only
 - Homepage styles in `css/gallery.css`; project page styles in `css/shared.css` + `css/project.css`
 - Use CSS custom properties for colours; never hardcode colour values in element styles
-- Project pages are fixed to `data-theme="bold"`; their back link must point to `index.html#<section-id>` and `<body data-section>` must be that id (ids in `P` in js/gallery.js). `data-onset-img` / `data-onset-clip` / `data-onset-px` on `<body>` = the gallery screen's capture for that section (the first frame of the hand-over); `ph:<label>` uses the gallery's placeholder.
+- Project files are fixed to `data-theme="bold"`. Each has an inline `<head>` script that, with WebGL and without `?flat`, redirects to `index.html#<section-id>/case` (plus `/<item>` for a `#item` anchor); keep its id in step with `P` in js/gallery.js. Their back link points to `index.html#<section-id>`. js/case.js parses their markup (`.project-hero-desc`, `.project-section`, `.project-content div.project-text` p/h4, `.work-stats`, `.project-link`, `.video-embed iframe`): keep that structure when editing copy.
 - `@playwright/cli` for screenshots (`npm install -g @playwright/cli@latest` if not installed)
 
 ## Preferences

@@ -5,9 +5,9 @@ Overview: no build step, no modules, all IIFEs. Three.js r128 comes from cdnjs (
 | File | Loaded by | Purpose |
 |------|-----------|---------|
 | `greybox.js` (~175 lines) | `index.html`, project pages | Shared 3D stage (`window.Greybox`): `renderer()`, `Stage`, `capsule`, `stand`, `Clock`, `phURL`, `dragX`, easing helpers |
-| `gallery.js` (~400 lines) | `index.html` | The Dolly Gallery homepage |
-| `onset.js` (~400 lines) | project pages | On Set: the guide tells the case in bubbles, built from the page's own HTML |
-| `shared.js` (~66 lines) | project pages | Scroll reveal, lazy mp4 loops, title focus (plain page) |
+| `gallery.js` (~450 lines) | `index.html` | The Dolly Gallery homepage |
+| `case.js` (~390 lines) | `index.html` | A case in the scene (`window.CaseMode`): parses the project file, bubble, case bar, trailer, University frames, URL |
+| `shared.js` (~63 lines) | project files (plain pages) | Scroll reveal, lazy mp4 loops, title focus |
 | `analytics.js` (~57 lines) | all pages | GA4 events: case_open, email_click, social_click, scroll_depth |
 
 Retired code (card hand, page transitions, title flight, theme toolbar, paper plane, text destruction) is in `archive/` (see archive/README.md); none of it is loaded.
@@ -49,7 +49,7 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 - The shot list is the keyboard route: roving tabindex, arrows/Home/End select, Enter on the selected section opens.
 - `.live` (`aria-live=polite`, visually hidden) gets only the section name, and only on user-driven moves.
 - The bubble (`#guide-bubble`) is the `aria-describedby` of the active key. Wall placards (`.tp`) are `aria-hidden` and not focusable.
-- Return focus: the section's key. On the project page `onset.js` focuses the title (or, for `#item`, that game's strip button) when it consumed `dolly-return`.
+- Return focus: the section's key. Opening a case moves focus to its current part on the case bar; closing returns it to the section's key.
 - `prefers-reduced-motion`: `Clock.add` completes tweens instantly, no walk, no bubble pop, no motion overlay, no push/pull.
 
 ### Gotchas
@@ -60,38 +60,26 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 
 ---
 
-## onset.js (project pages)
-Built from direction C of `design/work-pages/work-pages.html` (section C, `makeSet`). Grep for the names below.
+## case.js (a case in the scene)
+"On Set" (direction C) in the gallery's own scene. `gallery.js` hands it the scene as `X` (`G.cs = CaseMode({...})`: stage, clock, guide, `secs`, `sx`, bars, `pushTarget`, `standToSpot`, `galleryShot`, `atGallery`, `setBusy`). Grep for the names below.
 
-### Page contract
-- `<body data-section="<P id>" data-onset-img data-onset-clip data-onset-px>`: the section id (must match the back link hash) and the gallery screen's capture (first frame of the hand-over; `ph:<label>` = `GB.phURL`).
-- `<head>`: inline script adds `html.os-wait` (unless `?flat` / no WebGL support); Three.js async with `three-ready` / `three-failed` events. Scripts at the end: `shared.js`, `greybox.js`, `onset.js` (shared.js must run first: it reads `dolly-return` before onset.js consumes it).
-
-### Flow
-1. Arrival: `fromGallery` = `sessionStorage['dolly-return'] === data-section` (the key is removed). `hashEl` = `#climbing` etc.
-2. `upgrade()` (now, or on `three-ready`): checks `GB.renderer()` before touching the DOM, then `parse()` -> `buildDOM()` -> `build()` -> `api.arrive('gallery' | 'walk')`. Sets `html.os-on`; `data-os-arrive` records the mode (tests read it). If `build` throws after the DOM moved, it sets `sessionStorage['os-failed']` and reloads once as the plain page.
-3. Fallback (`?flat`, no WebGL, `three-failed`, 4s): `unwait()` shows the plain page and calls `window.planFocus()` (shared.js).
-
-### Key pieces
 | Name | Notes |
 |------|-------|
-| `parse()` | Beats from the HTML: beat 0 = `.project-hero-desc` with the gallery capture; then one beat per `<p>` in each `.project-content div.project-text`. Groups (strip keys) = `h2` sections when the page has 2+, else the `h4`s (Over the Hill). Captures = the block's `video[data-src]` / `img.work-image` / `.work-capture-tbc` (max 2; carried forward). `.work-stats` -> chips on the block's last beat. `.project-link`s -> tags on the section's beats (a section with no text: every beat). `.video-embed iframe` -> trailer on the section's first beat (no text: the previous beat). |
-| `buildDOM()` | Placard (badge, the real `h1` moved in, tidbit chips), link tags, Play trailer button, bubble (`#os-bubble`), phone bubble slot `.os-mb`, beat strip `.os-keys` (roving tabindex, arrows/Home/End), live region `.os-live`. Moves the page's content into `<details class="os-text">`. Back link click -> `api.leave(href)`. |
-| `fill(i)` / `go(i, user)` | Bubble text, `k / n` and dots within the part, stats, tags, strip state; the live region says "Part i of N: heading" on user moves only. |
-| `build()` | The set: `GB.Stage`, back wall + dividers, screens (`L1` one, `L2` main + smaller), stand + guide left of the screen, pins (placard, tags, play, trailer, clip overlays, desktop bubble above the guide with its text height capped to fit). Phone (< 640) = bubble under the stage. Rebuilt on width change (same renderer). |
-| `arrive(mode)` | `gallery`: start inside the screen (`inside()`, framed like the gallery's `pushTarget`), pull out to the low shot while `walkIn()`; `walk`: low shot + `walkIn()`; reduced motion / `cut`: guide on the stand at once. `.os-busy` hides placard, tags and play during camera moves. |
-| `leave(href)` | Sets `dolly-return`, pushes into the screen (0.6s), loads the gallery. Interrupts a walk-in. bfcache `pageshow` pulls back out. |
+| `load(p)` / `parse(doc, p)` | Fetches the project file (cached; scripts don't run) and reads it: part 0 = `.project-hero-desc` with the gallery capture (`p.img/clip/px`, so the push in and out is one shot); then one part per `<p>` in `.project-content div.project-text`. Bar groups = `h2` sections when there are 2+, else the `h4`s (Over the Hill). Captures = the block's `video[data-src]` / `img.work-image` (max 2, carried forward). `.work-stats` -> chips; `.project-link` -> tags; `.video-embed iframe` -> trailer. University sections map to `items` by id (`item`). |
+| `enter(s, k, o)` | `o.inside`: start inside the screen; `o.push`: push in first (Forward); `o.cut`: no motion (reduced motion, rebuild); `o.user`: pushes `#<id>/case` to history; `o.part`: start part. Hides the section bar, builds the case bar, low shot (`lowShot()`: from left of the bay's divider to its right end; phone adds the guide's depth), `walkIn()` onto the stand, then `talk()`. If the file fails to load: the plain page (`?flat`). |
+| `show(i, talk)` / `go(i, user)` | Part i: University rotates its game big (`rotateTo`); otherwise `setImg` on the main screen, a second small screen (`extra`) for two captures, clip overlays, tags, Play button. Live region "Part i of N: heading" on user moves only. |
+| `leave()` / `exit(done)` | All projects: `history.back()` if we pushed the state (popstate closes), else replace the hash and close. Push in, restore the screen's own capture, swap bars, pull out to the gallery shot, `standToSpot`. |
+| `trailer()` / `closeTrailer()` | Zoom into the frame (`inside()`), YouTube embed over the screen, Close button + Esc (focus stays on Close: the player frame would keep Esc). |
+| `setupSlots()` / `rotateTo(k, dur)` / `rotateBay(s, k, dur)` | University frames: `sec.order[k]` = slot of item k (slot 0 = big). Rotation tweens position + scale, updates `sec.scr[k].scx/sy/sw` (so `pushTarget` follows) and the selection outline's margin. `rotateBay` is the gallery's rotate-first before the push. |
+| popstate | `#<id>/case`: open (or switch from another case); anything else: close. |
 
-### Gotchas
-- `html.os-wait` hides the plain page; remove it **before** `build()` measures the stage (hidden = width 0 = phone shot).
-- The desktop bubble is a `.pin` inside the stage; on phone the same element moves to `.os-mb` and loses `.pin`.
-- Don't give anything an id equal to a section id.
+Gotchas: while a case is open the stage doesn't scrub but clicks still reach `tap()` (gallery's drag `start` checks `inCase()`); the case bubble is `#case-bubble` (`.bub.cbub`), the gallery's is `#guide-bubble`; phone puts the case bubble in `.cmb` under the stage.
 
 ---
 
-## shared.js (project pages)
+## shared.js (plain project pages)
 - Scroll reveal (`.reveal` -> `.visible`), `window.revealObserver`.
-- `window.planFocus()`: if `sessionStorage['dolly-return']` is set, focus `.project-hero-title` (tabindex=-1), or, when the URL has `#item`, that section's `.section-heading`. Runs at once unless `html.os-wait` (then onset.js calls it if the plain page stays). Focus runs after `load` because the browser's own fragment focus step would undo it.
+- If `sessionStorage['dolly-return']` is set (the plain list's links set it): focus `.project-hero-title` (tabindex=-1), or, when the URL has `#item`, that section's `.section-heading`. Focus runs after `load` because the browser's own fragment focus step would undo it.
 - `video[data-src]`: src set when within 200px of the viewport, play while visible, pause when not. Reduced motion: `controls`, no loop, `preload=none`, no autoplay.
 
 ---

@@ -1,4 +1,4 @@
-// Project pages: the plain case (also the source js/onset.js builds the On Set stage from).
+// Project pages (casino_games.html, eve_of_destruction.html, my_games.html).
 // One identity now: the theme switcher is retired and every page is fixed to data-theme="bold".
 (function () {
   var RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -23,16 +23,12 @@
   var target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
   var title = (target && target.querySelector('.section-heading')) || document.querySelector('.project-hero-title');
   if (title && title !== document.querySelector('.project-hero-title')) title.tabIndex = -1;
-  // While the On Set stage may still be built (html.os-wait, js/onset.js), onset.js decides: it focuses inside
-  // the set, or calls window.planFocus() when the plain page stays.
-  window.planFocus = function () {
-    if (!from || !title) return;
+  if (from && title) {
     title.classList.add('visible');
     // After load: scrolling to a #fragment runs the browser's own focus step, which would undo an earlier focus.
     var go = function () { setTimeout(function () { title.focus({ preventScroll: !location.hash }); }, 0); };
     if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once: true });
-  };
-  if (!document.documentElement.classList.contains('os-wait')) window.planFocus();
+  }
 
   // Clips: muted mp4 loops (converted from the old GIFs). Each loads only when it nears the viewport,
   // plays while visible and pauses when it leaves. With reduced motion they stay on the poster frame

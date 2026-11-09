@@ -1,4 +1,4 @@
-/* js/greybox.js: the greybox stage shared by the Dolly Gallery (gallery.js) and the On Set project pages (onset.js).
+/* js/greybox.js: the greybox stage used by the Dolly Gallery (gallery.js) and the cases told in its scene (case.js).
    One WebGLRenderer per page (renderer()), the Stage (scene, lights, grid floor, screens, pinned HTML, render on demand),
    the capsule guide, the stand (player-start pad), on-demand tweens (Clock) and the drag helper.
    Plain script, no modules: exposes window.Greybox. Touches THREE only when called, so Three.js can load async. */
@@ -113,7 +113,7 @@ function Stage(host, w, h, o){
     var sel = new T.Group(); sel.position.z = -.06; sel.visible = false; g.add(sel);
     sel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .34, sh + .34, .16)), new T.LineBasicMaterial({color:0x2BD957})));
     sel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .40, sh + .40, .16)), new T.LineBasicMaterial({color:0x15181B})));
-    g.userData = {w:sw, h:sh, iw:iw, ih:ih, sel:sel}; return g;
+    g.userData = {w:sw, h:sh, iw:iw, ih:ih, iw0:iw, ih0:ih, pl:pl, src:p.img, px:!!p.px, sel:sel}; return g;
   }
   function pin(elm, v, ax, ay, extra){ var p = {el:elm, v:v, ax:ax || 0, ay:ay || 0}; if (extra) for (var k in extra) p[k] = extra[k]; pins.push(p); return p; }
   /* which tagged object (userData.hit) is under a client point */

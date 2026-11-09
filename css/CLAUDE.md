@@ -5,7 +5,6 @@
 | `gallery.css` (~199 lines) | `index.html` only | The Dolly Gallery. Self-contained: does not load shared.css. |
 | `shared.css` (~228 lines) | project pages | Base reset, `:root` tokens (bold palette, Archivo Black / Archivo / IBM Plex Mono), container, tidbits, section headings, buttons, `.reveal`. |
 | `project.css` (~286 lines) | project pages | Back link, project hero, sections, captures, stats, video embed, responsive rules. |
-| `onset.css` (~150 lines) | project pages | The On Set stage (js/onset.js): own `--os-*` tokens (the gallery palette), `html.os-wait` placeholder, placard, tags, trailer, clip overlay, bubble, beat strip, folded text, 900px / 639px / reduced motion. |
 
 Pruned on 2026-11-09: the other themes (brutalist, retro, cinematic, neon), toolbar, card hand, paper plane, destruction and old homepage rules were removed by a script that dropped every selector naming a non-bold theme or a class/id absent from the live HTML/JS, checked with before/after screenshots of all five project pages at 1440, 1024 and 390px (identical within rendering noise). `cards.css` is in `archive/card-hand/css/`.
 
@@ -22,11 +21,12 @@ One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light
 | Gizmo marks | `.pv-mk`, `.mk`, `.mk-chip` |
 | Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.st.over` (pointer over a capture), `.pin` (transform-origin 0 0; JS adds scale), `.tp` placards, `.sign`, `.tl`, `.bub` (+ `.side` on phone, `.its` University items), `.openb`, `.vov` motion overlay |
 | Shot list | `.keys`, `.key` (`.on`, `.lead`, `.abk`), `.track` playhead |
+| Case (js/case.js) | `.home.incase`, `.cbub` (+ `.cstats`), `.ctags`, `.cplay`, `.cclose`, `.cyt`, `.vov.ctl`, `.ckeys` (`.cback`), `.cmb` (phone bubble slot) |
 | Breakpoints | 1100px (smaller key text), 900px (name strip 2x2), 639px (phone: matches `PHONE` in gallery.js), reduced motion |
 
 
 ## shared.css
-`:root` tokens were swapped to the gallery palette and green on 2026-11-09 (the plain case matches the set). Project pages are fixed to `data-theme="bold"`, so the `[data-theme="bold"]` blocks at the end of the file are the live overrides (uppercase tidbit labels, section headings, buttons). Classes styled: `.btn`, `.chip`, `.container`, `.css`, `.reveal`, `.section-heading`, `.tidbit`, `.tidbit-label`, `.tidbit-value`, `.visible`, `.work-image`, `.work-image-placeholder`, `.work-stat`, `.work-stat-label`, `.work-stat-num`, `.work-stats`.
+`:root` tokens were swapped to the gallery palette and green on 2026-11-09 (the plain project pages match the scene). Project pages are fixed to `data-theme="bold"`, so the `[data-theme="bold"]` blocks at the end of the file are the live overrides (uppercase tidbit labels, section headings, buttons). Classes styled: `.btn`, `.chip`, `.container`, `.css`, `.reveal`, `.section-heading`, `.tidbit`, `.tidbit-label`, `.tidbit-value`, `.visible`, `.work-image`, `.work-image-placeholder`, `.work-stat`, `.work-stat-label`, `.work-stat-num`, `.work-stats`.
 
 `.reveal` starts at `opacity: 0` + `translateY(24px)`; `js/shared.js` adds `.visible` on scroll. Override it before full-page screenshots.
 

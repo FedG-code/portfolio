@@ -10,30 +10,28 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 |-------|------|
 | Viewports | 1920x1080, 1024x768, 390x844, 812x375: gallery built, exactly one canvas, About selected, bubble shown, no horizontal overflow, no page errors |
 | Keyboard | focus About key, ArrowRight x2 -> Eve; live region = "Eve of Destruction" only; `aria-describedby="guide-bubble"` on the active key; knightboss.mp4 overlay |
-| Open | Enter on the selected key: bubble hides during the push, eve_of_destruction.html loads, focus on the H1 |
-| Project clips | the folded text's clips aren't loaded; once opened and scrolled near, the first gets `src` |
-| Return | back link pushes in, then `#eve-of-destruction`; bubble hidden during the pull-out + walk-in, then shown; focus on the Eve key |
-| University | bubble lists 3 Open links (#climbing, #rally, #fishing); Rally opens on its part of the set with focus on its strip button; back focuses the University button |
-| Over the Hill | Learn more loads over_the_hill.html |
-| Stage input | button reads "Learn more"; no dolly-track label; a drag scrubs and snaps; a click on a capture opens its page |
+| Open | Enter on the selected key: bubble hides during the push; `#eve-of-destruction/case` in the same page, one canvas, case bar shown, focus on Overview |
+| All projects | bubble hidden during the push / pull-out / walk, then shown; section bar back, focus on the Eve key, no `/case` in the URL |
+| University | bubble lists 3 Open links (#climbing, #rally, #fishing); Rally opens its game in the scene with focus on its part; browser Back closes the case and focuses the University button |
+| Over the Hill | Learn more opens `#over-the-hill/case` |
+| Stage input | button reads "Learn more"; no dolly-track label; a drag scrubs and snaps; a click on a capture opens its case |
 | No flash | with Three.js slowed to 1.5s, the plain list is never visible before the gallery appears |
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
-| Reduced motion | instant cut, no clip; project clips have controls and stay paused |
+| Reduced motion | instant cut, no clip; the case cuts in with its clip paused + controls; plain project page clips have controls and stay paused |
 
-## onset-test.js (project pages)
+## case-test.js (cases in the scene)
 
-`node tests/onset-test.js`, same `BASE` / `NODE_PATH` as above.
+`node tests/case-test.js`, same `BASE` / `NODE_PATH` as above.
 
 | Check | What |
 |-------|------|
-| Viewports | 4 viewports x 5 pages: `html.os-on`, one canvas, h1 in the placard, bubble shown, strip = one key per part, no overflow, no errors |
-| Arrival | `dolly-return` = section: `data-os-arrive="gallery"`, key consumed, bubble waits, then Overview with focus on the title; direct link = `walk`, no focus move; a key for another section is ignored |
-| Navigation | Next / Back, strip click, ArrowRight on the strip (focus follows), live region "Part 2 of N: The brief", link tag, still one canvas |
-| Anchors | `#rally`, `#fishing` from the gallery: that game's part, focus on its strip button |
-| Media | Casino two-clip part plays hitfor6 + hopit; stat chips 300k / #1; Eve overview plays knightboss.mp4, Play trailer opens the embed, Next closes it; Tetrarcana link tags |
-| Back link | bubble hides and the page stays during the push, then `index.html#eve-of-destruction` |
-| Fallbacks | `?flat` and `--disable-webgl`: plain page, no canvas; with Three.js slowed 1.5s the plain page never shows |
-| Reduced motion | `cut`, bubble at once, clip paused with controls |
+| Viewports | 4 viewports x 5 cases (`index.html#<id>/case`): case bar shown, section bar hidden, one canvas, one key per part, bubble, no overflow, no errors |
+| Parts | Next / Back, bar click, ArrowRight (focus follows), live region "Part 2 of N: The brief", feedbot.co.uk tag |
+| Switch | another case's hash while one is open switches cases |
+| Media | Casino two-clip part plays hitfor6 + hopit; stat chips 300k / #1; Eve overview plays knightboss.mp4; Play trailer zooms in (embed > 75% of the stage width), Esc zooms back out |
+| University | `#university-projects/case/rally` opens Rally; a small frame (tap, and a real click above its label) rotates to big and the URL names the game; from the homepage a small frame rotates first, then the case opens on it |
+| Project files | redirect into the scene (also `#fishing` -> `/case/fishing`); `?flat` stays plain; `index.html?flat#<id>/case` goes to the plain page; no WebGL ends on the plain page |
+| Reduced motion | the case cuts in, clip paused with controls |
 
 ## Archived
 The card-hand / title-flight / theme tests and the paper-plane / destruction suites are in `archive/card-hand/tests/` and `archive/paper-plane/tests/`. They target code that is no longer loaded, so they don't run against the current site.

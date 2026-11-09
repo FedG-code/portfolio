@@ -148,6 +148,49 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .sr{position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
 
 /* ---- tablet ---- */
+/* ---- a case open in the scene (js/case.js): bubble, link tags, trailer, the case bar ---- */
+.home.incase .ab-m{display:none}
+.cbub{width:400px}
+.cbub::after{left:var(--tail, 30px)}
+.cbub .h{display:flex; justify-content:space-between; gap:10px; padding:9px 14px 0; font:600 11.5px/1.25 var(--fm); color:var(--link)}
+.cbub .h span + span{color:var(--mut); font-weight:500; white-space:nowrap}
+.cbub .t{padding:6px 14px 12px; font-size:14.5px; line-height:1.55; overflow:auto; overscroll-behavior:contain}
+.cbub .t a{color:var(--link)}
+.cstats{display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0 14px 12px}
+.cstats div{display:flex; gap:6px; align-items:baseline; background:var(--chip); color:var(--p2); padding:4px 8px}
+.cstats dt{font-weight:800; font-stretch:115%; font-size:15px; color:var(--sig-hi)}
+.cstats dd{margin:0; font:500 11px/1.2 var(--fm)}
+.cbub .nav{display:grid; grid-template-columns:auto 1fr auto; background:var(--ink); color:var(--p2); position:relative; z-index:1}
+.cbub .nav button{padding:8px 14px; font-size:13px; font-weight:700; color:var(--p2)}
+.cbub .nav button span{color:var(--sig-hi)}
+.cbub .nav button:disabled{opacity:.35; cursor:default}
+.cbub .nav button:not(:disabled):hover{background:#2A2F33}
+.cbub .dots{display:flex; gap:4px; align-items:center; justify-content:center}
+.cbub .dots i{width:6px; height:6px; background:#4A5054}
+.cbub .dots i.on{background:var(--sig-hi)}
+.ctags{display:flex; flex-wrap:wrap; gap:6px; max-width:60%}
+.ctags .mk-chip{position:static; display:inline-flex; gap:6px; font-size:11px; padding:4px 7px; text-decoration:none; border:1px solid var(--sig-hi)}
+.ctags .mk-chip:hover{background:#22282B}
+.cplay, .cclose{display:inline-flex; gap:10px; align-items:center; background:var(--ink); color:var(--p2); font-weight:700; font-size:14px; padding:10px 16px; border:1.5px solid var(--sig-hi); z-index:4 !important}
+.cplay span, .cclose span{color:var(--sig-hi)}
+.cclose{font-size:13px; padding:7px 12px}
+.cplay:hover, .cclose:hover{background:#2A2F33}
+.cyt{background:#000; z-index:3 !important}
+.cyt iframe{display:block; width:100%; height:100%; border:0}
+.vov.ctl{pointer-events:auto}
+.ckeys{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(140px, 1fr); overflow-x:auto; scrollbar-width:thin}
+.ckeys .key .rt{font-size:16px}
+.ckeys .cback{background:var(--ink); color:var(--p2)}
+.ckeys .cback .rt{font-size:15px}
+.ckeys .cback .rs{color:#B9BEB9}
+.ckeys .cback .rt span{color:var(--sig-hi)}
+.ckeys .cback:hover{background:#2A2F33}
+.ckeys .key.on::before{content:""; position:absolute; left:50%; top:3px; margin-left:-5px; border:5px solid transparent; border-top-color:var(--sig)}
+.ckeys .key:focus-visible{outline-offset:-3px}
+.cmb{position:relative; margin-top:-2px}
+.cmb .cbub{width:100%; position:relative; margin-top:12px}
+.cmb .cbub::after{left:var(--tail, 60px); top:-9px; bottom:auto; border:0; border-left:1.5px solid var(--ink); border-top:1.5px solid var(--ink)}
+
 @media (max-width: 1100px){
   .keys .key{padding:9px 10px 10px}
   .keys .key .rt{font-size:15px}
@@ -196,6 +239,11 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
   .its .itb{font-size:11.5px; padding:7px 10px}
   .tl{font-size:8.5px; padding:2px 4px 3px}
   .keys{grid-template-columns:1fr 1fr}
+  .ckeys{grid-template-columns:none; grid-auto-columns:minmax(124px, 46%)}
+  .ckeys .key{border-top:0 !important; border-left:1px solid var(--ln) !important}
+  .ckeys .key:first-child{border-left:0 !important}
+  .cplay{font-size:12px; padding:6px 10px; gap:7px}
+  .ctags{max-width:none}
   .keys .key{padding:9px 10px 10px; border-left:0; border-top:0}
   .keys .key:nth-of-type(n+3){border-top:1px solid var(--ln)}
   .keys .key:nth-of-type(even){border-left:1px solid var(--ln)}
