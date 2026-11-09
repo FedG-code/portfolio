@@ -109,7 +109,10 @@ function Stage(host, w, h, o){
     box(sw + .16, sh + .16, .1, M.dark, 0, 0, -.06, g);
     var iw = p.ar >= 16/9 ? sw : sh * p.ar, ih = p.ar >= 16/9 ? sw / p.ar : sh;
     var pl = new T.Mesh(new T.PlaneGeometry(iw, ih), new T.MeshBasicMaterial({map:tex(p.img, p.px)})); pl.position.z = .002; g.add(pl);
-    var sel = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .34, sh + .34, .16)), new T.LineBasicMaterial({color:0xFF4B1F})); sel.position.z = -.06; sel.visible = false; g.add(sel);
+    /* selection: a bright green line with a dark line just outside it, so it holds on the grey stage */
+    var sel = new T.Group(); sel.position.z = -.06; sel.visible = false; g.add(sel);
+    sel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .34, sh + .34, .16)), new T.LineBasicMaterial({color:0x2BD957})));
+    sel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .40, sh + .40, .16)), new T.LineBasicMaterial({color:0x15181B})));
     g.userData = {w:sw, h:sh, iw:iw, ih:ih, sel:sel}; return g;
   }
   function pin(elm, v, ax, ay, extra){ var p = {el:elm, v:v, ax:ax || 0, ay:ay || 0}; if (extra) for (var k in extra) p[k] = extra[k]; pins.push(p); return p; }

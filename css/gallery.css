@@ -1,9 +1,10 @@
 /* Dolly Gallery homepage (index.html only). Ported from design/blockout/dolly-r4.html.
    Engine-debug greybox: green only for colliders and triggers, orange only for selection. */
 :root{
-  --p:#ECEEE8; --p2:#F8F9F6; --ink:#15181B; --mut:#59605A; --ln:#C2C7BF; --link:#C2360F;
-  --sig:#FF4B1F;            /* selection: engines outline the selected object in orange */
-  --col:#2BD957;            /* collider / trigger green */
+  --p:#ECEEE8; --p2:#F8F9F6; --ink:#15181B; --mut:#59605A; --ln:#C2C7BF; --link:#0B7A2E;
+  --sig:#0E7F31;            /* signal green on paper: selection bars, outlines, underlines, playhead (4.4:1) */
+  --sig-hi:#2BD957;         /* signal green on ink / the dark chip */
+  --col:#2BD957;            /* debug marks (collider / trigger outlines + mono chips) */
   --chip:#101315;
   --stage:#8F9591;
   --f:"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -16,7 +17,7 @@ p, h1{margin:0}
 button{font:inherit; color:inherit; background:none; border:0; text-align:left; cursor:pointer; padding:0}
 a{color:inherit}
 img, video{display:block; max-width:none}
-:focus-visible{outline:2px solid var(--sig); outline-offset:2px}
+:focus-visible{outline:2px solid var(--link); outline-offset:2px}
 [hidden]{display:none !important}
 
 .pg{max-width:1280px; margin:0 auto; padding:26px 44px 40px}
@@ -27,7 +28,7 @@ img, video{display:block; max-width:none}
 .tb > *{padding:12px 14px; border-left:1px solid var(--ink); display:grid; align-content:center; gap:5px; font-size:13.5px; font-weight:600; line-height:1.3}
 .tb > :first-child{border-left:0}
 .tb-ln{background:var(--ink); color:var(--p2); display:flex !important; flex-wrap:wrap; gap:6px 14px; align-content:center; align-items:center}
-.tb-ln a{text-decoration:none; border-bottom:1.5px solid var(--sig)}
+.tb-ln a{text-decoration:none; border-bottom:1.5px solid var(--sig-hi)}
 .tb-ln a:hover{color:#fff; border-bottom-color:#fff}
 .nm{font-weight:800; font-stretch:125%; font-size:26px; line-height:1; letter-spacing:-.015em}
 .rl{font-size:13.5px; font-weight:500}
@@ -66,7 +67,7 @@ img.px, .vov.px video, .vov.px img{image-rendering:pixelated}
 .pv-spec .res{grid-column:1 / -1; border-left:0 !important}
 .pv-spec .res dd{color:var(--link)}
 .pv-open{display:inline-flex; margin-top:12px; font-size:13px; font-weight:700; padding:7px 12px; gap:12px; background:var(--ink); color:var(--p2); text-decoration:none}
-.pv-open span{color:var(--sig)}
+.pv-open span{color:var(--sig-hi)}
 
 /* gizmo marks drawn over captures */
 .pv-mk{position:absolute; inset:0; pointer-events:none}
@@ -120,7 +121,7 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .its .it-o{font:500 10.5px/1 var(--fm); white-space:nowrap}
 .its .it-o span{color:var(--sig)}
 .openb{position:relative; z-index:1; font-size:13px; font-weight:700; padding:7px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--ink); color:var(--p2); white-space:nowrap; text-decoration:none}
-.openb span{color:var(--sig)}
+.openb span{color:var(--sig-hi)}
 .openb:hover{background:#2A2F33}
 .bub.anim{animation:bubIn .22s cubic-bezier(.3,1.5,.6,1) both}
 @keyframes bubIn{from{opacity:0; scale:.85} to{opacity:1; scale:1}}

@@ -162,6 +162,9 @@ function buildDolly(start){
   var BW = [6.4].concat(P.map(function(p, i){ return i === 0 || p.items ? 8.0 : 6.6; })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
   st.box(x1 - x0 + .3, 3.7, .3, M.wall, (x0 + x1)/2, 1.85, -.15);
   var x = x0, hits = []; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
+  /* every bay has a stand (the player-start pad) beside the guide's spot. The guide steps onto it only when it
+     walks in from off screen (coming back from a project page); normal moves stop beside it */
+  function standAt(z){ var q = m ? {x:z.x + .45, z:z.z - .8} : {x:z.x - .8, z:z.z}; GB.stand(T, st.S, q.x, q.z); return q; }
   var secs = BW.map(function(bw, s){
     var l = x, cx = x + bw/2; x += bw; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
     var zone = {x:l + bw - (s ? 1.35 : .62), z:1.6};            /* where the guide stands on desktop (About: clear of the sign) */
@@ -169,8 +172,7 @@ function buildDolly(start){
     if (s === 0){
       var sign = el('div', 'pin sign', '<span class="k">About</span><p class="ab-lead">' + H.lead + '</p>' + (m ? '' : '<p class="ab-txt">' + H.about + '</p>')); host.appendChild(sign);
       st.pin(sign, new T.Vector3(m ? cx : l + .28, m ? 3.5 : 3.3, .05), m ? .5 : 0, 0, {clamp:false});
-      var pad = new T.Mesh(new T.CylinderGeometry(.5, .5, .03, 28), M.lead); pad.position.set(zone.x, .015, zone.z); pad.receiveShadow = true; st.S.add(pad);
-      return {cx:cx, l:l, bw:bw, zone:zone};
+      return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone)};
     }
     var i = s - 1, p = P[i], scr3 = [], sc, sw, sy, scx;
     if (p.items){
@@ -199,7 +201,7 @@ function buildDolly(start){
     st.pin(tp, new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05), 0, 1, {clamp:false});
     tp.addEventListener('click', function(){ act(s); });
     scr3.forEach(function(o, k){ o.sc.userData.hit = {s:s, k:k}; hits.push(o.sc); });
-    return {cx:cx, l:l, bw:bw, zone:zone, sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, i:i, scr:scr3};
+    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone), sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, i:i, scr:scr3};
   });
   /* the guide: capsule + speech bubble */
   var plr = capsule(T, M.white, 1.1), body = plr.userData.body; plr.position.set(secs[0].zone.x, .02, secs[0].zone.z); st.S.add(plr);
@@ -261,13 +263,13 @@ function buildDolly(start){
     return {x:lerp(sg.a.x, sg.b.x, t), z:lerp(sg.a.z, sg.b.z, t), ry:Math.atan2(sg.b.x - sg.a.x, sg.b.z - sg.a.z)};
   }
   function arrive(s, announce){ body.position.y = 0; body.rotation.x = 0; face(); at = s; say(s, announce); showOv(s); st.render(); }
-  function select(s, anim, announce){
+  function select(s, anim, announce, stay){
     G.sel = s; setRove(keyEls, s);
     keyEls.forEach(function(kk, j){ if (j === s) kk.setAttribute('aria-describedby', bub.id); else kk.removeAttribute('aria-describedby'); });
     secs.forEach(function(o, j){ if (o.tp){ o.tp.classList.toggle('on', j === s); o.sc.userData.sel.visible = j === s; } });
     clock.kill(tw); clock.kill(walk);
     var from = camX, to = sx[s], a = {x:plr.position.x, z:plr.position.z}, b = secs[s].zone;
-    if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce); return; }
+    if (!anim || RM){ put(to); if (!stay) plr.position.set(b.x, .02, b.z); arrive(s, announce); return; }
     var dur = clamp(Math.abs(to - from)/9, .4, .9);
     bub.hidden = true; hideOv();
     tw = clock.add(dur, function(p){ put(lerp(from, to, eio(p))); st.render(); });
@@ -300,14 +302,24 @@ function buildDolly(start){
     clock.add(.6, function(q){ var e = eio(q); tpv.copy(p0).lerp(pushed.p, e); tl.copy(l0).lerp(pushed.l, e); st.setCam(tpv, tl); st.render(); }, function(){ location.href = href; });
   }
   /* back from the case study: start inside the screen and pull out to the section shot */
+  /* ...while the guide walks in from off screen (left) and steps up onto the section's stand */
   function pullBack(s){
-    var pp = pushed || pushTarget(s, 0); pushed = null;
-    if (RM){ busy = false; select(s, false); return; }
+    var pp = pushed || pushTarget(s, 0), pd = secs[s].pad; pushed = null;
+    if (RM){ busy = false; plr.position.set(pd.x, GB.STAND_H, pd.z); select(s, false, false, true); return; }
     busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv();
-    var to = sx[s], b = secs[s].zone, p2 = new T.Vector3(to + c.off, c.y, c.z), l2 = new T.Vector3(to, c.ly, 0), tpv = new T.Vector3(), tl = new T.Vector3();
-    G.sel = s; setRove(keyEls, s); plr.position.set(b.x, .02, b.z); face();
+    var to = sx[s], p2 = new T.Vector3(to + c.off, c.y, c.z), l2 = new T.Vector3(to, c.ly, 0), tpv = new T.Vector3(), tl = new T.Vector3();
+    var zw = m ? pd.z : ZOUT, a = {x:to - (m ? 3.2 : 6.5), z:zw}, rt = {segs:[], tot:0};
+    [a, {x:pd.x, z:zw}, pd].reduce(function(u, v){ var d = Math.hypot(v.x - u.x, v.z - u.z); if (d > 1e-4){ rt.segs.push({a:u, b:v, d:d, s:rt.tot}); rt.tot += d; } return v; });
+    G.sel = s; setRove(keyEls, s); plr.position.set(a.x, .02, a.z);
     st.setCam(pp.p, pp.l); camX = to; st.render();
-    clock.add(.6, function(q){ var e = eio(q); tpv.copy(pp.p).lerp(p2, e); tl.copy(pp.l).lerp(l2, e); st.setCam(tpv, tl); st.render(); }, function(){ busy = false; select(s, false); });
+    clock.add(.6, function(q){ var e = eio(q); tpv.copy(pp.p).lerp(p2, e); tl.copy(pp.l).lerp(l2, e); st.setCam(tpv, tl); st.render(); });
+    var WD = 1.5;
+    walk = clock.add(WD, function(q){
+      var w = clamp(q/.86, 0, 1), up = clamp((q - .82)/.18, 0, 1), dist = eio(w)*rt.tot, o = along(rt, dist);
+      plr.position.set(o.x, .02 + (GB.STAND_H - .02)*up, o.z); plr.rotation.y = up > 0 ? lerp(o.ry, m ? .35 : -.45, up) : o.ry;
+      body.position.y = q < .82 ? Math.abs(Math.sin(dist*1.6))*.07 : Math.sin(up*Math.PI)*.1; body.rotation.x = q < .82 ? .15 : 0;
+      st.render();
+    }, function(){ busy = false; select(s, false, false, true); });
   }
   var ppu = c.w / (2*c.z*Math.tan(c.fov*Math.PI/360)*(c.w/c.h)), dx0 = 0;
   function snap(){ var best = 0; sx.forEach(function(v, j){ if (Math.abs(v - camX) < Math.abs(sx[best] - camX)) best = j; }); select(best, true, true); }
