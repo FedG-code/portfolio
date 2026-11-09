@@ -72,7 +72,8 @@ const state = p => p.evaluate(() => ({
   await p.click('.back-link');
   const seen = [];
   for (let i = 0; i < 10; i++) { seen.push(await p.evaluate(() => { const b = document.querySelector('.bub'); return b ? (b.hidden ? 'H' : 'V') : '-'; })); await p.waitForTimeout(100); }
-  await p.waitForTimeout(600);
+  // the guide walks in onto the stand, then over to its spot: the bubble opens when it gets there
+  await p.waitForFunction(() => { const b = document.querySelector('.bub'); return b && !b.hidden; }, null, { timeout: 6000 }).catch(() => {});
   s = await state(p);
   check('return pulls back out of the screen (bubble hidden, then shown)', seen.join('').indexOf('H') >= 0 && s.bubble, seen.join(''));
   check('return: URL hash + focus on the section button', /#eve-of-destruction$/.test(p.url()) && s.active.indexOf('Eve of Destruction') === 0, s.active);
@@ -83,7 +84,8 @@ const state = p => p.evaluate(() => ({
   await p.click('.bub .itb[data-k="1"]');
   await p.waitForURL('**/university_projects.html#rally', { timeout: 5000 }); await p.waitForTimeout(400);
   check('University item opens its section, focus on its heading', await p.evaluate(() => document.activeElement.textContent.trim() === 'Rally Game'));
-  await p.click('.back-link'); await p.waitForTimeout(1600);
+  await p.click('.back-link'); await p.waitForTimeout(1000);
+  await p.waitForFunction(() => { const b = document.querySelector('.bub'); return b && !b.hidden; }, null, { timeout: 6000 }).catch(() => {});
   check('back from University Projects focuses its button', (await state(p)).active.indexOf('University Projects') === 0);
 
   // Over the Hill opens its page
