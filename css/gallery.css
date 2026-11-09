@@ -6,6 +6,7 @@
   --col:#2BD957;            /* collider / trigger green */
   --chip:#101315;
   --stage:#8F9591;
+  --accent:var(--sig);       /* read by the paper plane (js/plane.js, js/destruction.js) */
   --f:"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --fm:"IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
@@ -133,6 +134,12 @@ img.px, .vov.px video, .vov.px img{image-rendering:pixelated}
 .home.g3d .ab-m + .keys{margin-top:-16px}
 .home.g3d .st + .ab-m{margin-top:-16px; border-top:0}
 .sr{position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+
+/* ---- paper plane (P key, js/plane-key.js) ---- */
+#plane-canvas{position:fixed; inset:0; z-index:103; pointer-events:none}
+html.plane-active{-webkit-user-select:none; user-select:none}
+.destruct-char{display:inline-block}
+.destruct-word{white-space:nowrap; display:inline}
 
 /* ---- tablet ---- */
 @media (max-width: 1100px){

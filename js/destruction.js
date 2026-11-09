@@ -24,25 +24,18 @@ var MAX_ROTATION       = 720;
 var activeBatchCount = 0;       // scatter batches currently animating
 
 var DESTRUCTIBLE_SELECTOR = [
-  'h1', 'h2', 'h3', 'h4',
-  '.hero-desc', '.hero-badge',
+  // Gallery homepage (index.html). The 3D wall itself is a canvas; only its HTML labels can shatter.
+  '.nm', '.rl', '.tb-city', '.edu > span',
+  '.ab-lead', '.ab-txt', '.ab-m',
+  '.row .rt', '.row .rs', '.pv-cap',
+  '.key .rt', '.key .rs',
+  // Project pages
+  'h2', 'h3', 'h4',
   '.tidbit-value', '.tidbit-label',
-  '.section-label', '.section-heading',
-  '.work-card-info h3', '.work-card-info p',
-  '.work-pill',
-  '.about-prose p', '.about-box-title', '.about-box-text',
-  '.chip',
-  '.contact-heading', '.contact-sub',
+  '.section-heading',
   '.project-hero-title', '.project-hero-desc',
   '.project-text p', '.project-text h4',
-  '.work-stat-num', '.work-stat-label',
-  'footer span',
-  // Brutalist layout elements
-  '.field-value', '.field-label',
-  '.about-header', '.skills-mono',
-  '.data-row-value', '.data-row-label',
-  // Retro panel elements
-  '.hero-panel .tidbit-value', '.hero-panel .tidbit-label'
+  '.work-stat-num', '.work-stat-label'
 ].join(', ');
 
 // --- TextSplitter ---

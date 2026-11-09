@@ -183,7 +183,7 @@
       document.documentElement.classList.remove('plane-active');
       // If other buttons are already scroll-hidden, fade out the plane toggle too
       var nav = document.querySelector('nav');
-      if (nav && nav.classList.contains('scroll-hidden')) {
+      if (toggleBtn && nav && nav.classList.contains('scroll-hidden')) {
         toggleBtn.classList.add('scroll-hidden');
       }
       stop();
@@ -730,6 +730,8 @@
     sessionStorage.removeItem(LS_KEY);
   }
 
-  createToggleButton();
+  // No on-screen toggle since the toolbar was retired: js/plane-key.js loads this file on the P key
+  // and calls PaperPlane.toggle(). createToggleButton() is kept for a future button.
+  window.PaperPlane = { toggle: toggle, isOn: function () { return enabled; } };
   if (enabled) init();
 })();
