@@ -9,7 +9,7 @@ casino_games.html       - Logifuture case study
 eve_of_destruction.html - Lost Satellite Studios case study
 my_games.html           - "Other Games" case study (file name kept; title renamed from My Games)
 over_the_hill.html      - Over the Hill / Feedbot case study
-university_projects.html - Climbing, Fishing and Rally Game (one page, one section each)
+university_projects.html - Climbing, Rally and Fishing Game (one page, one section each, in that order)
 css/
   gallery.css           - Homepage only (self-contained, one identity)
   shared.css            - Project pages (bold theme; other theme blocks are dead CSS)
@@ -35,7 +35,7 @@ assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF 
 - **Open / return**: Open pushes the camera into the screen, then loads the project page. The back link (`← All projects`) goes to `index.html#<section-id>`; with `sessionStorage['dolly-return']` the gallery pulls back out and focuses that section's button. No title flight (user removed it).
 - **Media**: muted H.264 mp4 loops (ffmpeg recipe in `design/HANDOFF.md`), loaded only when needed: the gallery overlay loads the selected section's clip only; project pages load clips near the viewport.
 - **Content rules** (user): no availability line; gambling metrics only inside the Casino case study; don't apply `cv.md` content without asking; no major rewriting of page copy.
-- **Pages**: `over_the_hill.html` (Feedbot, built from cv.md + the sentiment-tracker repo) and `university_projects.html` (Climbing Game = main item, Fishing Game, Rally Game; anchors `#climbing`, `#fishing`, `#rally`). Each university item in the gallery bubble opens its own anchor. **No reference to AI use on the university page** (user rule).
+- **Pages**: `over_the_hill.html` (Feedbot, built from cv.md + the sentiment-tracker repo) and `university_projects.html` (order: Climbing Game = main item, Rally Game, Fishing Game last; anchors `#climbing`, `#rally`, `#fishing`). Each university item in the gallery bubble opens its own anchor. **No reference to AI use on the university page** (user rule).
 - **Content still to come**:
   - **Showcase videos for all three university projects** (Climbing, Fishing, Rally): the user is making them. When each arrives, convert it to a muted mp4 loop + poster (ffmpeg recipe in `design/HANDOFF.md`) and swap it in on `university_projects.html` (`video[data-src]`, replacing the "Capture to come" box / island preview / court still) and in the gallery's University bay (`items[k].img` = poster, plus a clip; today only `scr[0]` gets a motion overlay, so the small screens need the overlay extended or stay stills).
   - Real game titles (repos only have working names), and confirmation of module/year/solo for each university project.

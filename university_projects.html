@@ -30,7 +30,7 @@
     <div class="project-hero-badge">University</div>
     <h1 class="project-hero-title reveal" tabindex="-1">University Projects</h1>
     <p class="project-hero-desc reveal">
-      Three games I've built as university projects, each one an experiment in how a single action can carry a game: climbing hand over hand, casting a line, and returning a ball off a wall. All three are Unity prototypes where I designed and programmed the systems myself.
+      Three games I've built as university projects, each one an experiment in how a single action can carry a game: climbing hand over hand, returning a ball off a wall, and casting a line. All three are Unity prototypes where I designed and programmed the systems myself.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
@@ -101,45 +101,6 @@
     </div>
   </div>
 </section>
-<!-- FISHING GAME -->
-<section class="project-section" id="fishing">
-  <div class="container">
-
-    <h2 class="section-heading reveal">Fishing Game</h2>
-
-    <div class="project-content reveal">
-      <div>
-        <!-- TODO: showcase video coming; swap the island preview for it (or keep the preview as a second figure). -->
-        <figure class="work-figure"><img class="work-image" src="assets/fishing-island.jpg" alt="Top-down preview of a generated island" loading="lazy"><figcaption>A generated island, seen from above in the editor tool.</figcaption></figure>
-      </div>
-      <div class="project-text">
-        <h4>Fishing with nothing on the hook</h4>
-        <p>
-          A first-person game about fishing from an island about 500 m across. There is one fish in the whole game, and catching it is the ending, so everything before that is fishing without a catch. The project asks whether the act of fishing, the cast, the drift and the wait, can carry a game on its own.
-        </p>
-        <p>
-          Most fishing games tell you in the first minutes that a bite is coming soon; if this game did the same, an empty line would read as a bug or a grind. So every bite comes from the one fish. The player meets it, fights it, and it always escapes, leaving notes that help them get closer. Progress comes from messages in bottles scattered over the island, and the first one unlocks the rod. I chose not to add grading or accuracy targets, because a good cast should feel good rather than score well.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>A cast you swing</h4>
-        <p>
-          The cast is physical. You draw the rod back, swing forward and let go during the stroke, with the mouse or the right stick. How fast the rod was moving sets the distance, where it was when you let go sets the arc (early for a high lob, late for a low one), and a sideways stroke turns it. Mouse and gamepad were treated as equally important, and a debug readout shows each cast's device, rod speed, release angle and distance so the two can be tuned against each other. The cast maths is kept in pure functions so it can be unit tested outside Play mode.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>An island built from regions</h4>
-        <p>
-          The island comes from an editor tool I wrote that uses no noise at all. Seeds grow into about 90 irregular regions, which are then marked as sea, coves, hills or chasms and raised with ramps, banks and rolling domes, with a shallow shelf at every shore for the water's foam bands. The same seed and settings always give the same island, and good islands can be saved to a library and kept. The look draws on Proteus and A Short Hike: a low-resolution pixel frame, a palette that changes across a day and night cycle, and weather that glides between clear, haze, fog, overcast and rain.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
 <!-- RALLY GAME -->
 <section class="project-section" id="rally">
   <div class="container">
@@ -174,6 +135,45 @@
         <h4>Making hits feel fast</h4>
         <p>
           For the last stretch I worked on how impacts feel rather than on new mechanics, using Lethal League Blaze as the reference. A connecting swing freezes the ball on the racket for a moment, and camera shake, racket sound and the freeze length all scale from one value driven by ball speed, so one number tunes the whole ladder. An effect showcase mode switches every effect off and turns them back on one per few hits, so each can be judged on its own.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- FISHING GAME -->
+<section class="project-section" id="fishing">
+  <div class="container">
+
+    <h2 class="section-heading reveal">Fishing Game</h2>
+
+    <div class="project-content reveal">
+      <div>
+        <!-- TODO: showcase video coming; swap the island preview for it (or keep the preview as a second figure). -->
+        <figure class="work-figure"><img class="work-image" src="assets/fishing-island.jpg" alt="Top-down preview of a generated island" loading="lazy"><figcaption>A generated island, seen from above in the editor tool.</figcaption></figure>
+      </div>
+      <div class="project-text">
+        <h4>Fishing with nothing on the hook</h4>
+        <p>
+          A first-person game about fishing from an island about 500 m across. There is one fish in the whole game, and catching it is the ending, so everything before that is fishing without a catch. The project asks whether the act of fishing, the cast, the drift and the wait, can carry a game on its own.
+        </p>
+        <p>
+          Most fishing games tell you in the first minutes that a bite is coming soon; if this game did the same, an empty line would read as a bug or a grind. So every bite comes from the one fish. The player meets it, fights it, and it always escapes, leaving notes that help them get closer. Progress comes from messages in bottles scattered over the island, and the first one unlocks the rod. I chose not to add grading or accuracy targets, because a good cast should feel good rather than score well.
+        </p>
+      </div>
+    </div>
+    <div class="project-content project-content--text reveal">
+      <div class="project-text">
+        <h4>A cast you swing</h4>
+        <p>
+          The cast is physical. You draw the rod back, swing forward and let go during the stroke, with the mouse or the right stick. How fast the rod was moving sets the distance, where it was when you let go sets the arc (early for a high lob, late for a low one), and a sideways stroke turns it. Mouse and gamepad were treated as equally important, and a debug readout shows each cast's device, rod speed, release angle and distance so the two can be tuned against each other. The cast maths is kept in pure functions so it can be unit tested outside Play mode.
+        </p>
+      </div>
+    </div>
+    <div class="project-content project-content--text reveal">
+      <div class="project-text">
+        <h4>An island built from regions</h4>
+        <p>
+          The island comes from an editor tool I wrote that uses no noise at all. Seeds grow into about 90 irregular regions, which are then marked as sea, coves, hills or chasms and raised with ramps, banks and rolling domes, with a shallow shelf at every shore for the water's foam bands. The same seed and settings always give the same island, and good islands can be saved to a library and kept. The look draws on Proteus and A Short Hike: a low-resolution pixel frame, a palette that changes across a day and night cycle, and weather that glides between clear, haze, fog, overcast and rain.
         </p>
       </div>
     </div>

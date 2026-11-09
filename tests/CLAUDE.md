@@ -13,7 +13,7 @@ Playwright (Chromium). The `playwright` package is in the repo's `package.json`;
 | Open | Enter on the selected key: bubble hides during the push, eve_of_destruction.html loads, focus on the H1 |
 | Project clips | none loaded at first; first one gets `src` once scrolled near |
 | Return | back link -> `#eve-of-destruction`, bubble hidden during the pull-out then shown, focus on the Eve key |
-| University | bubble lists 3 Open links (#climbing, #fishing, #rally); Rally opens with focus on its heading; back focuses the University button |
+| University | bubble lists 3 Open links (#climbing, #rally, #fishing); Rally opens with focus on its heading; back focuses the University button |
 | Over the Hill | Learn more loads over_the_hill.html |
 | Stage input | button reads "Learn more"; no dolly-track label; a drag scrubs and snaps; a click on a capture opens its page |
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
