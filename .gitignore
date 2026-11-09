@@ -4,3 +4,7 @@
 !assets/visionsystemimg.png
 node_modules/
 .worktrees/
+
+# Personal CV (reference only, contains contact details)
+*CV*.pdf
+cv.md

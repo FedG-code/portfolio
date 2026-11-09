@@ -44,6 +44,12 @@ archive/                - Retired code, not loaded anywhere: card hand + theme s
   - Real game titles (repos only have working names), and confirmation of module/year/solo for each university project.
   - A real Feedbot dashboard capture (needs player data blurred); the page uses the public site's illustrative example.
 
+## Redesign history
+The design work behind the gallery (v2-v9, the animated and blockout explorations, Dolly Gallery rounds 2-4, the polish list and the decisions already made) is in `design/` in the main checkout, untracked. Start at `design/HANDOFF.md`; versions and artifact links are in `design/CHANGELOG.md`.
+
+## CV Reference
+`cv.md` (repo root, gitignored) is a text copy of `Federico Giovannini CV.pdf` (also gitignored). Use it as the source of truth for roles, dates and metrics. Ask before changing site content based on it (the Over the Hill page was written from it with the user's go-ahead).
+
 ## Serving Locally
 ```
 npx http-server -p 8080 -c-1
