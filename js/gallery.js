@@ -99,7 +99,7 @@ function marksHTML(ms){ return (ms || []).map(function(m){ return m.chip ? '<spa
 function inWidth(ar){ return ar < 16/9 - .01 ? (ar / (16/9) * 100) + '%' : '100%'; }
 function roleYear(p){ return p.rs || p.spec[1][1] + ' · ' + p.spec[3][1]; }
 function abHTML(){ return '<section class="ab" aria-label="About"><p class="ab-lead">' + H.lead + '</p><p class="ab-txt">' + H.about + '</p></section>'; }
-function openLink(p, cls){ return '<a class="' + cls + '" href="' + p.href + '">Open case study <span aria-hidden="true">&rarr;</span></a>'; }
+function openLink(p, cls){ return '<a class="' + cls + '" href="' + p.href + '">Learn more <span aria-hidden="true">&rarr;</span></a>'; }
 function rove(items, onSel){
   items.forEach(function(b, i){
     b.addEventListener('keydown', function(e){
@@ -131,6 +131,7 @@ function setPV(root, p){
   root.querySelector('.pv-spec').innerHTML = specHTML(p.spec);
   var ol = root.querySelector('.pv-open'); if (ol) ol.remove();
   if (p.href) root.querySelector('.pv').insertAdjacentHTML('beforeend', openLink(p, 'pv-open'));
+  root.querySelector('.pv-view').classList.toggle('go', !!p.href);
 }
 function flatList(){
   var m = home.clientWidth < PHONE;
@@ -146,6 +147,8 @@ function flatList(){
     remember(p);
   }); });
   rove(rows, function(j){ G.picked = G.moved = true; sel(j); });
+  /* clicking the preview capture opens the selected section's page */
+  host.querySelector('.pv-view').addEventListener('click', function(){ var p = P[G.sel - 1]; if (p && p.href){ remember(p); location.href = p.href; } });
   var h = hashIdx(); if (h >= 0) G.picked = true; sel(h >= 0 ? h : Math.max(0, G.sel - 1));
   if (h >= 0) rows[h].focus({preventScroll:true});
 }
@@ -220,13 +223,22 @@ function Stage(host, w, h, o){
     g.userData = {w:sw, h:sh, iw:iw, ih:ih, sel:sel}; return g;
   }
   function pin(elm, v, ax, ay, extra){ var p = {el:elm, v:v, ax:ax || 0, ay:ay || 0}; if (extra) for (var k in extra) p[k] = extra[k]; pins.push(p); return p; }
+  /* which tagged object (userData.hit) is under a client point */
+  var ray = new T.Raycaster(), nd = new T.Vector2();
+  function pick(cx, cy, objs){
+    var r = R.domElement.getBoundingClientRect(); nd.set((cx - r.left)/r.width*2 - 1, -(cy - r.top)/r.height*2 + 1);
+    ray.setFromCamera(nd, cam);
+    var h = ray.intersectObjects(objs, true)[0], o = h && h.object;
+    while (o && !o.userData.hit) o = o.parent;
+    return o ? o.userData.hit : null;
+  }
   /* drop this scene's GPU objects (textures are shared across rebuilds and kept) */
   function dispose(){
     dead = true; if (q) cancelAnimationFrame(q);
     S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
     ft.dispose();
   }
-  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, render:render, box:box, screen:screen, pin:pin, dispose:dispose};
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, render:render, box:box, screen:screen, pin:pin, pick:pick, dispose:dispose};
 }
 function capsule(T, mat, s){
   var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;
@@ -237,12 +249,20 @@ function capsule(T, mat, s){
   [cyl, s1, s2, vz].forEach(function(o){ o.castShadow = true; b.add(o); });
   g.userData.body = b; return g;
 }
-function dragX(host, isBusy, start, move, end){
+/* drag on the stage: a press only becomes a drag after 6px, so a plain click/tap reaches tap(e) instead */
+function dragX(host, isBusy, start, move, end, tap, hover){
   var d = null;
-  host.addEventListener('pointerdown', function(e){ if (isBusy() || e.target.closest('button,a')) return; d = {x:e.clientX}; try { host.setPointerCapture(e.pointerId); } catch(_){} start(); });
-  host.addEventListener('pointermove', function(e){ if (d) move(e.clientX - d.x); });
-  function up(){ if (!d) return; d = null; end(); }
-  host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
+  host.addEventListener('pointerdown', function(e){ if (isBusy() || e.target.closest('button,a')) return; d = {x:e.clientX, y:e.clientY, on:false, id:e.pointerId}; });
+  host.addEventListener('pointermove', function(e){
+    if (!d){ if (hover && e.pointerType === 'mouse') hover(e); return; }
+    if (!d.on){
+      if (Math.abs(e.clientX - d.x) < 6 && Math.abs(e.clientY - d.y) < 6) return;
+      d.on = true; try { host.setPointerCapture(d.id); } catch(_){} start();
+    }
+    move(e.clientX - d.x);
+  });
+  host.addEventListener('pointerup', function(e){ if (!d) return; var was = d; d = null; if (was.on) end(); else if (tap && !isBusy()) tap(e); });
+  host.addEventListener('pointercancel', function(){ if (!d) return; var was = d; d = null; if (was.on) end(); });
 }
 
 /* ================================ the gallery ================================ */
@@ -251,7 +271,7 @@ var GUIDE = 'Walk with me: drag, scroll sideways or pick a section below.';
 function bubHTML(i){
   if (i < 0) return '<p class="bt">' + GUIDE + '</p>';
   var p = P[i];
-  if (p.items) return '<ul class="its">' + p.items.map(function(it, k){ return '<li><a class="itb" href="' + it.href + '" data-k="' + k + '"><span class="it-t">' + it.t + '</span><span class="it-o">Open <span aria-hidden="true">&rarr;</span></span></a></li>'; }).join('') + '</ul>';
+  if (p.items) return '<ul class="its">' + p.items.map(function(it, k){ return '<li><a class="itb" href="' + it.href + '" data-k="' + k + '"><span class="it-t">' + it.t + '</span><span class="it-o">Learn more <span aria-hidden="true">&rarr;</span></span></a></li>'; }).join('') + '</ul>';
   return '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul><p class="bs"><span>Stack</span> ' + p.spec[2][1] + '</p>' + (p.href ? openLink(p, 'openb') : '');
 }
 /* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
@@ -272,7 +292,7 @@ function buildDolly(start){
     '<button type="button" class="key abk" data-i="0" tabindex="0"><span class="rt">About</span><span class="rs">' + H.city + '</span></button>' +
     P.map(function(p, i){ return '<button type="button" class="key' + (i ? '' : ' lead') + '" data-i="' + (i + 1) + '" tabindex="-1"><span class="rt">' + p.t + '</span><span class="rs">' + roleYear(p) + '</span></button>'; }).join('') + '</div>';
   /* phone: the About body text sits under the stage as plain HTML; the sign keeps only the lead line */
-  home.innerHTML = '<div class="st" aria-label="Gallery"><span class="dbg" aria-hidden="true">Dolly track' + (m ? ': swipe' : ': drag or shift + scroll') + '</span></div>' +
+  home.innerHTML = '<div class="st" aria-label="Gallery"></div>' +
     (m ? '<p class="ab-m">' + H.about + '</p>' : '') + keys + '<p class="sr live" aria-live="polite"></p>';
   var host = home.querySelector('.st'), c = shot(m, host.clientWidth);
   host.style.height = c.h + 'px';
@@ -284,7 +304,7 @@ function buildDolly(start){
   /* section widths: About, then the projects (the lead bay and the three-screen bay are widest) */
   var BW = [6.4].concat(P.map(function(p, i){ return i === 0 || p.items ? 8.0 : 6.6; })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
   st.box(x1 - x0 + .3, 3.7, .3, M.wall, (x0 + x1)/2, 1.85, -.15);
-  var x = x0; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
+  var x = x0, hits = []; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
   var secs = BW.map(function(bw, s){
     var l = x, cx = x + bw/2; x += bw; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
     var zone = {x:l + bw - (s ? 1.35 : .62), z:1.6};            /* where the guide stands on desktop (About: clear of the sign) */
@@ -321,6 +341,7 @@ function buildDolly(start){
     tp.tabIndex = -1; tp.setAttribute('aria-hidden', 'true'); host.appendChild(tp);
     st.pin(tp, new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05), 0, 1, {clamp:false});
     tp.addEventListener('click', function(){ act(s); });
+    scr3.forEach(function(o, k){ o.sc.userData.hit = {s:s, k:k}; hits.push(o.sc); });
     return {cx:cx, l:l, bw:bw, zone:zone, sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, i:i, scr:scr3};
   });
   /* the guide: capsule + speech bubble */
@@ -434,7 +455,10 @@ function buildDolly(start){
   var ppu = c.w / (2*c.z*Math.tan(c.fov*Math.PI/360)*(c.w/c.h)), dx0 = 0;
   function snap(){ var best = 0; sx.forEach(function(v, j){ if (Math.abs(v - camX) < Math.abs(sx[best] - camX)) best = j; }); select(best, true, true); }
   /* scrubbing: the bubble hides as soon as the camera leaves, so stale facts never slide off with it; the guide walks after the snap */
-  dragX(host, function(){ return busy; }, function(){ clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); dx0 = camX; }, function(dx){ put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); }, snap);
+  dragX(host, function(){ return busy; }, function(){ clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); dx0 = camX; }, function(dx){ put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); }, snap,
+    /* clicking a capture opens its page, the same way as Learn more */
+    function(e){ var h = st.pick(e.clientX, e.clientY, hits); if (h && P[h.s - 1].href) open(h.s, h.k); },
+    function(e){ var h = st.pick(e.clientX, e.clientY, hits); host.classList.toggle('over', !!(h && P[h.s - 1].href)); });
   var wt = 0;
   host.addEventListener('wheel', function(e){
     var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy) return;

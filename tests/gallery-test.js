@@ -92,6 +92,21 @@ const state = p => p.evaluate(() => ({
   await p.waitForURL('**/over_the_hill.html', { timeout: 5000 });
   check('Over the Hill opens its page', true);
 
+  // Clicking a capture opens its page like Learn more; a drag still scrubs
+  await p.goto(BASE + 'index.html'); await p.waitForTimeout(1200);
+  await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800);
+  check('bubble button reads Learn more', (await p.textContent('.bub .openb')).trim().indexOf('Learn more') === 0);
+  check('no dolly track label', !(await p.$('.dbg')));
+  const bx = await p.locator('.st').boundingBox();
+  await p.mouse.move(bx.x + bx.width * .3, bx.y + bx.height * .9); await p.mouse.down();
+  await p.mouse.move(bx.x + bx.width * .8, bx.y + bx.height * .9, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(1800);
+  check('dragging the stage still scrubs and snaps', (await state(p)).key !== 'Other Games' && p.url().indexOf('index.html') > 0, (await state(p)).key);
+  await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800);
+  const ov = await p.locator('.vov').boundingBox();
+  await p.mouse.click(ov.x + ov.width / 2, ov.y + ov.height / 2);
+  await p.waitForURL('**/my_games.html', { timeout: 5000 });
+  check('clicking the screen opens its page', true);
+
   // 5. ?flat
   await p.goto(BASE + 'index.html?flat'); await p.waitForTimeout(800);
   s = await state(p);

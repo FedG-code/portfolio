@@ -14,14 +14,11 @@ Playwright (Chromium). The `playwright` package is in the repo's `package.json`;
 | Project clips | none loaded at first; first one gets `src` once scrolled near |
 | Return | back link -> `#eve-of-destruction`, bubble hidden during the pull-out then shown, focus on the Eve key |
 | University | bubble lists 3 Open links (#climbing, #fishing, #rally); Rally opens with focus on its heading; back focuses the University button |
-| Over the Hill | Open loads over_the_hill.html |
+| Over the Hill | Learn more loads over_the_hill.html |
+| Stage input | button reads "Learn more"; no dolly-track label; a drag scrubs and snaps; a click on a capture opens its page |
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
 | Reduced motion | instant cut, no clip; project clips have controls and stay paused |
 
-## plane-archive/ (dormant)
-
-The destruction/plane suites (`run-destruction-suite.js`, `destruction-*-test.js`, `perf-test*.js`, `gsap-diagnostic-test.js`, `baselines/`). They were written for the old homepage and expect `TextDestruction`/the plane to be loaded at page load and the old hero/#about markup, so they **won't run as-is**. The plane now loads on the P key (`js/plane-key.js`); to revive them, press P (or load the scripts) in their setup and retarget the element selectors.
-
 ## Removed (2026-11-09)
 
-Card hand / title flight / theme tests whose systems are gone: blur-overlay-cleanup, fly-clone-alignment, fly-swap-diagnostic, fullstop-shift, home-title-jump-diagnostic, title-jump-diagnostic, hero-layout, mobile-hand, mobile-touch, toolbar-shadow, transition-refresh. See git history (commit 2ad4150) if needed.
+Card hand / title flight / theme tests whose systems are gone, plus the paper plane / destruction suites (removed with the plane): blur-overlay-cleanup, fly-clone-alignment, fly-swap-diagnostic, fullstop-shift, home-title-jump-diagnostic, title-jump-diagnostic, hero-layout, mobile-hand, mobile-touch, toolbar-shadow, transition-refresh. See git history (commit 2ad4150) if needed.

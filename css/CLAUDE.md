@@ -3,7 +3,7 @@
 | File | Used by | Notes |
 |------|---------|-------|
 | `gallery.css` (~200 lines) | `index.html` only | The Dolly Gallery. Self-contained: does not load shared.css. |
-| `shared.css` (~2.6k lines) | project pages | Base + theme blocks. Only `bold` is live now (pages hard-code `data-theme="bold"`); the brutalist/retro/cinematic/neon blocks, toolbar, card and destruction rules are dead CSS kept in place, safe to prune in a cleanup pass. |
+| `shared.css` (~2.6k lines) | project pages | Base + theme blocks. Only `bold` is live now (pages hard-code `data-theme="bold"`); the brutalist/retro/cinematic/neon blocks, toolbar, card, plane and destruction rules are dead CSS kept in place, safe to prune in a cleanup pass. |
 | `project.css` (~450 lines) | project pages | Project hero/sections, back link (`.project-nav-link.back-link`), title focus ring, `.project-content--text` (text-only block), `.work-figure` caption, `.work-capture-tbc` placeholder. |
 
 `cards.css` was deleted with the card hand (2026-11-09).
@@ -17,10 +17,9 @@ One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light
 | Base | reset, `[hidden]{display:none !important}` (needed: see js/CLAUDE.md gotchas), `.pg` (max 1280px, 44px gutters) |
 | Name strip | `.tb`, `.tb-id`, `.nm`, `.rl`, `.tb-city`, `.edu` (`.full`/`.short` swap on phone), `.tb-ln` (contact links) |
 | About | `.ab`, `.ab-lead`, `.ab-txt`; phone body under the stage: `.ab-m` |
-| Plain list | `.mn`, `.menu`, `.row` (`.lead`, `.on`), `.rt`, `.rs`, `.pv*` preview + spec, `.pv-open` |
+| Plain list | `.mn`, `.menu`, `.row` (`.lead`, `.on`), `.rt`, `.rs`, `.pv*` preview + spec (`.pv-view.go` = clickable), `.pv-open` |
 | Gizmo marks | `.pv-mk`, `.mk`, `.mk-chip` |
-| Paper plane | `#plane-canvas`, `html.plane-active`, `.destruct-char`, `.destruct-word`; `--accent` aliases `--sig` for the plane |
-| Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.pin` (transform-origin 0 0; JS adds scale), `.dbg`, `.tp` placards, `.sign`, `.tl`, `.bub` (+ `.side` on phone, `.its` University items), `.openb`, `.vov` motion overlay |
+| Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.st.over` (pointer over a capture), `.pin` (transform-origin 0 0; JS adds scale), `.tp` placards, `.sign`, `.tl`, `.bub` (+ `.side` on phone, `.its` University items), `.openb`, `.vov` motion overlay |
 | Shot list | `.keys`, `.key` (`.on`, `.lead`, `.abk`), `.track` playhead |
 | Breakpoints | 1100px (smaller key text), 900px (name strip 2x2), 639px (phone: matches `PHONE` in gallery.js), reduced motion |
 

@@ -6,7 +6,6 @@
   --col:#2BD957;            /* collider / trigger green */
   --chip:#101315;
   --stage:#8F9591;
-  --accent:var(--sig);       /* read by the paper plane (js/plane.js, js/destruction.js) */
   --f:"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --fm:"IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
@@ -82,8 +81,9 @@ img.px, .vov.px video, .vov.px img{image-rendering:pixelated}
 .st{position:relative; overflow:hidden; border:1.5px solid var(--ink); background:var(--stage); touch-action:pan-y; -webkit-user-select:none; user-select:none}
 .st.no3d{background:none; border:0; overflow:visible; touch-action:auto; -webkit-user-select:auto; user-select:auto}
 .st-cv{position:absolute; left:0; top:0; display:block}
+.st.over{cursor:pointer}
+.pv-view.go{cursor:pointer}
 .pin{position:absolute !important; left:0; top:0; z-index:2; transform-origin:0 0}
-.dbg{position:absolute; right:8px; bottom:7px; font:500 10.5px/1 var(--fm); color:#22262A; background:rgba(248,249,246,.78); padding:3px 5px; z-index:3; pointer-events:none}
 .tp{display:grid; gap:1px; padding:5px 9px 6px; background:rgba(248,249,246,.93); border-left:3px solid transparent; box-shadow:0 1px 0 rgba(21,24,27,.3)}
 .tp .rt{font-size:19px}
 .tp.lead .rt{font-size:27px}
@@ -137,12 +137,6 @@ img.px, .vov.px video, .vov.px img{image-rendering:pixelated}
 .home.g3d .st + .ab-m{margin-top:-16px; border-top:0}
 .sr{position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
 
-/* ---- paper plane (P key, js/plane-key.js) ---- */
-#plane-canvas{position:fixed; inset:0; z-index:103; pointer-events:none}
-html.plane-active{-webkit-user-select:none; user-select:none}
-.destruct-char{display:inline-block}
-.destruct-word{white-space:nowrap; display:inline}
-
 /* ---- tablet ---- */
 @media (max-width: 1100px){
   .keys .key{padding:9px 10px 10px}
@@ -182,7 +176,6 @@ html.plane-active{-webkit-user-select:none; user-select:none}
   .row.lead .rt{font-size:28px}
   .rs{font-size:12px; margin-top:5px}
   .pv-cap{font-size:12px}
-  .dbg{top:7px; bottom:auto}
   .tp .rt{font-size:15px; font-stretch:112%}
   .tp.lead .rt{font-size:19px}
   .tp .rs{font-size:10.5px}
