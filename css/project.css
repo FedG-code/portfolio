@@ -3,8 +3,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 6rem;
+  padding-top: 2.5rem;
 }
+
+.project-nav-link.back-link {
+  font-size: 0.85rem;
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--accent);
+  padding-bottom: 2px;
+  color: var(--text-primary);
+}
+
+.project-hero-title:focus { outline: none; }
+.project-hero-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
 .project-nav-link {
   font-family: var(--font-mono);

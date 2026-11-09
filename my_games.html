@@ -3,27 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Games</title>
+<title>Other Games</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Bold (default) -->
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Cinematic -->
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Commit+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Brutalist -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
-<!-- Retro -->
-<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bitter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/project.css">
-<link rel="stylesheet" href="css/cards.css">
-<script>
-  var t = localStorage.getItem('portfolio-theme');
-  // Only enabled themes; cinematic/neon are archived (CSS kept) and fall back to bold.
-  if (['bold', 'brutalist', 'retro'].indexOf(t) === -1) t = 'bold';
-  document.documentElement.setAttribute('data-theme', t);
-</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>
 <script>
@@ -35,18 +20,15 @@
 </head>
 <body>
 
-<div id="plane-canvas"></div>
-<div class="drag-blur-overlay" id="dragBlurOverlay"></div>
-<div class="page-container" id="pageContainer"></div>
-<div class="hand-container" id="handContainer"></div>
-<div class="perspective-container" id="perspectiveContainer"></div>
-<div class="fly-overlay" id="flyOverlay"></div>
+<nav class="container project-nav" aria-label="Back">
+  <a class="project-nav-link back-link" href="index.html#other-games">&larr; All projects</a>
+</nav>
 
 <!-- PROJECT HERO -->
 <section class="project-hero">
   <div class="container">
     <div class="project-hero-badge">Solo Dev</div>
-    <h1 class="project-hero-title reveal">My Games</h1>
+    <h1 class="project-hero-title reveal" tabindex="-1">Other Games</h1>
     <p class="project-hero-desc reveal">
       A stealth-horror project in pre-production focused on visibility, AI behavior, and environmental tension. Set in the bayou
       with a lovecraftian narrative. 
@@ -79,7 +61,7 @@
     <!-- Vision & Visibility -->
     <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/visionsystem.gif" alt="Vision system gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/visionsystem.mp4" poster="assets/visionsystem-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Vision system gameplay"></video>
       </div>
       <div class="project-text">
         <h4>Vision &amp; Visibility</h4>
@@ -100,7 +82,7 @@
     <!-- Readable Danger -->
     <div class="project-content project-content--reversed reveal">
       <div>
-        <img class="work-image" src="assets/soundring.gif" alt="Combat and sound propagation gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/soundring.mp4" poster="assets/soundring-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Combat and sound propagation gameplay"></video>
       </div>
       <div class="project-text">
         <h4>Readable Danger</h4>
@@ -117,7 +99,7 @@
     <!-- Enemy AI -->
     <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/enemy-ai.gif" alt="Enemy AI gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/enemy-ai.mp4" poster="assets/enemy-ai-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Enemy AI gameplay"></video>
       </div>
       <div class="project-text">
         <h4>Enemy and Shadows</h4>
@@ -142,7 +124,7 @@
     <h2 class="section-heading reveal">Tetrarcana</h2>
     <div class="project-content project-content--reversed reveal">
       <div>
-        <img class="work-image" src="assets/tetrarcana.gif" alt="Tetrarcana gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/tetrarcana.mp4" poster="assets/tetrarcana-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Tetrarcana gameplay"></video>
       </div>
       <div class="project-text">
         <p>
@@ -175,7 +157,7 @@
     <h2 class="section-heading reveal">Calm Before the Storm</h2>
     <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/calm.gif" alt="Calm Before the Storm gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/calm.mp4" poster="assets/calm-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Calm Before the Storm gameplay"></video>
       </div>
       <div class="project-text">
         <p>
@@ -203,16 +185,7 @@
 </section>
 
 
-<script src="js/toolbar.js"></script>
 <script src="js/shared.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Physics2DPlugin.min.js"></script>
-<script src="js/destruction.js"></script>
-<script src="js/plane.js"></script>
-<script src="js/card-hand.js"></script>
-<script src="js/text-rearrange.js"></script>
-<script src="js/page-transition.js"></script>
 <script src="js/analytics.js"></script>
 </body>
 </html>

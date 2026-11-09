@@ -6,24 +6,9 @@
 <title>Eve of Destruction</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Bold (default) -->
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Cinematic -->
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Commit+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Brutalist -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
-<!-- Retro -->
-<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bitter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/project.css">
-<link rel="stylesheet" href="css/cards.css">
-<script>
-  var t = localStorage.getItem('portfolio-theme');
-  // Only enabled themes; cinematic/neon are archived (CSS kept) and fall back to bold.
-  if (['bold', 'brutalist', 'retro'].indexOf(t) === -1) t = 'bold';
-  document.documentElement.setAttribute('data-theme', t);
-</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>
 <script>
@@ -35,18 +20,15 @@
 </head>
 <body>
 
-<div id="plane-canvas"></div>
-<div class="drag-blur-overlay" id="dragBlurOverlay"></div>
-<div class="page-container" id="pageContainer"></div>
-<div class="hand-container" id="handContainer"></div>
-<div class="perspective-container" id="perspectiveContainer"></div>
-<div class="fly-overlay" id="flyOverlay"></div>
+<nav class="container project-nav" aria-label="Back">
+  <a class="project-nav-link back-link" href="index.html#eve-of-destruction">&larr; All projects</a>
+</nav>
 
 <!-- PROJECT HERO -->
 <section class="project-hero">
   <div class="container">
     <div class="project-hero-badge">Lost Satellite Studios</div>
-    <h1 class="project-hero-title reveal">Eve of Destruction</h1>
+    <h1 class="project-hero-title reveal" tabindex="-1">Eve of Destruction</h1>
     <p class="project-hero-desc reveal">
       A 2D action-platformer built around combo combat, unlockable abilities, and branching progression.
        As Technical Designer on a small team, I designed and implemented the combat,
@@ -92,7 +74,7 @@
     <h2 class="section-heading reveal">Combat</h2>
     <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/ult+bossfightgif.gif" alt="Ultimate ability and boss fight gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/ult+bossfightgif.mp4" poster="assets/ult+bossfightgif-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Ultimate ability and boss fight gameplay"></video>
       </div>
       <div class="project-text">
         <p>
@@ -107,7 +89,7 @@
 
     <div class="project-content project-content--reversed reveal" style="margin-top: 3rem;">
       <div>
-        <img class="work-image" src="assets/knockup.gif" alt="Berserk mode and laser eye gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/knockup.mp4" poster="assets/knockup-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Berserk mode and laser eye gameplay"></video>
       </div>
       <div class="project-text">
         <p>
@@ -135,7 +117,7 @@
     <h2 class="section-heading reveal">Enemies</h2>
     <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/star.gif" alt="Crystal Eater and Star enemy gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/star.mp4" poster="assets/star-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Crystal Eater and Star enemy gameplay"></video>
       </div>
       <div class="project-text">
         <h4>Crystal Eaters &amp; Stars</h4>
@@ -156,7 +138,7 @@
 
     <div class="project-content project-content--reversed reveal" style="margin-top: 3rem;">
       <div>
-        <img class="work-image" src="assets/knightboss.gif" alt="Sword-and-Shield Knight boss fight" loading="lazy">
+        <video class="work-image" data-src="assets/knightboss.mp4" poster="assets/knightboss-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Sword-and-Shield Knight boss fight"></video>
       </div>
       <div class="project-text">
         <h4>Boss: Sword-and-Shield Knight</h4>
@@ -188,7 +170,7 @@
     <h2 class="section-heading reveal">Movement</h2>
     <div class="project-content reveal">
       <div>
-        <img class="work-image" src="assets/wall-jump.gif" alt="Wall jump gameplay" loading="lazy">
+        <video class="work-image" data-src="assets/wall-jump.mp4" poster="assets/wall-jump-poster.jpg" muted loop playsinline preload="none" disablepictureinpicture aria-label="Wall jump gameplay"></video>
       </div>
       <div class="project-text">
         <p>
@@ -204,16 +186,7 @@
 </section>
 
 
-<script src="js/toolbar.js"></script>
 <script src="js/shared.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Physics2DPlugin.min.js"></script>
-<script src="js/destruction.js"></script>
-<script src="js/plane.js"></script>
-<script src="js/card-hand.js"></script>
-<script src="js/text-rearrange.js"></script>
-<script src="js/page-transition.js"></script>
 <script src="js/analytics.js"></script>
 </body>
 </html>
