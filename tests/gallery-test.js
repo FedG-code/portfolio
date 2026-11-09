@@ -1,0 +1,112 @@
+/**
+ * Dolly Gallery test
+ *
+ * Checks the homepage gallery (js/gallery.js) and the project pages it links to:
+ *   - 3D upgrade, one WebGL canvas, no horizontal overflow at 4 viewports
+ *   - keyboard route on the shot list, live region, aria-describedby, motion overlay
+ *   - Open: push into the screen, project page loads with focus on its title
+ *   - Back link: index.html#section, pull back out, focus on the section button
+ *   - plain-list fallback with ?flat and without WebGL
+ *   - prefers-reduced-motion: instant cut, no overlay clip; project clips get controls
+ *   - project pages: clips load only near the viewport
+ *
+ * Usage: node tests/gallery-test.js   (server on BASE, default http://localhost:8080)
+ * Exits non-zero on any failure.
+ */
+const { chromium } = require('playwright');
+const BASE = (process.env.BASE || 'http://localhost:8080').replace(/\/$/, '') + '/';
+// SwiftShader so headless Chromium has WebGL
+const GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+
+let failed = 0;
+function check(name, ok, detail) {
+  console.log((ok ? 'PASS  ' : 'FAIL  ') + name + (detail !== undefined ? '  ' + JSON.stringify(detail) : ''));
+  if (!ok) failed++;
+}
+const state = p => p.evaluate(() => ({
+  g3d: document.querySelector('#gallery').classList.contains('g3d'),
+  canvases: document.querySelectorAll('canvas').length,
+  rows: document.querySelectorAll('.row').length,
+  key: (document.querySelector('.key.on .rt') || {}).textContent || null,
+  active: document.activeElement ? document.activeElement.textContent.trim().slice(0, 40) : null,
+  live: (document.querySelector('.live') || {}).textContent || '',
+  describedBy: (document.querySelector('.key[aria-describedby]') || {}).id || (document.querySelector('.key[aria-describedby]') ? document.querySelector('.key[aria-describedby]').getAttribute('aria-describedby') : null),
+  bubble: document.querySelector('.bub') ? !document.querySelector('.bub').hidden : null,
+  clip: (document.querySelector('.vov:not([hidden]) video') || {}).src || null,
+}));
+
+(async () => {
+  let b = await chromium.launch({ args: GL });
+
+  // 1. viewports
+  for (const [w, h] of [[1920, 1080], [1024, 768], [390, 844], [812, 375]]) {
+    const ctx = await b.newContext({ viewport: { width: w, height: h }, isMobile: w < 700, hasTouch: w < 900 });
+    const p = await ctx.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(String(e)));
+    await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
+    const s = await state(p);
+    const sw = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    check(`${w}x${h} gallery built, one canvas, About first`, s.g3d && s.canvases === 1 && s.key === 'About' && s.bubble, s);
+    check(`${w}x${h} no horizontal overflow, no errors`, sw <= 0 && !errs.length, { overflow: sw, errs });
+    await ctx.close();
+  }
+
+  // 2-4. keyboard route, open, return
+  let p = await (await b.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  await p.goto(BASE + 'index.html'); await p.waitForTimeout(1200);
+  await p.focus('.key[data-i="0"]');
+  await p.keyboard.press('ArrowRight'); await p.keyboard.press('ArrowRight'); await p.waitForTimeout(1700);
+  let s = await state(p);
+  check('arrow keys select Eve of Destruction', s.key === 'Eve of Destruction' && s.active.indexOf('Eve of Destruction') === 0, s);
+  check('live region says only the section name', s.live === 'Eve of Destruction', s.live);
+  check('bubble describes the active button', s.describedBy === 'guide-bubble', s.describedBy);
+  check('clip plays over the selected screen', /knightboss\.mp4$/.test(s.clip || ''), s.clip);
+  await p.keyboard.press('Enter'); await p.waitForTimeout(250);
+  check('bubble hides during the push', (await state(p)).bubble === false);
+  await p.waitForURL('**/eve_of_destruction.html', { timeout: 5000 }); await p.waitForTimeout(400);
+  const pg = await p.evaluate(() => ({ focus: document.activeElement.tagName, loaded: [...document.querySelectorAll('video')].filter(v => v.getAttribute('src')).length }));
+  check('project page: focus on the case title', pg.focus === 'H1', pg);
+  check('project page: clips below the fold not loaded yet', pg.loaded === 0, pg);
+  await p.evaluate(() => document.querySelector('video').scrollIntoView()); await p.waitForTimeout(500);
+  check('project page: clip loads near the viewport', await p.evaluate(() => !!document.querySelector('video').getAttribute('src')));
+  await p.click('.back-link');
+  const seen = [];
+  for (let i = 0; i < 10; i++) { seen.push(await p.evaluate(() => { const b = document.querySelector('.bub'); return b ? (b.hidden ? 'H' : 'V') : '-'; })); await p.waitForTimeout(100); }
+  await p.waitForTimeout(600);
+  s = await state(p);
+  check('return pulls back out of the screen (bubble hidden, then shown)', seen.join('').indexOf('H') >= 0 && s.bubble, seen.join(''));
+  check('return: URL hash + focus on the section button', /#eve-of-destruction$/.test(p.url()) && s.active.indexOf('Eve of Destruction') === 0, s.active);
+
+  // University Projects has no page yet: no Open
+  await p.click('.key[data-i="4"]'); await p.waitForTimeout(1800);
+  check('University Projects bubble lists three items, no Open', await p.evaluate(() => document.querySelectorAll('.bub .its li').length === 3 && !document.querySelector('.bub .openb')));
+
+  // 5. ?flat
+  await p.goto(BASE + 'index.html?flat'); await p.waitForTimeout(800);
+  s = await state(p);
+  check('?flat keeps the plain list', !s.g3d && s.canvases === 0 && s.rows === 5, s);
+  await b.close();
+
+  // 6. no WebGL
+  b = await chromium.launch({ args: ['--disable-webgl', '--disable-3d-apis'] });
+  p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
+  s = await state(p);
+  check('no WebGL: plain list', !s.g3d && s.canvases === 0 && s.rows === 5, s);
+  await b.close();
+
+  // 7. reduced motion
+  b = await chromium.launch({ args: GL });
+  p = await (await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' })).newPage();
+  await p.goto(BASE + 'index.html'); await p.waitForTimeout(1200);
+  await p.click('.key[data-i="3"]'); await p.waitForTimeout(30);
+  s = await state(p);
+  check('reduced motion: instant cut, no clip', s.key === 'Casino Games' && s.bubble && !s.clip, s);
+  await p.click('.bub .openb'); await p.waitForURL('**/casino_games.html', { timeout: 3000 });
+  const rv = await p.evaluate(() => [...document.querySelectorAll('video')].every(v => v.controls && v.paused && v.preload === 'none'));
+  check('reduced motion: project clips have controls and stay paused', rv);
+  await b.close();
+
+  console.log(failed ? `\n${failed} check(s) failed` : '\nAll checks passed');
+  process.exit(failed ? 1 : 0);
+})().catch(e => { console.error(e); process.exit(1); });

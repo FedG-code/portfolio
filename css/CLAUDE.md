@@ -1,6 +1,27 @@
 # CSS Reference Map
 
-Brief overview: 3 CSS files totaling ~3,900 lines. Five themes defined (bold, cinematic, brutalist, retro, neon); only bold (default), brutalist, retro are enabled — cinematic/neon CSS is archived in place. Pattern: base component styles followed by theme override blocks.
+| File | Used by | Notes |
+|------|---------|-------|
+| `gallery.css` (~200 lines) | `index.html` only | The Dolly Gallery. Self-contained: does not load shared.css. |
+| `shared.css` (~2.6k lines) | project pages | Base + theme blocks. Only `bold` is live now (pages hard-code `data-theme="bold"`); the brutalist/retro/cinematic/neon blocks, toolbar, card and destruction rules are dead CSS kept in place, safe to prune in a cleanup pass. |
+| `project.css` (~430 lines) | project pages | Project hero/sections, back link (`.project-nav-link.back-link`), title focus ring. |
+
+`cards.css` was deleted with the card hand (2026-11-09).
+
+## gallery.css
+
+One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light paper, `--ink`, `--mut`, `--ln` rule, `--link`, `--sig` orange (**selection only**), `--col` green (**colliders/triggers only**), `--chip`, `--stage`. Fonts: Archivo (variable, `font-stretch` up to 125%) + IBM Plex Mono.
+
+| Block | Selectors |
+|-------|-----------|
+| Base | reset, `[hidden]{display:none !important}` (needed: see js/CLAUDE.md gotchas), `.pg` (max 1280px, 44px gutters) |
+| Name strip | `.tb`, `.tb-id`, `.nm`, `.rl`, `.tb-city`, `.edu` (`.full`/`.short` swap on phone), `.tb-ln` (contact links) |
+| About | `.ab`, `.ab-lead`, `.ab-txt`; phone body under the stage: `.ab-m` |
+| Plain list | `.mn`, `.menu`, `.row` (`.lead`, `.on`), `.rt`, `.rs`, `.pv*` preview + spec, `.pv-open` |
+| Gizmo marks | `.pv-mk`, `.mk`, `.mk-chip` |
+| Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.pin` (transform-origin 0 0; JS adds scale), `.dbg`, `.tp` placards, `.sign`, `.tl`, `.bub` (+ `.side` on phone, `.its` University items), `.openb`, `.vov` motion overlay |
+| Shot list | `.keys`, `.key` (`.on`, `.lead`, `.abk`), `.track` playhead |
+| Breakpoints | 1100px (smaller key text), 900px (name strip 2x2), 639px (phone: matches `PHONE` in gallery.js), reduced motion |
 
 ## shared.css (2570 lines)
 
@@ -59,33 +80,6 @@ All variables defined in lines 3-26:
 - max-width: 768px -- .toolbar shrink (smaller swatches + plane icon)
 - max-width: 600px -- overflow-x: hidden
 
-## cards.css (864 lines)
-
-### Section Map
-
-| Section | Lines | Key Details |
-|---------|-------|-------------|
-| SPA PAGE SYSTEM | 1-18 | .spa-page display states (active, measuring, transitioning), z-index 200 |
-| PAGE CONTAINER | 20-28 | .page-container absolute, inset 0, z-index 5, overflow-y auto, padding-bottom 220px |
-| DRAG BLUR OVERLAY | 30-40 | .drag-blur-overlay fixed, backdrop-filter blur(0px), will-change |
-| HAND CONTAINER | 42-59 | .hand-container bottom 0, translateX(-50%), height 400px (768px+: 260px), max-width 700px |
-| ATTRACTOR LABEL | 61-81 | .attractor-label absolute, font-mono, var(--accent), z-index 30, pointer-events none |
-| PERSPECTIVE + FLY | 83-96 | .perspective-container, .fly-overlay fixed, z-index 60/500 |
-| CARD BASE | 76-105 | .card 220x320px (768px+: 132x192), cursor grab, transition 0.55s cubic-bezier |
-| CARD INNER | 107-246 | .card-inner radius 14px, .card-title h3, .card-art height 155px, .card-art-icon, .card-inner--home, .type-bar, .card-textbox, .accent-strip |
-| MOBILE CARD SCALING | 248-261 | @media 768px: radius 9px, font-sizes reduced |
-| NEON OVERRIDES | 263-342 | Dark card bg #131318, lime accent glow |
-| TOUCH SUPPORT | 344-356 | html.card-dragging overflow hidden |
-| BOLD OVERRIDES | 358-475 | White/opaque, uppercase, orange accent, no accent-strip |
-| CINEMATIC OVERRIDES | 476-594 | Dark #161616, red accent, 800 weight |
-| BRUTALIST OVERRIDES | 596-713 | White/monospace, blue accent, 2px borders, hand positioning overrides |
-| RETRO OVERRIDES | 714-864 | Rounded 10px, red top line, Shrikhand, decorative elements, hardcoded hex palette |
-
-### Card Dimensions
-
-- Desktop: 220px x 320px
-- Mobile (<=768px): 132px x 192px
-
 ## project.css (412 lines)
 
 ### Section Map
@@ -120,7 +114,6 @@ All variables defined in lines 3-26:
 - Theme override pattern: `[data-theme="X"]` blocks redefine variables AND add theme-specific component styles
 - Brutalist is the most complex theme (~685 lines in shared.css) due to alternate hero/about HTML layouts
 - Image placeholder gradients vary by theme (linear, radial, or solid)
-- Card dimensions defined in both cards.css (CSS) and card-hand.js (JS constants CARD_W/CARD_H) -- keep in sync
 
 ## Uncertainties
 

@@ -1,81 +1,71 @@
 # JS Reference Map
 
-Overview: 6 JS files (~3,100 lines). No build step, no modules — all globals. GSAP + Three.js loaded from CDN. Files communicate via `window.*` hooks.
+Overview: no build step, no modules, all IIFEs. Three.js r128 comes from cdnjs (async, in `index.html`'s `<head>`).
 
-## Dependency Graph
+| File | Loaded by | Purpose |
+|------|-----------|---------|
+| `gallery.js` (~490 lines) | `index.html` | The Dolly Gallery homepage |
+| `shared.js` (~60 lines) | project pages | Scroll reveal, lazy mp4 loops, title focus on arrival from the gallery |
+| `analytics.js` (~57 lines) | all pages | GA4 events: case_open, email_click, social_click, scroll_depth |
+| `plane.js`, `destruction.js` | **nothing (dormant)** | Paper plane + text destruction. Kept available, off by default; how it gets switched on is still the user's call (HANDOFF Tier 3 idea: the guide's toy). If wired onto the homepage it must reuse the gallery's renderer or live on a page without it: plane.js loads its own Three.js + WebGLRenderer, which would break the one-WebGL-context rule. It also expects a `#toolbar-plane-slot` (falls back to body) and GSAP + SplitText + Physics2DPlugin. |
 
-```
-toolbar.js (DOM: swatches, plane slot, hover preview)
-  ├─ wires → window.setTheme(t) on swatch click
-  └─ exports → window.Toolbar.syncActive(t)
-
-shared.js (setTheme(name) — direct theme switch)
-  ├─ called by → toolbar.js swatch click
-  ├─ fires → window.Toolbar.syncActive(name)
-  ├─ fires → TextDestruction.onThemeChange()
-  ├─ fires → window._planeOnThemeChange()
-  └─ fires → window._cardHandOnThemeChange()
-
-plane.js (3D canvas + projectiles)
-  └─ calls → TextDestruction.onProjectileAt()
-
-card-hand.js ←→ page-transition.js (shared state: CARDS, cardOrder, activePageCardId, dragState, animState)
-  └─ page-transition.js uses → TextRearrange.fly()
-
-External: GSAP core, SplitText, Physics2DPlugin, Three.js r128, GLTFLoader
-```
+Retired on 2026-11-09 with the Dolly Gallery: `card-hand.js`, `page-transition.js`, `text-rearrange.js` (title flight), `toolbar.js` (theme switcher). They are in git history (last at commit 2ad4150).
 
 ---
 
-## shared.js (27 lines)
+## gallery.js
 
-### Complete Reference
-| Section | Lines | Notes |
-|---------|-------|-------|
-| Scroll reveal (IntersectionObserver) | 1-12 | threshold 0.1, rootMargin '0px 0px -40px 0px', staggered 60ms delay, unobserves after visible |
-| Theme list | 16 | themes = ['bold','brutalist','retro'] (cinematic/neon archived — CSS kept, not selectable) |
-| setTheme(name) | 17-26 | Validates name, sets data-theme, persists to localStorage('portfolio-theme'), fires Toolbar.syncActive + 3 theme-change callbacks |
-| window.setTheme export | 27 | Global accessor invoked by toolbar.js swatch clicks |
+Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the names below; line numbers drift.
 
-### Global Exports
-- `window.revealObserver` (line 11) — IntersectionObserver instance
-- `window.setTheme(name)` (line 27) — direct theme switch; no cycling logic, name must be in `themes` array
+### Data
+- `H`: city, About lead line and body.
+- `P`: the five project sections in track order (About is section 0 and is not in `P`). Fields: `id` (also the URL hash), `t`, `sub`/`subM` (desktop/phone placard line), `img` (still texture), `clip` (mp4 for the motion overlay), `px` (pixel art: nearest filtering), `ar`, `alt`, `marks` (gizmo chips/boxes in the plain list preview), `href` (project page, or `null` = no Open yet), `blurb`, `spec`, `logs` (bubble facts), `items` (University Projects: three entries, placeholder captures from `phURL()`).
+- Section index (`G.sel`, key `data-i`) = About 0, then `P[i]` is section `i + 1`.
 
-### Theme Change Hooks Fired (in order, inside setTheme)
-1. `window.Toolbar.syncActive(name)` — updates swatch `.active` class + aria-pressed (null-checked)
-2. `window.TextDestruction.onThemeChange()` (null-checked)
-3. `window._planeOnThemeChange()` (null-checked)
-4. `window._cardHandOnThemeChange()` (null-checked)
+### Flow
+1. `boot()`: tries `upgrade()`; if Three.js isn't there yet (or no WebGL / `?flat`) it renders `flatList()`.
+2. `three-ready` event (dispatched by the `<script onload>` in `<head>`) -> `upgrade()` keeps the selected section and focus.
+3. `buildDolly(start)`: builds stage + shot list (`.keys`) + live region; `start = {sel, focus, pull}`.
+4. Window width change -> rebuild (same renderer) keeping `G.sel`. Height changes are ignored (phone URL bars).
+
+### Key pieces
+| Name | Notes |
+|------|-------|
+| `renderer()` | The single `WebGLRenderer`, created once and reused across rebuilds. `glOK=false` if WebGL is missing -> plain list for good. |
+| `Stage(host, w, h, o)` | Scene, lights, grid floor, `screen()`, `pin()` (HTML pinned to 3D points), render on demand (`render`, `later`), `dispose()`. `o.k` scales pinned HTML on narrower desktops. |
+| `shot(m, w)` | Camera per breakpoint. Base sizes from the prototype (desktop 1192x470, phone 358x500). Desktop height = clamp(w*0.394, 400, 470); camera pulls back only sqrt of the aspect change and pins scale by `k` (min 0.72) so sign and bubble don't collide at 812-1100px. |
+| `PHONE` | 640: stage width below this uses the phone shot (sign = lead line only, About body as `.ab-m` under the stage, bubble beside the guide). |
+| `bubHTML(i)` | Bubble content: logs + stack + Open link (only if `href`); University Projects lists its three items as "to come". |
+| `select(s, anim, announce)` | Moves camera (`put`), walks the guide round the bay dividers (`route` via z=2.45 on desktop), then `arrive` -> `say` (bubble + live region) + `showOv` (clip). |
+| `act(s)` | Shot-list click/Enter: select, or Open if already there. |
+| `open(s)` | Sets `sessionStorage['dolly-return'] = id`, pushes the camera into the screen (0.6s), then `location.href = href`. Reduced motion: navigates at once. |
+| `pullBack(s)` | Starts inside the screen and pulls out to the section shot. Used on return (`#id` + matching `dolly-return`) and on bfcache `pageshow`. |
+| `dragX`, wheel handler, `snap()` | Scrub the dolly; bubble + clip hide at once; guide walks after the snap. |
+
+### Accessibility
+- The shot list is the keyboard route: roving tabindex, arrows/Home/End select, Enter on the selected section opens.
+- `.live` (`aria-live=polite`, visually hidden) gets only the section name, and only on user-driven moves.
+- The bubble (`#guide-bubble`) is the `aria-describedby` of the active key. Wall placards (`.tp`) are `aria-hidden` and not focusable.
+- Return focus: the section's key. On the project page `shared.js` focuses `.project-hero-title` when `dolly-return` is set.
+- `prefers-reduced-motion`: `Clock.add` completes tweens instantly, no walk, no bubble pop, no motion overlay, no push/pull.
+
+### Gotchas
+- `[hidden]{display:none !important}` in gallery.css is required: `.bub{display:grid}` would otherwise beat the UA `[hidden]` rule and the bubble would never hide.
+- If Three.js arrives after the plain list was shown, a pending pull-back (`G.pull`) is applied on upgrade unless the visitor already moved (`G.moved`).
+- Don't give page elements ids equal to section ids (`over-the-hill`, ...): the back link's hash would scroll to them.
+
+---
+
+## shared.js (project pages)
+- Scroll reveal (`.reveal` -> `.visible`), `window.revealObserver`.
+- If `sessionStorage['dolly-return']` is set: focus `.project-hero-title` (tabindex=-1).
+- `video[data-src]`: src set when within 200px of the viewport, play while visible, pause when not. Reduced motion: `controls`, no loop, `preload=none`, no autoplay.
 
 ---
 
-## toolbar.js (147 lines)
+## Dormant: destruction.js and plane.js (not loaded by any page)
 
-### Purpose
-Builds the fixed right-edge `.toolbar` element injected into `document.body` on every live page. Contains three theme swatch buttons (direct-select, not cycling), a divider, a `#toolbar-plane-slot` marker div that plane.js adopts its button into, and a hover preview panel (desktop-only via `(hover: hover) and (pointer: fine)` media query).
-
-### Constants
-| Name | Value | Notes |
-|------|-------|-------|
-| `THEMES` | `['bold','brutalist','retro']` | Rendered in this order top-to-bottom. Cinematic/neon archived (LABELS/PREVIEW entries kept for re-enable) |
-| `LABELS` | `{bold: 'Bold', ...}` | aria-label + preview panel name |
-| `PREVIEW` | Per-theme `{accent, bg, text, sub, chips[4]}` | Inline hex values for preview panel chips — mirrors the `--theme-*-accent` CSS constants (keep in sync if CSS changes) |
-
-### Functions
-| Function | Notes |
-|----------|-------|
-| `buildToolbar()` | Creates `#toolbar` with role=toolbar, swatches, divider, plane slot, preview panel; wires click + hover; appends to body |
-| `wireSwatchClicks(swatches)` | Delegates click on `.swatch-btn`, reads `data-theme-id`, calls `window.setTheme(t)` |
-| `wireHoverPreview(...)` | Desktop-only — updates preview panel content on mouseover of non-active swatches, hides on mouseleave |
-| `syncActive(name)` | Toggles `.active` class + `aria-pressed` on swatch buttons; hides preview — exported as `window.Toolbar.syncActive` |
-
-### Global Exports
-- `window.Toolbar = { syncActive }` — called by `setTheme()` in shared.js
-
-### Load Order Requirement
-Must be loaded **before** `shared.js` (so `window.Toolbar.syncActive` exists when setTheme first fires) **and before** `plane.js` (so `#toolbar-plane-slot` exists when `createToggleButton()` runs). All four live HTML pages load scripts in this order: `toolbar.js` → `shared.js` → `plane.js`.
-
----
+The reference below is from before the Dolly Gallery and still describes the code. The pages it mentions (card hand, toolbar, hero h1 selectors) are gone, so `DESTRUCTIBLE_SELECTOR` needs new targets before this is switched on again.
 
 ## destruction.js (~447 lines)
 
@@ -195,231 +185,3 @@ GSAP core, SplitText plugin, Physics2DPlugin (all CDN, no npm)
 
 ---
 
-## text-rearrange.js (268 lines)
-
-### Section Map
-| Section | Lines | Notes |
-|---------|-------|-------|
-| IIFE wrapper | 14, 266-268 | `var TextRearrange = (function() { ... })()` |
-| quadBezier() | 23-29 | Quadratic bezier interpolation -> {x, y} |
-| measureDirect() | 37-80 | SplitText on element, extracts char rects + computed styles |
-| fly() | 94-263 | Main entry: measures source/target, builds bezier arc timeline |
-
-### Constants
-| Name | Value | Description |
-|------|-------|-------------|
-| CHAR_STAGGER | 0.05s | Delay between char launches |
-| CHAR_DURATION | 0.20s | Per-char fly time |
-| ARC_HEIGHT | 150px | Bezier arc offset |
-| DISCRETE_SWAP | 0.30 | Progress point for font-family/style/transform swap |
-
-### Functions
-| Function | Lines | Params | Returns | Description |
-|----------|-------|--------|---------|-------------|
-| quadBezier | 23-29 | t, p0x/y, p1x/y, p2x/y | {x,y} | Bezier point interpolation |
-| measureDirect | 37-80 | el, keepSplit | {positions[], sourceChars[], split, elRect, lineHeight} | Measures char positions + computed styles via SplitText |
-| fly | 94-263 | {sourceEl, targetEl, overlay, onStart?} | {timeline, lastLaunchTime, destroy(), charEls[]} or null | Builds GSAP timeline: chars fly along bezier arcs from source to target |
-
-### Measurement Invariant: destruct-char Consistency
-`measureDirect()` uses `charsClass: 'destruct-char'` so that SplitText creates inline-block spans matching the final state after `TextDestruction.onThemeChange()` re-splits. This is critical — without it, positions measured as inline text differ from positions rendered as inline-block spans, causing visible character shifts (especially on punctuation like "." which shifts ~15px).
-
-The old Y-correction block (previously L121-138) was removed because it compensated for inline-vs-inline-block glyph offset, which no longer exists when both source and target are measured as inline-block.
-
-**If you touch measureDirect or splitAllText**: both MUST use `charsClass: 'destruct-char'` with matching SplitText options, or fly-swap positions will diverge.
-
-### Line-Height Interpolation (L204-205, L230)
-Source and target line-heights extracted per-char, linearly interpolated during animation. Prevents vertical spacing jumps between card and page typography.
-
-### fly() Animation Flow
-1. **Validate** (L94-119): Check fonts loaded, measure source (keepSplit), measure target, validate char count (+/-2 tolerance)
-2. **Prepare chars** (L126-150): Reparent source chars to overlay as fixed-position elements, copy 9 computed style properties
-3. **Build timeline** (L152-236): Per-char bezier arc (alternating perpendicular offset), interpolate font-size/weight/letter-spacing/line-height linearly, swap font-family/style/text-transform at DISCRETE_SWAP, GSAP native color interpolation
-4. **Return** (L238-248): timeline, lastLaunchTime, destroy(), charEls[]
-
-### Dependencies
-GSAP core (timeline, to, set), SplitText (measureDirect)
-
----
-
-## card-hand.js (~730 lines)
-
-### Section Map
-| Section | Lines | Notes |
-|---------|-------|-------|
-| CARDS array | 0-44 | 4 card objects with id, accent, title, pageUrl, artImage, etc. |
-| Constants | 46-72 | Responsive dimensions + attractor constants |
-| State variables | 74-96 | dragState, animState, cardOrder, activePageCardId, attractorState |
-| createCardHTML() + freezeGif() + buildCards() | 98-146 | DOM construction, GIF->PNG freeze |
-| Fan geometry | 148-171 | fanX(), fanAngle(), fanArcY(), getRestPosition() |
-| layoutCards() | 173-194 | Applies transforms; skips dragged AND active-attractor card |
-| Slot detection + proximity | 196-236 | getSlotForX(), getCardCenter(), calcProximity(), isInPlayZone() |
-| Proximity feedback | 238-276 | applyProximityFeedback(), resetProximityFeedback(), hexToRGB() |
-| Touch helpers | 278-315 | isPlaneActive(), findNearestCardInRange(), liftCard(), dismissLift() |
-| Drag handlers | 317-484 | onPointerDown(), onPointerMove(), onPointerUp() |
-| Hover handlers | 486-505 | pointerover/pointerout |
-| Attractor (drag-me hint) | 507-660 | See "Attractor System" section below |
-| Event listeners | 662-693 | Pointer events, dragstart, scroll, theme callback |
-| Theme change callback | 697-705 | window._cardHandOnThemeChange |
-| Init | 707-712 | buildCards() + initAttractor() + entrance animation |
-
-### CARDS Array Structure (each object)
-```
-{ id, accent, title, typeLeft, typeRight, icon, text, pageUrl, artImage }
-```
-- id 0-2: project cards (have pageUrl + artImage)
-- id 3: Home card (pageUrl: null, artImage: null)
-
-### Key Constants
-| Name | Desktop | Mobile (<=768) | Description |
-|------|---------|----------------|-------------|
-| CARD_W | 220 | 132 | Card width (px) |
-| CARD_H | 320 | 192 | Card height (px) |
-| HAND_W | 700 | min(innerWidth, 400) | Hand container width |
-| HAND_H | 400 | 260 | Hand container height |
-| HOLD_RADIUS | 1400 | 900 | Fan arc radius |
-| FAN_SPREAD | 20 deg | 14 deg | Angular spread |
-| OVERLAP_SPACING | 155 | 90 | Horizontal card spacing |
-| SINK_BELOW | 190 | 130 | Vertical offset down |
-| HOVER_LIFT | 50 | 35 | Hover lift (px) |
-| PLAY_ZONE_HALF_W | ~385 | — | Play zone half-width |
-| PLAY_ZONE_HALF_H | ~289 | — | Play zone half-height |
-| MAX_BLUR | 8 | — | Max proximity blur (px) |
-| MAX_OVERLAY_OPACITY | 0.3 | — | Max overlay darkness |
-| MAX_GLOW_SIZE | 30 | — | Max card glow (px) |
-| PROXIMITY_DEAD_ZONE | 0.35 | — | Dead zone (35% distance) |
-
-### Fan Geometry
-- X: `(slot - (total-1)/2) * OVERLAP_SPACING`
-- Angle: `-FAN_SPREAD/2 + (FAN_SPREAD/(total-1)) * slot`
-- Y: `HOLD_RADIUS - HOLD_RADIUS * cos(angle_radians)`
-
-### DOM Structure Created
-```
-#handContainer (preserve-3d)
-  .card[data-card-id]
-    .card-inner[data-accent]
-      .card-title > h3
-      .card-art > .card-art-inner > (img.card-art-img OR .card-art-icon)
-      .type-bar
-      .card-textbox
-      .accent-strip
-```
-
-### Global Exports
-- `window._cardHandOnThemeChange` (L533-540): Clears inline proximity feedback styles
-- Shared variables (used by page-transition.js): CARDS, cardOrder, activePageCardId, dragState, animState, buildCards, getRestPosition, calcProximity, MAX_BLUR, MAX_OVERLAY_OPACITY, MAX_GLOW_SIZE, handContainer, dragBlurOverlay, perspectiveContainer, flyOverlay
-
-### Cross-File Dependencies
-- Calls `window.prefetchPage()` (from page-transition.js) on pointer down
-- Checks `isPlaneActive()` — reads `plane-active` CSS class (set by plane.js)
-
-### Attractor System (drag-me hint)
-
-A one-shot tutorial hint that bobs the center card and shows a `drag me!` label when a new user hasn't figured out the drag mechanic. Permanently disabled (across reloads) the first time any successful drag is observed.
-
-**Constants** (card-hand.js L66-72):
-| Name | Value | Notes |
-|------|-------|-------|
-| `ATTRACTOR_LS_KEY` | `'portfolio-card-attractor-seen'` | localStorage flag (set to `"1"` on first drag) |
-| `ATTRACTOR_FIRST_MS` | 10000 | First-land timer |
-| `ATTRACTOR_TOUCH_MS` | 3500 | Post-touch (hover/tap) timer |
-| `ATTRACTOR_BOUNCE_Y` | -40 desktop / -22 mobile | Bounce amplitude (px) |
-| `ATTRACTOR_LABEL_OFFSET` | 26 desktop / 18 mobile | Label offset above card top (px) |
-
-**State** (`attractorState` object, L86-95): `firstLandTimer`, `postTouchTimer`, `active`, `disabled`, `cardId`, `labelEl`, `tween`, `planeObserver`.
-
-**Timer logic:**
-1. `initAttractor()` runs at startup. If localStorage flag is set → `disabled = true`, returns. Otherwise wires a `MutationObserver` on `<html>` class (to react to `plane-active`) and arms the first-land timer.
-2. `armFirstLandTimer()` early-returns if disabled/active/already-armed/plane-active.
-3. `onAttractorCardInteraction()` — called from `onPointerDown` AND desktop `pointerover`. Cancels first-land and arms one-shot `ATTRACTOR_TOUCH_MS` timer. Post-touch timer does NOT restart on subsequent touches.
-4. Either timer firing calls `startAttractor()`.
-5. `onPointerMove` crossing the drag threshold calls `disableAttractorPermanently()` — writes localStorage, cancels timers, calls `stopAttractor()`, disconnects the observer.
-
-**Visual:**
-- `startAttractor()` picks `cardOrder[Math.floor(cardOrder.length / 2)]` as the target (center of visible fan, typically id 1 Eve of Destruction on index.html with 3 project cards).
-- Appends `.attractor-label` div **as a child of the target `.card`** so it rides with the bounce. Positioned `left: 50%; top: -ATTRACTOR_LABEL_OFFSET` with inline `transform: translateX(-50%) rotate(-pos.angle)` — counter-rotation keeps the text upright even if the target card has a non-zero fan angle. Uses `var(--font-mono)` and `var(--accent)`.
-- Calls `gsap.set(el, { x, y, rotation })` to take GSAP ownership of the card transform, then runs a two-phase `gsap.timeline({ repeat: -1, repeatDelay: 0.8 })`: `y → py + BOUNCE_Y` over 0.14s `power1.out` (snappy liftoff), then `y → py` over 0.9s `bounce.out` (settling drop) with a `-=0.04` overlap so the descent kicks in before the up tween's tail, eliminating the peak hang. `attractorState.tween` holds the timeline — `stopAttractor()` calls `.kill()` on it the same as a tween.
-- **Already-lifted intro**: if the target card has `hover-active` at the moment `startAttractor()` runs (hover or tap-lift), the up phase is skipped. GSAP starts the card at `py - HOVER_LIFT` and runs a one-shot intro timeline (0.9s `bounce.out` descent + 0.8s pause). Its `onComplete` swaps `attractorState.tween` with the normal infinite loop so subsequent iterations behave identically to the cold-start path.
-- `layoutCards()` skips the attractor card while active so hover-on-other-cards doesn't fight the tween.
-- `prefers-reduced-motion: reduce` → label still appears, no bounce tween.
-
-**Cleanup hooks:**
-- `onPointerDown` on any card while attractor is active → `stopAttractor()` (prevents tween/drag transform conflict). If the pointerdown becomes a real drag, `disableAttractorPermanently()` fires next.
-- Plane toggle via MutationObserver: class added → cancel timers + stopAttractor. Class removed → rearm first-land timer (if not disabled).
-- `playCard()` path is transitively covered (successful drag → `hasMoved = true` → permanent disable before `playCard()` is ever called).
-
-**CSS:** `.attractor-label` rule in `css/cards.css` (just above `.perspective-container`).
-
----
-
-## page-transition.js (890 lines)
-
-### Section Map
-| Section | Lines | Notes |
-|---------|-------|-------|
-| Timing constants | 0-6 | DECOMPOSE_DURATION=0.1s, FLY_DURATION=0.5s |
-| Fetch + cache | 8-31 | pageCache = {url: Promise<html>}, prefetchPage(), extractPageContent() |
-| SPA bootstrap | 50-136 | bootstrapFromProjectPage(): handles direct project page loads |
-| playCard() | 138-258 | 6-phase animation: center -> wriggle -> expand -> decompose -> pause -> transition |
-| beginPageTransition() | 260-356 | Measures title/art, reparents to flyOverlay, routes to home/project |
-| transitionToHome() | 358-501 | Flies elements to home hero, fades in home page |
-| transitionToProject() | 503-694 | Flies elements to project page, fades in wrapper |
-| Helpers | 696-722 | getTargetTypography(), applyArtCloneStyles() |
-| rebuildHand() | 725-765 | Rebuilds card hand after transition |
-| History + navigation | 767-889 | navigateToPage(), popstate handler, back/forward |
-
-### Timing Constants
-| Name | Value | Lines | Description |
-|------|-------|-------|-------------|
-| DECOMPOSE_DURATION | 0.1s | 5 | Decorative element fade-out |
-| FLY_DURATION | 0.5s | 6 | Title/art fly animation |
-| WRIGGLE_DURATION | 1.0s | 202 | Wriggle phase |
-| Page fade | 0.3-0.4s | various | Opacity transitions |
-
-### playCard() Animation Phases
-1. **Center** (0-500ms, L195-199): Card slides to viewport center, power3.out
-2. **Wriggle** (500-1500ms, L201-225): +/-8 deg rotation, +/-2.5px jitter, blur->16px, overlay->0.55, glow->70px
-3. **Expand** (1500-2000ms, L227-235): Scale to fill viewport `min(vw/CARD_W, vh/CARD_H)`, glow+blur->0
-4. **Decompose** (2000-2150ms, L237-249): Fade .type-bar, .card-textbox, .accent-strip, border
-5. **Pause** (2150-2350ms, L252): Empty delay
-6. **Transition** (2350ms+, L255-257): Calls beginPageTransition()
-
-### transitionToHome vs transitionToProject
-| Aspect | toHome (L358-501) | toProject (L503-694) |
-|--------|-------------------|----------------------|
-| Target | `#page-home` (hidden) | New `<div class="spa-page measuring">` |
-| Title target | `.hero h1` (theme-aware) | `.project-hero-title` |
-| Image target | None (art fades out) | First `.work-image` |
-| .reveal handling | Strips from title | Strips from title + image ancestor |
-| History | pushState -> index.html | pushState -> cardData.pageUrl |
-
-### Fly Clone System
-1. Measures card title/art at current scale (beginPageTransition L285-296)
-2. Reparents real elements to #flyOverlay with fixed positioning (L298-342)
-3. Uses TextRearrange.fly() for char-by-char animation (or fallback tween)
-4. After animation: destroy() clears overlay
-
-### transitionToHome Cleanup Ordering
-In the cleanup callback (~L477), `TextDestruction.onThemeChange()` MUST run BEFORE `targetTitle.style.opacity = '1'` and `rearrangeResult.destroy()`. This ensures the h1 is already split into `destruct-char` spans (inline-block) when it becomes visible. If onThemeChange runs after the title is revealed, the h1 briefly appears in its unsplit (inline) state, then jumps when re-split — punctuation like "." shifts ~15px.
-
-### .reveal Class Handling
-Elements with `.reveal` start at opacity:0 + translateY(24px). Must be stripped from fly targets before measuring, otherwise getBoundingClientRect returns wrong values. Re-observed after transition for elements without `.visible`.
-
-### pageCache Structure
-```
-{ [url: string]: Promise<string> }
-```
-Promises resolve to extracted HTML (nav/footer/canvas stripped by extractPageContent).
-
-### Global Exports
-- `window.prefetchPage(url)` (L31): Starts async fetch+cache
-
-### Cross-File Dependencies
-- Imports from card-hand.js: CARDS, calcProximity, MAX_BLUR, MAX_OVERLAY_OPACITY, MAX_GLOW_SIZE, cardOrder, activePageCardId, buildCards, getRestPosition, handContainer, dragBlurOverlay, perspectiveContainer, flyOverlay
-- Uses optional: window.TextDestruction, window.TextRearrange, window.revealObserver
-- Modifies: activePageCardId, cardOrder, dragState, animState
-
-### Uncertainties
-- extractPageContent() (L33-48) uses hardcoded selector list for removal — if page structure changes, content may be incorrectly stripped
-- TextRearrange.fly() failure is silently caught (L416-420)
-- popstate handler (L877-889) clears GSAP timeline on every navigation — may interrupt unrelated animations
