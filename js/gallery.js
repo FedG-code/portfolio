@@ -1,0 +1,486 @@
+/* js/gallery.js: the Dolly Gallery homepage.
+   Ported from the round 4 prototype (design/blockout/dolly-r4.html): buildDolly, bubHTML, Stage, flatList, P.
+   - HTML first: index.html ships About + a plain section list. When Three.js (r128, cdnjs, async) arrives,
+     the list is rebuilt as the 3D gallery, keeping the selected section and focus. Without WebGL (or with ?flat)
+     the list stays.
+   - One WebGL renderer for the page; the phone shot is a breakpoint (stage < 640px), not a second canvas.
+   - Renders on demand only. prefers-reduced-motion: the camera cuts, the guide appears in place, no bubble pop,
+     no motion overlay.
+   - Open pushes the camera into the screen, then loads the project page. The page's back link returns to
+     index.html#<section id>; sessionStorage 'dolly-return' tells us to start inside the screen and pull back out. */
+(function(){
+'use strict';
+var RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+var FLAT = /[?&]flat\b/.test(location.search);
+var RET_KEY = 'dolly-return';
+var PHONE = 640;
+
+/* ------------------------------ content ------------------------------ */
+var H = {
+  city:'London, UK',
+  lead:"I'm a technical designer who writes the tools and gameplay code behind the design.",
+  about:'At Funselektor I built Feedbot for Over the Hill. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on live web games at Logifuture.'
+};
+var P = [
+  { id:'over-the-hill', t:'Over the Hill', sub:'Tool programmer at Funselektor Labs, 2026', subM:'Tool programmer at Funselektor Labs, 2026',
+    img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill key art', marks:[{chip:'Funselektor key art'}], href:null,
+    blurb:"Key art from Funselektor's game. I built Feedbot, which sorts the game's player feedback from six platforms into bugs and requests. The first version shipped two days after the brief.",
+    spec:[['Studio','Funselektor Labs'],['Role','Tool Programmer'],['Stack','Web, LLM pipeline'],['Year','2026'],['Result','45k player messages triaged in launch week']],
+    logs:['Feedbot sorts feedback from six platforms into bugs and requests','First version shipped two days after the brief','45k player messages triaged in launch week'] },
+  { id:'eve-of-destruction', t:'Eve of Destruction', sub:'Technical designer at Lost Satellite Studios, 2024', subM:'Technical designer at Lost Satellite, 2024',
+    img:'assets/knightboss-poster.jpg', clip:'assets/knightboss.mp4', px:true, ar:800/494, alt:'Eve of Destruction knight boss attacking, with hitboxes visible', marks:[{chip:'Hitbox debug view on'}],
+    href:'eve_of_destruction.html', blurb:'The knight boss with my hitbox debug view on.',
+    spec:[['Studio','Lost Satellite Studios'],['Role','Technical Designer'],['Stack','Godot, GDScript'],['Year','2024']],
+    logs:['Combat: each attack is an FSM state, with input buffering','Crystal Eaters: ten-state FSM, three detection ranges','Steam demo out'] },
+  { id:'casino-games', t:'Casino Games', sub:'Game developer at Logifuture, 2023 to 2026', subM:'Game developer at Logifuture, 2023 to 2026',
+    img:'assets/spin+img.png', clip:'assets/spin+.mp4', ar:16/9, alt:'Spin and Win free spins round', marks:[{x:26,y:1,w:40,h:97,l:'Spin and Win wheel'}],
+    href:'casino_games.html', blurb:'Three years at Logifuture shipping live web games in PixiJS and Unity WebGL.',
+    spec:[['Studio','Logifuture'],['Role','Game Developer'],['Stack','PixiJS, Unity WebGL'],['Year','2023 to 2026']],
+    logs:['8+ game releases, start to finish','PixiJS and Unity WebGL'] },
+  /* placeholders until the content pass (titles, captures, write-ups, which one is the main item) */
+  { id:'university-projects', t:'University Projects', sub:'Three games from university (to come)', subM:'Three games from university',
+    rs:'Three games · to come', ph:true, href:null,
+    img:null, ar:16/9, alt:'Placeholder for a university project capture', marks:[{chip:'Placeholder: capture to come'}],
+    blurb:'Three games from university. Titles, captures and write-ups are on their way.',
+    spec:[['Studio','University'],['Role','To come'],['Stack','To come'],['Year','To come']],
+    items:[{t:'University project 1'},{t:'University project 2'},{t:'University project 3'}],
+    logs:[] },
+  { id:'other-games', t:'Other Games', sub:'A stealth game in Unity, plus jam games, since 2025', subM:'Stealth game in Unity, plus jam games',
+    img:'assets/visionsystemimg.png', clip:'assets/visionsystem.mp4', ar:800/456, alt:'Top-down stealth game with the guard vision cone drawn on the floor', marks:[{x:43.5,y:9,w:10.5,h:43,l:'Vision cone: HLSL shader'}],
+    href:'my_games.html', blurb:'A top-down stealth game in Unity. The guard vision cone is a shader I wrote in HLSL. Jam games sit under the same heading.',
+    spec:[['Studio','Independent'],['Role','Solo developer'],['Stack','Unity 6, HLSL'],['Year','2025 onwards']],
+    logs:['Guard vision cone: a shader I wrote in HLSL','Built in Unity 6'] }
+];
+/* grey placeholder capture as a data URL, so the plain list and the 3D texture share it */
+var phC = {};
+function phURL(label){
+  if (phC[label]) return phC[label];
+  var cv = document.createElement('canvas'); cv.width = 640; cv.height = 360; var g = cv.getContext('2d');
+  g.fillStyle = '#5A605C'; g.fillRect(0, 0, 640, 360);
+  g.strokeStyle = 'rgba(243,244,240,.35)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(640, 360); g.moveTo(640, 0); g.lineTo(0, 360); g.stroke();
+  g.fillStyle = '#5A605C'; g.fillRect(150, 140, 340, 80);
+  g.fillStyle = '#F3F4F0'; g.textAlign = 'center'; g.font = '600 30px Archivo, sans-serif'; g.fillText(label, 320, 178);
+  g.font = '500 18px "IBM Plex Mono", monospace'; g.fillStyle = 'rgba(243,244,240,.75)'; g.fillText('capture to come', 320, 206);
+  return (phC[label] = cv.toDataURL('image/png'));
+}
+P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ it.img = phURL(it.t); }); p.img = p.items[0].img; } });
+function idxOf(id){ for (var i = 0; i < P.length; i++) if (P[i].id === id) return i; return -1; }
+
+/* ------------------------------ clock: on-demand tweens ------------------------------ */
+function Clock(){ this.tw = []; this.raf = 0; this.last = 0; }
+Clock.prototype.add = function(dur, fn, done){
+  if (RM || dur <= 0){ fn(1); if (done) done(); return null; }
+  var t = {e:0, dur:dur, fn:fn, done:done, dead:false}; this.tw.push(t); this.run(); return t;
+};
+Clock.prototype.kill = function(t){ if (t) t.dead = true; };
+Clock.prototype.killAll = function(){ this.tw.forEach(function(t){ t.dead = true; }); this.tw = []; };
+Clock.prototype.run = function(){
+  var self = this; if (self.raf) return; self.last = performance.now();
+  function loop(now){
+    var dt = Math.min(0.05, (now - self.last) / 1000); self.last = now; self.raf = 0;
+    var list = self.tw.slice();
+    for (var i = 0; i < list.length; i++){ var t = list[i]; if (t.dead) continue; t.e += dt; var p = Math.min(1, t.e / t.dur); t.fn(p); if (p >= 1){ t.dead = true; if (t.done) t.done(); } }
+    self.tw = self.tw.filter(function(t){ return !t.dead; });
+    if (self.tw.length) self.raf = requestAnimationFrame(loop);
+  }
+  self.raf = requestAnimationFrame(loop);
+};
+function eio(p){ return p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2; }
+function lerp(a, b, t){ return a + (b - a) * t; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function el(tag, cls, html){ var e = document.createElement(tag); e.className = cls; if (html != null) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+function restart(e){ e.classList.remove('anim'); void e.offsetWidth; e.classList.add('anim'); }
+
+/* ------------------------------ shared markup ------------------------------ */
+function specHTML(spec){ return spec.map(function(s){ return '<div' + (s[0] === 'Result' ? ' class="res"' : '') + '><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join(''); }
+function marksHTML(ms){ return (ms || []).map(function(m){ return m.chip ? '<span class="mk-chip">' + m.chip + '</span>' : '<span class="mk" style="left:' + m.x + '%;top:' + m.y + '%;width:' + m.w + '%;height:' + m.h + '%"><b>' + m.l + '</b></span>'; }).join(''); }
+function inWidth(ar){ return ar < 16/9 - .01 ? (ar / (16/9) * 100) + '%' : '100%'; }
+function roleYear(p){ return p.rs || p.spec[1][1] + ' · ' + p.spec[3][1]; }
+function abHTML(){ return '<section class="ab" aria-label="About"><p class="ab-lead">' + H.lead + '</p><p class="ab-txt">' + H.about + '</p></section>'; }
+function openLink(p, cls){ return '<a class="' + cls + '" href="' + p.href + '">Open case study <span aria-hidden="true">&rarr;</span></a>'; }
+function rove(items, onSel){
+  items.forEach(function(b, i){
+    b.addEventListener('keydown', function(e){
+      var j = null, n = items.length;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') j = (i + 1) % n;
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') j = (i - 1 + n) % n;
+      else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = n - 1;
+      if (j !== null){ e.preventDefault(); items[j].focus({preventScroll:true}); onSel(j); }
+    });
+  });
+}
+function setRove(items, i){ items.forEach(function(r, j){ r.tabIndex = j === i ? 0 : -1; if (j === i) r.setAttribute('aria-current', 'true'); else r.removeAttribute('aria-current'); r.classList.toggle('on', j === i); }); }
+function remember(p){ try { sessionStorage.setItem(RET_KEY, p.id); } catch(e){} }
+function takeReturn(){ var v = null; try { v = sessionStorage.getItem(RET_KEY); sessionStorage.removeItem(RET_KEY); } catch(e){} return v; }
+function hashIdx(){ return idxOf(decodeURIComponent((location.hash || '').slice(1))); }
+
+/* ------------------------------ state ------------------------------ */
+var home = document.getElementById('gallery');
+var G = {mode:'', sel:0, picked:false, w:0, api:null};  /* sel: section index, About = 0 */
+var retId = takeReturn();
+
+/* ------------------------------ plain list (before Three.js, and without WebGL) ------------------------------ */
+function setPV(root, p){
+  var im = root.querySelector('.pv img'), pin = root.querySelector('.pv .pv-in'), mkl = root.querySelector('.pv .pv-mk');
+  im.src = p.img; im.alt = p.alt; im.classList.toggle('px', !!p.px);
+  pin.style.setProperty('--ar', p.ar); pin.style.width = inWidth(p.ar);
+  mkl.innerHTML = marksHTML(p.marks); if (!RM) restart(mkl);
+  root.querySelector('.pv-cap').textContent = p.blurb;
+  root.querySelector('.pv-spec').innerHTML = specHTML(p.spec);
+  var ol = root.querySelector('.pv-open'); if (ol) ol.remove();
+  if (p.href) root.querySelector('.pv').insertAdjacentHTML('beforeend', openLink(p, 'pv-open'));
+}
+function flatList(){
+  var m = home.clientWidth < PHONE;
+  G.mode = 'flat'; G.api = null; home.classList.remove('g3d');
+  home.innerHTML = abHTML() + '<div class="st no3d"><div class="mn"><div class="menu" role="group" aria-label="Sections">' +
+    P.map(function(p, i){ return '<a class="row' + (i ? '' : ' lead') + '" href="' + (p.href || '#' + p.id) + '" data-i="' + i + '"><span class="rt">' + p.t + '</span><span class="rs">' + (m ? p.subM : p.sub) + '</span></a>'; }).join('') +
+    '</div><figure class="pv"><div class="pv-view"><div class="pv-in"><img alt=""><div class="pv-mk"></div></div></div><figcaption class="pv-cap"></figcaption><dl class="pv-spec"></dl></figure></div></div>';
+  var host = home.querySelector('.st'), rows = [].slice.call(host.querySelectorAll('.row'));
+  function sel(i){ G.sel = i + 1; setRove(rows, i); setPV(host, P[i]); }
+  rows.forEach(function(r, i){ r.addEventListener('click', function(e){
+    var p = P[i];
+    if (!p.href || (G.sel !== i && !m)){ e.preventDefault(); G.picked = G.moved = true; sel(i); return; }
+    remember(p);
+  }); });
+  rove(rows, function(j){ G.picked = G.moved = true; sel(j); });
+  var h = hashIdx(); if (h >= 0) G.picked = true; sel(h >= 0 ? h : Math.max(0, G.sel - 1));
+  if (h >= 0) rows[h].focus({preventScroll:true});
+}
+
+/* ================================ 3D stage (one renderer for the page) ================================ */
+var R = null, glOK = null, texC = {};
+function renderer(){
+  if (glOK === false) return null;
+  if (R) return R;
+  var T = window.THREE;
+  try { R = new T.WebGLRenderer({antialias:true}); } catch(e){ R = null; }
+  if (!R || !R.getContext()){ glOK = false; R = null; return null; }
+  glOK = true;
+  R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap; R.setClearColor(0x8F9591);
+  R.domElement.className = 'st-cv'; R.domElement.setAttribute('aria-hidden', 'true');
+  return R;
+}
+function gridTex(T, base, line, major){
+  var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
+  g.fillStyle = base; g.fillRect(0, 0, 128, 128);
+  g.strokeStyle = line; g.lineWidth = 1; g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 128); g.moveTo(0, 64); g.lineTo(128, 64); g.stroke();
+  g.strokeStyle = major; g.lineWidth = 3; g.strokeRect(0, 0, 128, 128);
+  var t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return t;
+}
+function Stage(host, w, h, o){
+  var T = window.THREE, R = renderer(); if (!R) return null;
+  R.setSize(w, h); host.insertBefore(R.domElement, host.firstChild);
+  var S = new T.Scene(), cam = new T.PerspectiveCamera(o.fov, w/h, .1, 400);
+  S.add(new T.HemisphereLight(0xffffff, 0x7d837f, .75));
+  var sun = new T.DirectionalLight(0xffffff, .62); sun.position.set(o.sun[0], o.sun[1], o.sun[2]);
+  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+  var sc = sun.shadow.camera, b = o.sb; sc.left = -b; sc.right = b; sc.top = b; sc.bottom = -b; sc.near = .5; sc.far = 60; sun.shadow.bias = -.0008;
+  S.add(sun);
+  var fs = o.fs, ft = gridTex(T, '#9AA09B', 'rgba(40,46,42,.18)', 'rgba(40,46,42,.32)'); ft.repeat.set(fs, fs);
+  var floor = new T.Mesh(new T.PlaneGeometry(fs, fs), new T.MeshLambertMaterial({map:ft}));
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; S.add(floor);
+  var M = {
+    wall:new T.MeshLambertMaterial({color:0xB9BEB9}), prop:new T.MeshLambertMaterial({color:0xDCDFDA}), lead:new T.MeshLambertMaterial({color:0xE4E6E1}),
+    white:new T.MeshLambertMaterial({color:0xF3F4F0}), dark:new T.MeshLambertMaterial({color:0x2A2E31})
+  };
+  var look = new T.Vector3(), pins = [], q = 0, dead = false, k = o.k || 1;
+  function setCam(p, l){ cam.position.copy(p); look.copy(l); cam.lookAt(look); cam.updateMatrixWorld(); }
+  function proj(v){ var s = v.clone().project(cam); return [(s.x + 1)/2*w, (1 - s.y)/2*h, s.z]; }
+  function placePins(){
+    pins.forEach(function(p){
+      if (p.el.hidden) return;
+      if (p.rect){ p.rect(proj); return; }
+      var wp = p.get ? p.get() : p.v, s = proj(wp), ew = p.el.offsetWidth*k, eh = p.el.offsetHeight*k;
+      var x = s[0] - p.ax*ew + (p.dx || 0), y = s[1] - p.ay*eh + (p.dy || 0);
+      if (p.clamp !== false){ x = clamp(x, 6, w - ew - 6); y = clamp(y, 6, h - eh - 6); }
+      p.el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)' + (k < 1 ? ' scale(' + k.toFixed(3) + ')' : '');
+    });
+  }
+  function render(){ if (dead) return; if (q){ cancelAnimationFrame(q); q = 0; } R.render(S, cam); placePins(); }
+  function later(){ if (q || dead) return; q = requestAnimationFrame(function(){ q = 0; if (!dead){ R.render(S, cam); placePins(); } }); }
+  function box(sx, sy, sz, mat, x, y, z, parent){ var mm = new T.Mesh(new T.BoxGeometry(sx, sy, sz), mat); mm.position.set(x, y, z); mm.castShadow = true; mm.receiveShadow = true; (parent || S).add(mm); return mm; }
+  function tex(src, px){
+    var key = src + (px ? '#px' : '');
+    if (texC[key]){ if (!texC[key].image) texC[key].__wait.push(later); return texC[key]; }
+    var t = new T.TextureLoader().load(src, function(){ t.__wait.forEach(function(f){ f(); }); t.__wait = []; });
+    t.__wait = [later]; t.minFilter = T.LinearFilter; t.generateMipmaps = false; if (px) t.magFilter = T.NearestFilter;
+    texC[key] = t; return t;
+  }
+  /* capture on a dark frame, kept at its own ratio inside a 16:9 box */
+  function screen(p, sw, parent){
+    var sh = sw / (16/9), g = new T.Group(); (parent || S).add(g);
+    box(sw + .16, sh + .16, .1, M.dark, 0, 0, -.06, g);
+    var iw = p.ar >= 16/9 ? sw : sh * p.ar, ih = p.ar >= 16/9 ? sw / p.ar : sh;
+    var pl = new T.Mesh(new T.PlaneGeometry(iw, ih), new T.MeshBasicMaterial({map:tex(p.img, p.px)})); pl.position.z = .002; g.add(pl);
+    var sel = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .34, sh + .34, .16)), new T.LineBasicMaterial({color:0xFF4B1F})); sel.position.z = -.06; sel.visible = false; g.add(sel);
+    g.userData = {w:sw, h:sh, iw:iw, ih:ih, sel:sel}; return g;
+  }
+  function pin(elm, v, ax, ay, extra){ var p = {el:elm, v:v, ax:ax || 0, ay:ay || 0}; if (extra) for (var k in extra) p[k] = extra[k]; pins.push(p); return p; }
+  /* drop this scene's GPU objects (textures are shared across rebuilds and kept) */
+  function dispose(){
+    dead = true; if (q) cancelAnimationFrame(q);
+    S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
+    ft.dispose();
+  }
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, render:render, box:box, screen:screen, pin:pin, dispose:dispose};
+}
+function capsule(T, mat, s){
+  var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;
+  var cyl = new T.Mesh(new T.CylinderGeometry(r, r, .5*s, 20), mat); cyl.position.y = .48*s;
+  var s1 = new T.Mesh(new T.SphereGeometry(r, 20, 12), mat); s1.position.y = .24*s;
+  var s2 = s1.clone(); s2.position.y = .73*s;
+  var vz = new T.Mesh(new T.BoxGeometry(.26*s, .09*s, .12*s), new T.MeshLambertMaterial({color:0x15181B})); vz.position.set(0, .74*s, .2*s);
+  [cyl, s1, s2, vz].forEach(function(o){ o.castShadow = true; b.add(o); });
+  g.userData.body = b; return g;
+}
+function dragX(host, isBusy, start, move, end){
+  var d = null;
+  host.addEventListener('pointerdown', function(e){ if (isBusy() || e.target.closest('button,a')) return; d = {x:e.clientX}; try { host.setPointerCapture(e.pointerId); } catch(_){} start(); });
+  host.addEventListener('pointermove', function(e){ if (d) move(e.clientX - d.x); });
+  function up(){ if (!d) return; d = null; end(); }
+  host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
+}
+
+/* ================================ the gallery ================================ */
+/* The About sign comes first, then the projects. The capsule guide walks with the camera and talks. */
+var GUIDE = 'Walk with me: drag, scroll sideways or pick a section below.';
+function bubHTML(i){
+  if (i < 0) return '<p class="bt">' + GUIDE + '</p>';
+  var p = P[i];
+  if (p.items) return '<ul class="its">' + p.items.map(function(it){ return '<li><span class="it-t">' + it.t + '</span><span class="it-o">to come</span></li>'; }).join('') + '</ul>';
+  return '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul><p class="bs"><span>Stack</span> ' + p.spec[2][1] + '</p>' + (p.href ? openLink(p, 'openb') : '');
+}
+/* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
+function shot(m, w){
+  var b = m ? {w:358, h:500, fov:50, y:1.5, z:11.2, ly:.35, off:.4} : {w:1192, h:470, fov:34, y:2.15, z:8.6, ly:1.8, off:.7};
+  var h = m ? 500 : Math.round(clamp(w * .394, 400, 470));
+  /* narrower desktops: pull back only part of the way (so the wall isn't tiny) and shrink the pinned HTML to match */
+  var f = (b.w/b.h) / (w/h), z = m ? b.z * f : b.z * Math.sqrt(f), k = m ? 1 : clamp((w/b.w) * (b.z/z) * f, .72, 1);
+  return {w:w, h:h, fov:b.fov, y:b.y, ly:b.ly, off:b.off, z:z, k:k};
+}
+
+function buildDolly(start){
+  var m = home.clientWidth < PHONE;
+  var hadFocus = home.contains(document.activeElement);
+  /* layout first so the stage width is known */
+  home.classList.add('g3d');
+  var keys = '<div class="keys" role="group" aria-label="Sections"><span class="track" aria-hidden="true"><i></i></span>' +
+    '<button type="button" class="key abk" data-i="0" tabindex="0"><span class="rt">About</span><span class="rs">' + H.city + '</span></button>' +
+    P.map(function(p, i){ return '<button type="button" class="key' + (i ? '' : ' lead') + '" data-i="' + (i + 1) + '" tabindex="-1"><span class="rt">' + p.t + '</span><span class="rs">' + roleYear(p) + '</span></button>'; }).join('') + '</div>';
+  /* phone: the About body text sits under the stage as plain HTML; the sign keeps only the lead line */
+  home.innerHTML = '<div class="st" aria-label="Gallery"><span class="dbg" aria-hidden="true">Dolly track' + (m ? ': swipe' : ': drag or shift + scroll') + '</span></div>' +
+    (m ? '<p class="ab-m">' + H.about + '</p>' : '') + keys + '<p class="sr live" aria-live="polite"></p>';
+  var host = home.querySelector('.st'), c = shot(m, host.clientWidth);
+  host.style.height = c.h + 'px';
+  var st = Stage(host, c.w, c.h, {fov:c.fov, k:c.k, sun:[-7, 13, 10], sb:24, fs:110});
+  if (!st){ home.classList.remove('g3d'); flatList(); return false; }
+  G.mode = m ? 'm' : 'd'; G.w = home.clientWidth;
+  var keyEls = [].slice.call(home.querySelectorAll('.key')), live = home.querySelector('.live'), busy = false, pushed = null, clock = new Clock();
+  var T = st.T, M = st.M;
+  /* section widths: About, then the projects (the lead bay and the three-screen bay are widest) */
+  var BW = [6.4].concat(P.map(function(p, i){ return i === 0 || p.items ? 8.0 : 6.6; })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
+  st.box(x1 - x0 + .3, 3.7, .3, M.wall, (x0 + x1)/2, 1.85, -.15);
+  var x = x0; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
+  var secs = BW.map(function(bw, s){
+    var l = x, cx = x + bw/2; x += bw; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
+    var zone = {x:l + bw - (s ? 1.35 : .62), z:1.6};            /* where the guide stands on desktop (About: clear of the sign) */
+    if (m) zone = {x:s ? cx - 1.35 : cx - .95, z:s ? 3.6 : 4.9}; /* phone: front left, in from the edge */
+    if (s === 0){
+      var sign = el('div', 'pin sign', '<span class="k">About</span><p class="ab-lead">' + H.lead + '</p>' + (m ? '' : '<p class="ab-txt">' + H.about + '</p>')); host.appendChild(sign);
+      st.pin(sign, new T.Vector3(m ? cx : l + .28, m ? 3.5 : 3.3, .05), m ? .5 : 0, 0, {clamp:false});
+      var pad = new T.Mesh(new T.CylinderGeometry(.5, .5, .03, 28), M.lead); pad.position.set(zone.x, .015, zone.z); pad.receiveShadow = true; st.S.add(pad);
+      return {cx:cx, l:l, bw:bw, zone:zone};
+    }
+    var i = s - 1, p = P[i], scr3 = [], sc, sw, sy, scx;
+    if (p.items){
+      /* one main screen + two small, stacked to its right */
+      var mw = m ? 2.7 : 3.3, smw = m ? 1.2 : 1.55, gap = m ? .3 : .4;
+      sy = m ? 2.4 : 2.05; sw = mw;
+      var gl = m ? cx - (mw + gap + smw)/2 : l + .5;
+      scx = gl + mw/2;
+      var sx2 = gl + mw + gap + smw/2, sh2 = smw/(16/9), dy2 = sh2/2 + .1;
+      p.items.forEach(function(it, k){
+        var w = k ? smw : mw, px = k ? sx2 : scx, py = k ? sy + (k === 1 ? dy2 : -dy2) : sy;
+        var g = st.screen({img:it.img, ar:16/9}, w); g.position.set(px, py, .03);
+        var lab = el('span', 'pin tl', it.t); lab.setAttribute('aria-hidden', 'true'); host.appendChild(lab);
+        st.pin(lab, new T.Vector3(px - w/2 - .08, py - g.userData.h/2 - .1, .05), 0, 0, {clamp:false});
+        scr3.push({sc:g, scx:px, sy:py, sw:w});
+      });
+      sc = scr3[0].sc;
+    } else {
+      sw = i ? 3.7 : 4.7; sy = m ? 2.35 : i ? 1.95 : 2.05;
+      scx = m ? cx : l + .5 + sw/2; sc = st.screen(p, sw); sc.position.set(scx, sy, .03);
+      scr3.push({sc:sc, scx:scx, sy:sy, sw:sw});
+    }
+    st.box(sw*.6, .3, .5, i ? M.prop : M.lead, scx, .15, 1.0);
+    var tp = el('button', 'pin tp' + (i ? '' : ' lead'), '<span class="rt">' + p.t + '</span><span class="rs">' + (m ? p.subM : p.sub) + '</span>');
+    tp.tabIndex = -1; tp.setAttribute('aria-hidden', 'true'); host.appendChild(tp);
+    st.pin(tp, new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05), 0, 1, {clamp:false});
+    tp.addEventListener('click', function(){ act(s); });
+    return {cx:cx, l:l, bw:bw, zone:zone, sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, i:i, scr:scr3};
+  });
+  /* the guide: capsule + speech bubble */
+  var plr = capsule(T, M.white, 1.1), body = plr.userData.body; plr.position.set(secs[0].zone.x, .02, secs[0].zone.z); st.S.add(plr);
+  var bub = el('div', 'pin bub' + (m ? ' side' : ''), ''); bub.id = 'guide-bubble'; host.appendChild(bub);
+  /* motion on the wall: the selected screen's clip plays in an HTML layer pinned over the still texture */
+  var ov = el('div', 'pin vov', ''); ov.setAttribute('aria-hidden', 'true'); ov.hidden = true; host.insertBefore(ov, host.querySelector('.pin'));
+  var ovS = -1, ovSrc = '', cn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
+  st.pin(ov, null, 0, 0, {rect:function(proj){
+    var o = secs[ovS]; if (!o) return; var tg = o.scr[0], u = tg.sc.userData, a0 = tg.scx - u.iw/2, a1 = tg.scx + u.iw/2, y0 = tg.sy - u.ih/2, y1 = tg.sy + u.ih/2;
+    cn[0].set(a0, y0, .035); cn[1].set(a1, y0, .035); cn[2].set(a0, y1, .035); cn[3].set(a1, y1, .035);
+    var ps = cn.map(proj), lx = Math.min.apply(null, ps.map(function(q){ return q[0]; })), rx = Math.max.apply(null, ps.map(function(q){ return q[0]; })), ty = Math.min.apply(null, ps.map(function(q){ return q[1]; })), by = Math.max.apply(null, ps.map(function(q){ return q[1]; }));
+    ov.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'; ov.style.width = (rx - lx).toFixed(1) + 'px'; ov.style.height = (by - ty).toFixed(1) + 'px';
+  }});
+  /* clips load only when their section is selected */
+  function showOv(s){
+    var p = s > 0 ? P[s - 1] : null, src = p && !RM ? p.clip : '';
+    if (!src){ hideOv(); return; }
+    if (src !== ovSrc){ ovSrc = src; ov.classList.toggle('px', !!p.px); ov.innerHTML = '<video src="' + src + '" poster="' + p.img + '" muted loop playsinline autoplay preload="auto" disablepictureinpicture></video>'; }
+    ovS = s; ov.hidden = false;
+    var v = ov.querySelector('video'); if (v){ v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
+  }
+  function hideOv(){ ov.hidden = true; ovS = -1; var v = ov.querySelector('video'); if (v) v.pause(); }
+  var head = new T.Vector3();
+  st.pin(bub, null, m ? 0 : .5, m ? .05 : 1, {get:function(){ head.set(plr.position.x + (m ? .38 : 0), m ? .7 : 1.42, plr.position.z); return head; }, dy:m ? 0 : -6, dx:m ? 8 : 0});
+  function say(s, announce){
+    bub.innerHTML = bubHTML(s - 1);
+    var ob = bub.querySelector('.openb'); if (ob) ob.addEventListener('click', function(e){ e.preventDefault(); open(s, 0); });
+    bub.hidden = false; if (!RM) restart(bub);
+    if (announce) live.textContent = s ? P[s - 1].t : 'About';
+  }
+  /* camera stops: section centres, except the first shot on desktop, which frames the About sign and the whole lead screen */
+  var sx = secs.map(function(o){ return o.cx; }), N = sx.length;
+  if (!m) sx[0] = ((secs[0].l + .2) + (secs[1].scx + secs[1].sw/2 + .3))/2;
+  var camX = sx[0], tw = null, walk = null, trk = home.querySelector('.track i'), at = 0;
+  function put(xx){
+    camX = xx; st.setCam(new T.Vector3(xx + c.off, c.y, c.z), new T.Vector3(xx, c.ly, 0));
+    if (m) return;
+    var j = 0; while (j < N - 2 && xx > sx[j + 1]) j++; var f = clamp((xx - sx[j]) / (sx[j + 1] - sx[j]), -.4, 1.4);
+    var ce = function(k){ var e = keyEls[k]; return e.offsetLeft + e.offsetWidth/2; }, f0 = Math.max(0, Math.min(1, f));
+    trk.style.left = (f < 0 ? ce(0) + f*(ce(1) - ce(0)) : f > 1 ? ce(N - 1) + (f - 1)*(ce(N - 1) - ce(N - 2)) : lerp(ce(j), ce(j + 1), f0)) + 'px';
+  }
+  /* face the viewer, turned a little towards what the guide presents: on desktop the sign/screen is to its left, on phone to its right */
+  function face(){ plr.rotation.y = m ? .35 : -.45; }
+  /* on desktop the guide stands between the bay dividers (z 0 to 2.0), so it steps out past their ends, walks, and steps back in */
+  var ZOUT = 2.45;
+  function route(a, b){
+    var pts = [a];
+    if (!m && Math.abs(b.x - a.x) > .01){ pts.push({x:a.x, z:ZOUT}); pts.push({x:b.x, z:ZOUT}); }
+    pts.push(b);
+    var segs = [], tot = 0;
+    for (var k = 1; k < pts.length; k++){ var d = Math.hypot(pts[k].x - pts[k - 1].x, pts[k].z - pts[k - 1].z); if (d > 1e-4){ segs.push({a:pts[k - 1], b:pts[k], d:d, s:tot}); tot += d; } }
+    return {segs:segs, tot:tot};
+  }
+  function along(rt, dist){
+    var sg = rt.segs[rt.segs.length - 1];
+    for (var k = 0; k < rt.segs.length; k++){ if (dist <= rt.segs[k].s + rt.segs[k].d){ sg = rt.segs[k]; break; } }
+    var t = clamp((dist - sg.s)/sg.d, 0, 1);
+    return {x:lerp(sg.a.x, sg.b.x, t), z:lerp(sg.a.z, sg.b.z, t), ry:Math.atan2(sg.b.x - sg.a.x, sg.b.z - sg.a.z)};
+  }
+  function arrive(s, announce){ body.position.y = 0; body.rotation.x = 0; face(); at = s; say(s, announce); showOv(s); st.render(); }
+  function select(s, anim, announce){
+    G.sel = s; setRove(keyEls, s);
+    keyEls.forEach(function(kk, j){ if (j === s) kk.setAttribute('aria-describedby', bub.id); else kk.removeAttribute('aria-describedby'); });
+    secs.forEach(function(o, j){ if (o.tp){ o.tp.classList.toggle('on', j === s); o.sc.userData.sel.visible = j === s; } });
+    clock.kill(tw); clock.kill(walk);
+    var from = camX, to = sx[s], a = {x:plr.position.x, z:plr.position.z}, b = secs[s].zone;
+    if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce); return; }
+    var dur = clamp(Math.abs(to - from)/9, .4, .9);
+    bub.hidden = true; hideOv();
+    tw = clock.add(dur, function(p){ put(lerp(from, to, eio(p))); st.render(); });
+    var rt = route(a, b);
+    if (rt.tot < .01){ plr.position.set(b.x, .02, b.z); walk = clock.add(dur, function(){}, function(){ arrive(s, announce); }); return; }
+    /* the guide starts a beat later and arrives a beat after the camera, so it reads as following; the detour round the wall adds a little */
+    var wd = dur + (rt.segs.length > 1 ? .3 : 0);
+    walk = clock.add(wd + .18, function(p){
+      var q = clamp((p*(wd + .18) - .08)/wd, 0, 1), dist = eio(q)*rt.tot, o = along(rt, dist);
+      plr.position.set(o.x, .02, o.z); plr.rotation.y = o.ry;
+      body.position.y = Math.abs(Math.sin(dist*1.6))*.07; body.rotation.x = .2*Math.sin(Math.PI*q);
+      st.render();
+    }, function(){ arrive(s, announce); });
+  }
+  function act(s){ if (busy) return; if (G.sel === s && at === s && Math.abs(camX - sx[s]) < .05){ if (s > 0) open(s, 0); } else select(s, true, true); }
+  function pushTarget(s, k){
+    var tg = secs[s].scr[k || 0], half = Math.tan(c.fov*Math.PI/360), asp = c.w/c.h, sh = tg.sw/(16/9);
+    var d = Math.max((sh/2 + .12)/half, (tg.sw/2 + .12)/(half*asp));
+    return {s:s, p:new T.Vector3(tg.scx, tg.sy, d + .03), l:new T.Vector3(tg.scx, tg.sy, 0)};
+  }
+  /* push into the screen, then load the project page */
+  function open(s, k){
+    var p = P[s - 1]; if (busy || s < 1 || !p || !p.href) return;
+    remember(p);
+    if (RM){ location.href = p.href; return; }
+    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true;
+    var p0 = st.cam.position.clone(), l0 = st.look.clone(), tpv = new T.Vector3(), tl = new T.Vector3();
+    pushed = pushTarget(s, k);
+    clock.add(.6, function(q){ var e = eio(q); tpv.copy(p0).lerp(pushed.p, e); tl.copy(l0).lerp(pushed.l, e); st.setCam(tpv, tl); st.render(); }, function(){ location.href = p.href; });
+  }
+  /* back from the case study: start inside the screen and pull out to the section shot */
+  function pullBack(s){
+    var pp = pushed || pushTarget(s, 0); pushed = null;
+    if (RM){ busy = false; select(s, false); return; }
+    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv();
+    var to = sx[s], b = secs[s].zone, p2 = new T.Vector3(to + c.off, c.y, c.z), l2 = new T.Vector3(to, c.ly, 0), tpv = new T.Vector3(), tl = new T.Vector3();
+    G.sel = s; setRove(keyEls, s); plr.position.set(b.x, .02, b.z); face();
+    st.setCam(pp.p, pp.l); camX = to; st.render();
+    clock.add(.6, function(q){ var e = eio(q); tpv.copy(pp.p).lerp(p2, e); tl.copy(pp.l).lerp(l2, e); st.setCam(tpv, tl); st.render(); }, function(){ busy = false; select(s, false); });
+  }
+  var ppu = c.w / (2*c.z*Math.tan(c.fov*Math.PI/360)*(c.w/c.h)), dx0 = 0;
+  function snap(){ var best = 0; sx.forEach(function(v, j){ if (Math.abs(v - camX) < Math.abs(sx[best] - camX)) best = j; }); select(best, true, true); }
+  /* scrubbing: the bubble hides as soon as the camera leaves, so stale facts never slide off with it; the guide walks after the snap */
+  dragX(host, function(){ return busy; }, function(){ clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); dx0 = camX; }, function(dx){ put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); }, snap);
+  var wt = 0;
+  host.addEventListener('wheel', function(e){
+    var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy) return;
+    e.preventDefault(); clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); put(clamp(camX + dd/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); clearTimeout(wt); wt = setTimeout(snap, 180);
+  }, {passive:false});
+  keyEls.forEach(function(kk, s){ kk.addEventListener('click', function(){ act(s); }); });
+  rove(keyEls, function(j){ select(j, true, true); });
+
+  /* where to start: a returning visitor pulls back out of the screen they opened; a #section link starts on that section */
+  var s0 = start && start.sel >= 0 ? start.sel : 0;
+  if (start && start.pull) pullBack(s0); else select(s0, false);
+  if (start && start.focus) keyEls[s0].focus({preventScroll:true});
+  else if (hadFocus) keyEls[s0].focus({preventScroll:true});
+
+  G.api = {
+    dispose:function(){ clock.killAll(); hideOv(); ov.innerHTML = ''; st.dispose(); },
+    /* bfcache: coming back with the camera still pushed into a screen */
+    pageshow:function(){ if (pushed){ var s = pushed.s; busy = false; pullBack(s); keyEls[s].focus({preventScroll:true}); } }
+  };
+  return true;
+}
+
+/* ------------------------------ boot ------------------------------ */
+function canUpgrade(){ return !FLAT && !!window.THREE && glOK !== false; }
+function upgrade(start){
+  if (!canUpgrade()) return false;
+  if (G.api){ G.api.dispose(); G.api = null; }
+  try { return buildDolly(start); } catch(e){ if (window.console) console.error(e); home.classList.remove('g3d'); flatList(); return false; }
+}
+function boot(){
+  if (!home) return;
+  var h = hashIdx();
+  var start = {sel:h >= 0 ? h + 1 : 0, focus:h >= 0, pull:h >= 0 && retId === P[h].id};
+  /* if Three.js isn't here yet, the pull back out of the screen waits for it (unless the visitor moves first) */
+  if (!upgrade(start)){ flatList(); G.pull = start.pull; }
+  /* HTML first: when Three.js arrives, the list becomes the gallery and keeps the visitor's place */
+  document.addEventListener('three-ready', function(){
+    if (G.mode !== 'flat') return;
+    var had = home.contains(document.activeElement), pull = G.pull && !G.moved; G.pull = false;
+    upgrade({sel:G.picked || had ? G.sel : 0, focus:had, pull:pull});
+  });
+  /* the phone shot is a breakpoint: rebuild on width changes (not height: phone URL bars resize the viewport) */
+  var rt = 0;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(function(){
+      if (G.mode === 'flat' || home.clientWidth === G.w) return;
+      upgrade({sel:G.sel, focus:false, pull:false});
+    }, 150);
+  });
+  window.addEventListener('pageshow', function(e){ if (e.persisted && G.api) G.api.pageshow(); });
+}
+boot();
+})();

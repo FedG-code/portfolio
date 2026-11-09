@@ -1,29 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="bold">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Federico Giovannini - Developer</title>
+<title>Federico Giovannini - Technical Designer</title>
+<meta name="description" content="Federico Giovannini, technical designer and tool and gameplay programmer in London. Over the Hill, Eve of Destruction, casino games at Logifuture, university projects and other games.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Bold (default) -->
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Cinematic -->
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Commit+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Brutalist -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
-<!-- Retro -->
-<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bitter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shared.css">
-<link rel="stylesheet" href="css/project.css">
-<link rel="stylesheet" href="css/cards.css">
-<script>
-  var t = localStorage.getItem('portfolio-theme');
-  // Only enabled themes; cinematic/neon are archived (CSS kept) and fall back to bold.
-  if (['bold', 'brutalist', 'retro'].indexOf(t) === -1) t = 'bold';
-  document.documentElement.setAttribute('data-theme', t);
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/gallery.css">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>
 <script>
@@ -32,256 +17,50 @@
   gtag('js', new Date());
   gtag('config', 'G-E6FQ4G8G6B', { anonymize_ip: true });
 </script>
+<!-- HTML first: the page below works without this. When Three.js arrives, js/gallery.js upgrades the list to the 3D gallery. -->
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onload="window.__three=1;document.dispatchEvent(new Event('three-ready'))"></script>
 </head>
 <body>
 
-<div id="plane-canvas"></div>
+<div class="pg">
+  <header class="tb">
+    <div class="tb-id"><h1 class="nm">Federico Giovannini</h1><p class="rl">Technical Designer, Tool and Gameplay Programmer</p></div>
+    <div class="tb-city">London, UK</div>
+    <div class="edu"><span><span class="full">MA Games &amp; Playful Design, Goldsmiths</span><span class="short">MA, Goldsmiths</span></span><span>BSc Physics, Queen Mary</span></div>
+    <nav class="tb-ln" aria-label="Contact">
+      <a href="mailto:federico.giovannini28@gmail.com">Email</a>
+      <a href="https://github.com/FedG-code" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.linkedin.com/in/federico-giovannini-a0954b163/" target="_blank" rel="noopener">LinkedIn</a>
+    </nav>
+  </header>
 
-<!-- SPA containers -->
-<div class="drag-blur-overlay" id="dragBlurOverlay"></div>
-<div class="page-container" id="pageContainer"></div>
-<div class="hand-container" id="handContainer"></div>
-<div class="perspective-container" id="perspectiveContainer"></div>
-<div class="fly-overlay" id="flyOverlay"></div>
+  <main class="home" id="gallery">
+    <section class="ab" aria-label="About">
+      <p class="ab-lead">I'm a technical designer who writes the tools and gameplay code behind the design.</p>
+      <p class="ab-txt">At Funselektor I built Feedbot for Over the Hill. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on live web games at Logifuture.</p>
+    </section>
 
-<div class="spa-page active" id="page-home">
-
-<!-- HERO -->
-<section class="hero">
-  <div class="doodle-circle doodle"></div>
-  <div class="doodle-squiggle doodle"></div>
-
-  <!-- Default layout (bold/cinematic/neon/retro) -->
-  <div class="container hero-default">
-    <h1>
-      <span class="serif-line"><em>Never</em> shipped a</span>
-      <span class="serif-line">bo<span class="kern-ri">r</span>ing product.</span>
-    </h1>
-    <div class="hero-body">
-      <p class="hero-desc">
-        Developer with three years of experience shipping web and gaming products, now studying for an MA in Games and Playful Design at Goldsmiths.
-        I have a passion for design and champion high standards of polish.
-        I'm looking for Programming and Technical Designer roles in the premium game industry.
-      </p>
-      <div class="hero-tidbits">
-        <div class="tidbit">
-          <p class="tidbit-label">Based in</p>
-          <p class="tidbit-value">London, UK</p>
+    <!-- Plain list (shown until Three.js loads, and kept without WebGL). js/gallery.js rebuilds this from the same data. -->
+    <div class="st no3d">
+      <div class="mn">
+        <div class="menu" role="group" aria-label="Sections">
+          <a class="row lead" href="#over-the-hill" data-i="0"><span class="rt">Over the Hill</span><span class="rs">Tool programmer at Funselektor Labs, 2026</span></a>
+          <a class="row" href="eve_of_destruction.html" data-i="1"><span class="rt">Eve of Destruction</span><span class="rs">Technical designer at Lost Satellite Studios, 2024</span></a>
+          <a class="row" href="casino_games.html" data-i="2"><span class="rt">Casino Games</span><span class="rs">Game developer at Logifuture, 2023 to 2026</span></a>
+          <a class="row" href="#university-projects" data-i="3"><span class="rt">University Projects</span><span class="rs">Three games from university (to come)</span></a>
+          <a class="row" href="my_games.html" data-i="4"><span class="rt">Other Games</span><span class="rs">A stealth game in Unity, plus jam games, since 2025</span></a>
         </div>
-        <div class="tidbit">
-          <p class="tidbit-label">Studying</p>
-          <p class="tidbit-value">Goldsmiths</p>
-        </div>
-        <div class="tidbit">
-          <p class="tidbit-label">Side project</p>
-          <p class="tidbit-value">Solo Dev</p>
-        </div>
+        <figure class="pv">
+          <div class="pv-view"><div class="pv-in" style="--ar:1.7778"><img src="assets/oth.jpg" alt="Over the Hill key art"><div class="pv-mk"><span class="mk-chip">Funselektor key art</span></div></div></div>
+          <figcaption class="pv-cap">Key art from Funselektor's game. I built Feedbot, which sorts the game's player feedback from six platforms into bugs and requests. The first version shipped two days after the brief.</figcaption>
+          <dl class="pv-spec"><div><dt>Studio</dt><dd>Funselektor Labs</dd></div><div><dt>Role</dt><dd>Tool Programmer</dd></div><div><dt>Stack</dt><dd>Web, LLM pipeline</dd></div><div><dt>Year</dt><dd>2026</dd></div><div class="res"><dt>Result</dt><dd>45k player messages triaged in launch week</dd></div></dl>
+        </figure>
       </div>
     </div>
-  </div>
+  </main>
+</div>
 
-  <!-- Brutalist layout (hidden by default, shown for brutalist theme) -->
-  <div class="hero-brutalist">
-    <div class="hero-main">
-      <h1>
-        <span class="serif-line">Never shipped a</span>
-        <span class="serif-line">boring product.</span>
-      </h1>
-      <p class="hero-desc">
-        Developer with three years of experience shipping web and gaming products, now studying for an MA in Games and Playful Design at Goldsmiths.
-        I have a passion for design and champion high standards of polish.
-        I'm looking for Programming and Technical Designer roles in the premium game industry.
-      </p>
-    </div>
-    <div class="hero-sidebar">
-      <div>
-        <div class="sidebar-field">
-          <div class="field-label">Based in</div>
-          <div class="field-value">London, UK</div>
-        </div>
-        <div class="sidebar-field">
-          <div class="field-label">Studying</div>
-          <div class="field-value">Goldsmiths</div>
-        </div>
-        <div class="sidebar-field">
-          <div class="field-label">Side project</div>
-          <div class="field-value">Solo Dev</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Retro teal panel (hidden by default, shown for retro theme) -->
-  <div class="hero-panel">
-    <div class="tidbit">
-      <p class="tidbit-label">Based in</p>
-      <p class="tidbit-value">London, UK</p>
-    </div>
-    <div class="tidbit">
-      <p class="tidbit-label">Studying</p>
-      <p class="tidbit-value">Goldsmiths</p>
-    </div>
-    <div class="tidbit">
-      <p class="tidbit-label">Side project</p>
-      <p class="tidbit-value">Solo Dev</p>
-    </div>
-  </div>
-</section>
-
-<!-- ABOUT -->
-<section id="about">
-  <!-- Default layout (bold/cinematic/neon/retro) -->
-  <div class="container about-default">
-    <p class="section-label reveal">02 - About</p>
-    <h2 class="section-heading reveal">A bit about me.</h2>
-
-    <div class="about-content">
-      <div class="about-prose reveal">
-        <p>
-          I'm a <strong>design-minded developer</strong> with three years of experience
-          across web applications and games. I like working in teams and take pride in the quality of my communication.
-          I have a particular passion for mechanical design in games and polish. 
-          I hope to one day build things that inspire people.
-        </p>
-        <p>
-          In my spare time I build games, I climb and do a bit of running and I do stand-up. I also
-          <a href="https://medium.com/@federico.giovannini/how-to-rock-and-stone-your-way-to-a-more-positive-community-aa5a6cf99d05" target="_blank">interviewed Deep Rock Galactic's design director</a>
-          a while back about how the game was designed to foster positivity among players.
-        </p>
-
-      </div>
-      <div class="about-sidebar reveal">
-        <div class="about-box">
-          <p class="about-box-title">Languages</p>
-          <div class="chip-grid">
-            <span class="chip">JavaScript</span>
-            <span class="chip">C#</span>
-            <span class="chip">C++</span>
-            <span class="chip">Python</span>
-            <span class="chip">GDScript</span>
-          </div>
-        </div>
-        <div class="about-box">
-          <p class="about-box-title">Tools & Frameworks</p>
-          <div class="chip-grid">
-            <span class="chip">Node.js</span>
-            <span class="chip">PixiJS</span>
-            <span class="chip">GSAP</span>
-            <span class="chip">Unity</span>
-            <span class="chip">Godot</span>
-            <span class="chip">Three.js</span>
-            <span class="chip">Figma</span>
-            <span class="chip">Miro</span>
-          </div>
-        </div>
-        <div class="about-box">
-          <p class="about-box-title">Education</p>
-          <p class="about-box-text">
-            MA Games & Playful Design - Goldsmiths<br>
-            BSc Physics & Astronomy - Queen Mary<br>
-            Game Programming - CG Spectrum
-          </p>
-        </div>
-        <div class="about-box">
-          <p class="about-box-title">Bonus Stats</p>
-          <p class="about-box-text">
-            Fluent in English & Italian. Conversational French.<br>
-            Sports climber. Stand-up comedian.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Brutalist layout (hidden by default) -->
-  <div class="about-brutalist">
-    <div class="about-header reveal">
-      About
-      <span>Background &amp; Skills</span>
-    </div>
-    <div class="about-grid">
-      <div class="about-left reveal">
-        <div class="about-prose">
-          <p>
-            I'm a <strong>design-minded developer</strong> with three years of experience
-            across web applications and games. I like working in teams and take pride in the quality of my communication.
-            I have a particular passion for mechanical design in games and polish.
-            I hope to one day build things that inspire people.
-          </p>
-          <p>
-            In my spare time I build games, I climb and do a bit of running and I do stand-up. I also
-            <a href="https://medium.com/@federico.giovannini/how-to-rock-and-stone-your-way-to-a-more-positive-community-aa5a6cf99d05" target="_blank">interviewed Deep Rock Galactic's design director</a>
-            a while back about how the game was designed to foster positivity among players.
-          </p>
-        </div>
-        <div class="skills-table">
-          <div class="skills-table-title">Stack</div>
-          <div class="skills-mono">
-            <span>JavaScript</span><span>C#</span><span>C++</span>
-            <span>Python</span><span>GDScript</span><span>Node.js</span>
-            <span>PixiJS</span><span>GSAP</span><span>Unity</span>
-            <span>Godot</span><span>Three.js</span><span>Figma</span>
-            <span>Miro</span>
-          </div>
-        </div>
-      </div>
-      <div class="about-right">
-        <div class="data-row reveal">
-          <div class="data-row-label">Education</div>
-          <div class="data-row-value">MA Games &amp; Playful Design — Goldsmiths<br>BSc Physics &amp; Astronomy — Queen Mary<br>Game Programming — CG Spectrum</div>
-        </div>
-        <div class="data-row reveal">
-          <div class="data-row-label">Languages</div>
-          <div class="data-row-value">English &amp; Italian (fluent)<br>French (conversational)</div>
-        </div>
-        <div class="data-row reveal">
-          <div class="data-row-label">Interests</div>
-          <div class="data-row-value">Sports climbing, stand-up comedy, game community design, AI tooling</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CONTACT -->
-<section id="contact" class="contact">
-  <div class="container">
-    <h2 class="contact-heading reveal">Like what you see?<br><span class="teal">Get in touch.</span></h2>
-    <p class="contact-sub reveal">
-      Looking for a challenging role where I can put to use my diverse skillset.
-    </p>
-    <div class="contact-btns reveal">
-      <a href="mailto:federico.giovannini28@gmail.com" class="btn primary">Email me</a>
-      <a href="https://github.com/FedG-code" target="_blank" class="btn">GitHub</a>
-      <a href="https://www.linkedin.com/in/federico-giovannini-a0954b163/" target="_blank" class="btn">LinkedIn</a>
-    </div>
-  </div>
-
-  <!-- Brutalist contact (hidden by default, shown for brutalist theme) -->
-  <div class="contact-brutalist">
-    <h2>GET IN TOUCH</h2>
-    <p>Looking for a challenging role where I can put to use my diverse skillset.</p>
-    <div class="contact-btns">
-      <a href="mailto:federico.giovannini28@gmail.com" class="btn primary">Email me</a>
-      <a href="https://github.com/FedG-code" target="_blank" class="btn">GitHub</a>
-      <a href="https://www.linkedin.com/in/federico-giovannini-a0954b163/" target="_blank" class="btn">LinkedIn</a>
-    </div>
-  </div>
-</section>
-
-</div><!-- end .spa-page #page-home -->
-
-<script src="js/toolbar.js"></script>
-<script src="js/shared.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Physics2DPlugin.min.js"></script>
-<script src="js/destruction.js"></script>
-<script src="js/plane.js"></script>
-<script src="js/card-hand.js"></script>
-<script src="js/text-rearrange.js"></script>
-<script src="js/page-transition.js"></script>
-<script src="js/analytics.js"></script>
-
+<script src="js/gallery.js" defer></script>
+<script src="js/analytics.js" defer></script>
 </body>
 </html>

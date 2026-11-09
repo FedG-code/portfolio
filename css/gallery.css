@@ -1,0 +1,197 @@
+/* Dolly Gallery homepage (index.html only). Ported from design/blockout/dolly-r4.html.
+   Engine-debug greybox: green only for colliders and triggers, orange only for selection. */
+:root{
+  --p:#ECEEE8; --p2:#F8F9F6; --ink:#15181B; --mut:#59605A; --ln:#C2C7BF; --link:#C2360F;
+  --sig:#FF4B1F;            /* selection: engines outline the selected object in orange */
+  --col:#2BD957;            /* collider / trigger green */
+  --chip:#101315;
+  --stage:#8F9591;
+  --f:"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fm:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+*, *::before, *::after{box-sizing:border-box}
+html{background:var(--p)}
+body{margin:0; font-family:var(--f); color:var(--ink); background:var(--p); line-height:1.45; font-size:14px; -webkit-font-smoothing:antialiased}
+p, h1{margin:0}
+button{font:inherit; color:inherit; background:none; border:0; text-align:left; cursor:pointer; padding:0}
+a{color:inherit}
+img, video{display:block; max-width:none}
+:focus-visible{outline:2px solid var(--sig); outline-offset:2px}
+[hidden]{display:none !important}
+
+.pg{max-width:1280px; margin:0 auto; padding:26px 44px 40px}
+.home{display:grid; gap:16px; margin-top:16px}
+
+/* ---- name strip ---- */
+.tb{display:grid; grid-template-columns:3.2fr 1fr 2.2fr 1.6fr; border:1.5px solid var(--ink); background:var(--p2)}
+.tb > *{padding:12px 14px; border-left:1px solid var(--ink); display:grid; align-content:center; gap:5px; font-size:13.5px; font-weight:600; line-height:1.3}
+.tb > :first-child{border-left:0}
+.tb-ln{background:var(--ink); color:var(--p2); display:flex !important; flex-wrap:wrap; gap:6px 14px; align-content:center; align-items:center}
+.tb-ln a{text-decoration:none; border-bottom:1.5px solid var(--sig)}
+.tb-ln a:hover{color:#fff; border-bottom-color:#fff}
+.nm{font-weight:800; font-stretch:125%; font-size:26px; line-height:1; letter-spacing:-.015em}
+.rl{font-size:13.5px; font-weight:500}
+.edu{display:grid; gap:3px}
+.edu > span + span{font-weight:500; color:var(--mut)}
+.edu .short{display:none}
+
+/* ---- About (plain HTML; on desktop it moves onto the wall sign once the gallery is built) ---- */
+.ab{display:grid; grid-template-columns:5fr 6.2fr; gap:52px; padding:14px 0 12px; align-items:start}
+.ab-lead{font-weight:700; font-stretch:112%; font-size:25px; line-height:1.25; letter-spacing:-.01em}
+.ab-txt{font-size:16px; line-height:1.6; max-width:62ch}
+
+/* ---- plain list + preview (before Three.js, and without WebGL) ---- */
+.mn{display:grid; grid-template-columns:5fr 6.2fr; gap:40px}
+.menu{display:grid; align-content:start}
+.row{position:relative; display:grid; grid-template-columns:1fr auto; align-items:baseline; width:100%; padding:14px 16px 15px; border-top:1px solid var(--ln); text-decoration:none; transition:background .12s, color .12s}
+.menu > .row:last-child{border-bottom:1px solid var(--ln)}
+.row:hover{background:var(--p2)}
+.row.on{background:var(--p2); box-shadow:inset 3px 0 0 var(--sig)}
+.rt{font-weight:800; font-stretch:125%; font-size:27px; line-height:1.05; letter-spacing:-.02em; white-space:nowrap}
+.row.lead{padding:20px 16px 21px; border-top:1.5px solid var(--ink)}
+.row.lead .rt{font-size:44px; letter-spacing:-.025em}
+.rs{grid-column:1 / -1; font-size:13px; color:var(--mut); margin-top:7px}
+.pv{margin:0; min-width:0}
+.pv-view{position:relative; aspect-ratio:16/9; max-width:100%; background:var(--ink); border:1.5px solid var(--ink); display:grid; place-items:center; overflow:hidden}
+.pv-in{position:relative; aspect-ratio:var(--ar); max-width:100%; width:100%}
+.pv-in img{width:100%; height:100%; object-fit:cover}
+img.px, .vov.px video, .vov.px img{image-rendering:pixelated}
+.pv-cap{font-size:13px; line-height:1.5; color:var(--mut); margin-top:10px}
+.pv-spec{display:grid; grid-template-columns:1fr 1fr; margin:12px 0 0; border:1.5px solid var(--ink); background:var(--p2)}
+.pv-spec > div{padding:8px 12px 9px; border-top:1px solid var(--ln); display:grid; gap:2px; min-width:0}
+.pv-spec > div:nth-child(-n+2){border-top:0}
+.pv-spec > div:nth-child(even){border-left:1px solid var(--ln)}
+.pv-spec dt{font-size:11.5px; color:var(--mut)}
+.pv-spec dd{margin:0; font-size:14px; font-weight:600; line-height:1.3}
+.pv-spec .res{grid-column:1 / -1; border-left:0 !important}
+.pv-spec .res dd{color:var(--link)}
+.pv-open{display:inline-flex; margin-top:12px; font-size:13px; font-weight:700; padding:7px 12px; gap:12px; background:var(--ink); color:var(--p2); text-decoration:none}
+.pv-open span{color:var(--sig)}
+
+/* gizmo marks drawn over captures */
+.pv-mk{position:absolute; inset:0; pointer-events:none}
+.mk{position:absolute; border:1.5px solid var(--col)}
+.mk b, .mk-chip{position:absolute; font:500 10.5px/1.25 var(--fm); background:var(--chip); color:var(--col); padding:3px 6px; white-space:nowrap}
+.mk b{left:-1.5px; top:-1.5px}
+.mk-chip{left:8px; top:8px}
+.pv-mk.anim > *{animation:gzIn .3s steps(4, end) both}
+@keyframes gzIn{from{opacity:0; transform:scale(.86)} to{opacity:1; transform:none}}
+
+/* ---- 3D stage ---- */
+.st{position:relative; overflow:hidden; border:1.5px solid var(--ink); background:var(--stage); touch-action:pan-y; -webkit-user-select:none; user-select:none}
+.st.no3d{background:none; border:0; overflow:visible; touch-action:auto; -webkit-user-select:auto; user-select:auto}
+.st-cv{position:absolute; left:0; top:0; display:block}
+.pin{position:absolute !important; left:0; top:0; z-index:2; transform-origin:0 0}
+.dbg{position:absolute; right:8px; bottom:7px; font:500 10.5px/1 var(--fm); color:#22262A; background:rgba(248,249,246,.78); padding:3px 5px; z-index:3; pointer-events:none}
+.tp{display:grid; gap:1px; padding:5px 9px 6px; background:rgba(248,249,246,.93); border-left:3px solid transparent; box-shadow:0 1px 0 rgba(21,24,27,.3)}
+.tp .rt{font-size:19px}
+.tp.lead .rt{font-size:27px}
+.tp .rs{grid-column:auto; margin-top:0; font-size:12px; white-space:nowrap}
+.tp.on{border-left-color:var(--sig); background:var(--p2)}
+.sign{width:330px; background:var(--p2); border:1.5px solid var(--ink); padding:14px 16px 15px; display:grid; gap:7px; box-shadow:0 2px 0 rgba(21,24,27,.22)}
+.sign .ab-lead{font-size:19px; line-height:1.28}
+.sign .ab-txt{font-size:13px; line-height:1.5}
+.k{font:500 10.5px/1 var(--fm); color:var(--mut)}
+.tl{font:500 10.5px/1 var(--fm); background:rgba(248,249,246,.93); padding:3px 6px 4px; white-space:nowrap; color:var(--ink)}
+
+/* the guide's speech bubble */
+.bub{width:215px; background:var(--p2); border:1.5px solid var(--ink); display:grid; box-shadow:0 2px 0 rgba(21,24,27,.22)}
+.bub::after{content:""; position:absolute; left:calc(50% - 8px); bottom:-9px; width:14px; height:14px; background:var(--p2); border-right:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); transform:rotate(45deg)}
+.bub.side::after{left:-9px; bottom:auto; top:calc(12% - 8px); border:0; border-left:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink)}
+.bub ul{margin:0; padding:9px 12px 4px 26px; display:grid; gap:4px; font-size:12.5px; line-height:1.35}
+.bub li::marker{color:var(--sig)}
+.bub .bt{padding:10px 12px 11px; font-size:13px; line-height:1.4; font-weight:600}
+.bub .bs{padding:2px 12px 8px; font-size:11.5px; color:var(--mut)}
+.bub .bs span{font:500 10.5px/1 var(--fm)}
+.bub ul.its{list-style:none; padding:0; gap:0}
+.its li{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 12px; font-size:12.5px; font-weight:600}
+.its li + li{border-top:1px solid var(--ln)}
+.its .it-o{font:500 10.5px/1 var(--fm); white-space:nowrap; color:var(--mut)}
+.openb{position:relative; z-index:1; font-size:13px; font-weight:700; padding:7px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--ink); color:var(--p2); white-space:nowrap; text-decoration:none}
+.openb span{color:var(--sig)}
+.openb:hover{background:#2A2F33}
+.bub.anim{animation:bubIn .22s cubic-bezier(.3,1.5,.6,1) both}
+@keyframes bubIn{from{opacity:0; scale:.85} to{opacity:1; scale:1}}
+
+/* motion overlay pinned over the selected screen */
+.vov{overflow:hidden; pointer-events:none; background:#000; z-index:1 !important}
+.vov img, .vov video{display:block; width:100%; height:100%; object-fit:fill}
+
+/* ---- shot list (keyboard route) ---- */
+.keys{display:grid; grid-template-columns:.75fr repeat(5, minmax(0,1fr)); position:relative; border:1.5px solid var(--ink); background:var(--p2)}
+.key{display:grid; gap:2px; align-content:start; padding:10px 14px 11px; position:relative; min-width:0}
+.key + .key{border-left:1px solid var(--ln)}
+.key .rt{font-size:17px; white-space:normal}
+.key.lead .rt{font-size:20px}
+.key .rs{grid-column:auto; margin-top:0; font-size:12px; color:var(--mut)}
+.key:hover{background:var(--p)}
+.key.on{background:var(--p); box-shadow:inset 0 3px 0 var(--sig)}
+.track{position:absolute; left:0; right:0; top:-7px; height:12px; pointer-events:none; z-index:1}
+.track i{position:absolute; top:0; width:2px; height:12px; margin-left:-1px; background:var(--sig)}
+.track i::before{content:""; position:absolute; left:-4px; top:-4px; border:5px solid transparent; border-top-color:var(--sig)}
+.ab-m{margin:0; padding:10px 12px 12px; font-size:12.5px; line-height:1.5; border:1.5px solid var(--ink); border-bottom:0; background:var(--p2)}
+.home.g3d .ab-m + .keys{margin-top:-16px}
+.home.g3d .st + .ab-m{margin-top:-16px; border-top:0}
+.sr{position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+
+/* ---- tablet ---- */
+@media (max-width: 1100px){
+  .keys .key{padding:9px 10px 10px}
+  .keys .key .rt{font-size:15px}
+  .keys .key.lead .rt{font-size:17px}
+  .keys .key .rs{font-size:11px}
+  .row.lead .rt{font-size:36px}
+}
+@media (max-width: 900px){
+  .tb{grid-template-columns:1fr 1fr}
+  .tb > :nth-child(3){border-left:1px solid var(--ink)}
+  .tb > :nth-child(n+3){border-top:1px solid var(--ink)}
+  .tb > :nth-child(3){border-left:0}
+  .tb > :nth-child(4){border-left:1px solid var(--ink)}
+}
+
+/* ---- phone (the gallery switches to its phone shot below 640px) ---- */
+@media (max-width: 639px){
+  .pg{padding:16px 16px 22px}
+  .home{gap:12px; margin-top:12px}
+  .tb{display:grid; grid-template-columns:.8fr 1.2fr}
+  .tb > *{padding:8px 12px; font-size:12px; border-left:0}
+  .tb-id{grid-column:1 / -1; padding:12px !important}
+  .tb-city, .edu{border-top:1px solid var(--ink)}
+  .edu{border-left:1px solid var(--ink) !important}
+  .tb-ln{grid-column:1 / -1; gap:18px !important; padding:10px 12px !important; font-size:13px}
+  .nm{font-size:25px; font-stretch:118%}
+  .rl{font-size:13px}
+  .edu .full{display:none} .edu .short{display:inline}
+  .ab{grid-template-columns:1fr; gap:10px; padding:6px 2px 4px}
+  .ab-lead{font-size:19px}
+  .ab-txt{font-size:14px}
+  .mn{grid-template-columns:1fr; gap:14px}
+  .row{padding:11px 12px 12px}
+  .rt{font-size:22px; font-stretch:115%}
+  .row.lead{padding:14px 12px 15px}
+  .row.lead .rt{font-size:28px}
+  .rs{font-size:12px; margin-top:5px}
+  .pv-cap{font-size:12px}
+  .dbg{top:7px; bottom:auto}
+  .tp .rt{font-size:15px; font-stretch:112%}
+  .tp.lead .rt{font-size:19px}
+  .tp .rs{font-size:10.5px}
+  .sign{width:300px; padding:10px 12px 11px; gap:5px}
+  .sign .ab-lead{font-size:15px}
+  .bub{width:205px}
+  .bub ul{font-size:11.5px; padding:7px 10px 3px 22px}
+  .its li{font-size:11.5px; padding:7px 10px}
+  .tl{font-size:8.5px; padding:2px 4px 3px}
+  .keys{grid-template-columns:1fr 1fr}
+  .keys .key{padding:9px 10px 10px; border-left:0; border-top:0}
+  .keys .key:nth-of-type(n+3){border-top:1px solid var(--ln)}
+  .keys .key:nth-of-type(even){border-left:1px solid var(--ln)}
+  .keys .key .rt, .keys .key.lead .rt{font-size:15px; font-stretch:112%}
+  .track{display:none}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bub.anim, .pv-mk.anim > *{animation:none}
+  .row{transition:none}
+}
