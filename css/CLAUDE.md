@@ -5,12 +5,13 @@
 | `gallery.css` (~199 lines) | `index.html` only | The Dolly Gallery. Self-contained: does not load shared.css. |
 | `shared.css` (~228 lines) | project pages | Base reset, `:root` tokens (bold palette, Archivo Black / Archivo / IBM Plex Mono), container, tidbits, section headings, buttons, `.reveal`. |
 | `project.css` (~286 lines) | project pages | Back link, project hero, sections, captures, stats, video embed, responsive rules. |
+| `onset.css` (~150 lines) | project pages | The On Set stage (js/onset.js): own `--os-*` tokens (the gallery palette), `html.os-wait` placeholder, placard, tags, trailer, clip overlay, bubble, beat strip, folded text, 900px / 639px / reduced motion. |
 
 Pruned on 2026-11-09: the other themes (brutalist, retro, cinematic, neon), toolbar, card hand, paper plane, destruction and old homepage rules were removed by a script that dropped every selector naming a non-bold theme or a class/id absent from the live HTML/JS, checked with before/after screenshots of all five project pages at 1440, 1024 and 390px (identical within rendering noise). `cards.css` is in `archive/card-hand/css/`.
 
 ## gallery.css
 
-One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light paper, `--ink`, `--mut`, `--ln` rule, `--link`, `--sig` orange (**selection only**), `--col` green (**colliders/triggers only**), `--chip`, `--stage`. Fonts: Archivo (variable, `font-stretch` up to 125%) + IBM Plex Mono.
+One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light paper, `--ink`, `--mut`, `--ln` rule, `--link` (`#0B7A2E`, green text + focus ring), `--sig` (`#0E7F31`, green on paper: selection bars, playhead, bullets, underlines), `--sig-hi` (`#2BD957`, green on ink: name-strip links, Learn more arrows), `--col` (`#2BD957`, debug marks), `--chip`, `--stage`. Green replaced orange on 2026-11-09 (see the rule in the root CLAUDE.md). Fonts: Archivo (variable, `font-stretch` up to 125%) + IBM Plex Mono.
 
 | Block | Selectors |
 |-------|-----------|
@@ -25,7 +26,7 @@ One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light
 
 
 ## shared.css
-Project pages are fixed to `data-theme="bold"`, so the `[data-theme="bold"]` blocks at the end of the file are the live overrides (uppercase tidbit labels, section headings, buttons). Classes styled: `.btn`, `.chip`, `.container`, `.css`, `.reveal`, `.section-heading`, `.tidbit`, `.tidbit-label`, `.tidbit-value`, `.visible`, `.work-image`, `.work-image-placeholder`, `.work-stat`, `.work-stat-label`, `.work-stat-num`, `.work-stats`.
+`:root` tokens were swapped to the gallery palette and green on 2026-11-09 (the plain case matches the set). Project pages are fixed to `data-theme="bold"`, so the `[data-theme="bold"]` blocks at the end of the file are the live overrides (uppercase tidbit labels, section headings, buttons). Classes styled: `.btn`, `.chip`, `.container`, `.css`, `.reveal`, `.section-heading`, `.tidbit`, `.tidbit-label`, `.tidbit-value`, `.visible`, `.work-image`, `.work-image-placeholder`, `.work-stat`, `.work-stat-label`, `.work-stat-num`, `.work-stats`.
 
 `.reveal` starts at `opacity: 0` + `translateY(24px)`; `js/shared.js` adds `.visible` on scroll. Override it before full-page screenshots.
 

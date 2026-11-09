@@ -11,21 +11,21 @@
 }
 
 :root {
-  --bg: #FAFAF7;
-  --bg-warm: #F0EDE5;
-  --bg-card: #FFFFFF;
-  --border: #E0DCD4;
-  --border-hover: #C8C3B8;
-  --text-primary: #1A1714;
-  --text-secondary: #7A7570;
-  --text-muted: #9A9590;
-  --accent: #FF6123;
-  --accent-soft: rgba(255, 97, 35, 0.10);
-  --accent-mid: rgba(255, 97, 35, 0.30);
-  --pop: #FF6123;
-  --pop-soft: rgba(255, 97, 35, 0.08);
-  --cream: #FAFAF7;
-  --accent-glow: rgba(255, 97, 35, 0.25);
+  --bg: #ECEEE8;
+  --bg-warm: #F8F9F6;
+  --bg-card: #F8F9F6;
+  --border: #C2C7BF;
+  --border-hover: #59605A;
+  --text-primary: #15181B;
+  --text-secondary: #59605A;
+  --text-muted: #59605A;
+  --accent: #0B7A2E;        /* green text / underline on paper (4.7:1) */
+  --accent-soft: rgba(14, 127, 49, 0.10);
+  --accent-mid: rgba(14, 127, 49, 0.30);
+  --pop: #0E7F31;
+  --pop-soft: rgba(14, 127, 49, 0.08);
+  --cream: #F8F9F6;
+  --accent-glow: rgba(14, 127, 49, 0.25);
   --font-serif: 'Archivo Black', sans-serif;
   --font-body: 'Archivo', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
@@ -165,7 +165,7 @@ section {
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px #e85d2620;
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .reveal {

@@ -6,9 +6,13 @@
 <title>University Projects</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/project.css">
+<link rel="stylesheet" href="css/onset.css">
+<!-- On Set (js/onset.js): while Three.js loads, hold the stage's space instead of flashing the plain page. -->
+<script>if (!/[?&]flat(&|$)/.test(location.search) && window.WebGLRenderingContext) document.documentElement.classList.add('os-wait');</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onload="document.dispatchEvent(new Event('three-ready'))" onerror="document.dispatchEvent(new Event('three-failed'))"></script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>
 <script>
@@ -18,7 +22,7 @@
   gtag('config', 'G-E6FQ4G8G6B', { anonymize_ip: true });
 </script>
 </head>
-<body>
+<body data-section="university-projects" data-onset-img="ph:Climbing Game">
 
 <nav class="container project-nav" aria-label="Back">
   <a class="project-nav-link back-link" href="index.html#university-projects">&larr; All projects</a>
@@ -181,6 +185,8 @@
 </section>
 
 <script src="js/shared.js"></script>
+<script src="js/greybox.js"></script>
+<script src="js/onset.js"></script>
 <script src="js/analytics.js"></script>
 </body>
 </html>

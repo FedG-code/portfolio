@@ -131,7 +131,7 @@ function Stage(host, w, h, o){
     S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
     ft.dispose();
   }
-  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, render:render, box:box, screen:screen, pin:pin, pick:pick, dispose:dispose};
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, render:render, later:later, box:box, tex:tex, screen:screen, pin:pin, pick:pick, dispose:dispose};
 }
 function capsule(T, mat, s){
   var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;
