@@ -77,9 +77,20 @@ const state = p => p.evaluate(() => ({
   check('return pulls back out of the screen (bubble hidden, then shown)', seen.join('').indexOf('H') >= 0 && s.bubble, seen.join(''));
   check('return: URL hash + focus on the section button', /#eve-of-destruction$/.test(p.url()) && s.active.indexOf('Eve of Destruction') === 0, s.active);
 
-  // University Projects has no page yet: no Open
+  // University Projects: three items, each opens its own section of university_projects.html
   await p.click('.key[data-i="4"]'); await p.waitForTimeout(1800);
-  check('University Projects bubble lists three items, no Open', await p.evaluate(() => document.querySelectorAll('.bub .its li').length === 3 && !document.querySelector('.bub .openb')));
+  check('University Projects bubble lists three items with Open', await p.evaluate(() => [...document.querySelectorAll('.bub .its .itb')].map(a => a.getAttribute('href')).join() === 'university_projects.html#climbing,university_projects.html#fishing,university_projects.html#rally'));
+  await p.click('.bub .itb[data-k="2"]');
+  await p.waitForURL('**/university_projects.html#rally', { timeout: 5000 }); await p.waitForTimeout(400);
+  check('University item opens its section, focus on its heading', await p.evaluate(() => document.activeElement.textContent.trim() === 'Rally Game'));
+  await p.click('.back-link'); await p.waitForTimeout(1600);
+  check('back from University Projects focuses its button', (await state(p)).active.indexOf('University Projects') === 0);
+
+  // Over the Hill opens its page
+  await p.click('.key[data-i="1"]'); await p.waitForTimeout(1800);
+  await p.click('.bub .openb');
+  await p.waitForURL('**/over_the_hill.html', { timeout: 5000 });
+  check('Over the Hill opens its page', true);
 
   // 5. ?flat
   await p.goto(BASE + 'index.html?flat'); await p.waitForTimeout(800);

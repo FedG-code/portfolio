@@ -88,6 +88,25 @@
   grid-template-columns: 1fr 1.2fr;
 }
 
+/* text-only block (no capture): one column at reading width */
+.project-content--text { grid-template-columns: minmax(0, 46rem); }
+
+.work-figure { margin: 0; }
+.work-figure .work-image { aspect-ratio: auto; height: auto; }
+.work-figure figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+.work-capture-tbc {
+  background: var(--bg-warm);
+  border: 1px dashed var(--border-hover);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 .project-content--reversed > :first-child { order: 2; }
 .project-content--reversed > :last-child  { order: 1; }
 

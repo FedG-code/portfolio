@@ -7,7 +7,8 @@ Overview: no build step, no modules, all IIFEs. Three.js r128 comes from cdnjs (
 | `gallery.js` (~490 lines) | `index.html` | The Dolly Gallery homepage |
 | `shared.js` (~60 lines) | project pages | Scroll reveal, lazy mp4 loops, title focus on arrival from the gallery |
 | `analytics.js` (~57 lines) | all pages | GA4 events: case_open, email_click, social_click, scroll_depth |
-| `plane.js`, `destruction.js` | **nothing (dormant)** | Paper plane + text destruction. Kept available, off by default; how it gets switched on is still the user's call (HANDOFF Tier 3 idea: the guide's toy). If wired onto the homepage it must reuse the gallery's renderer or live on a page without it: plane.js loads its own Three.js + WebGLRenderer, which would break the one-WebGL-context rule. It also expects a `#toolbar-plane-slot` (falls back to body) and GSAP + SplitText + Physics2DPlugin. |
+| `plane-key.js` (~50 lines) | all pages | P key (no modifiers, not in a field) loads GSAP + SplitText + Physics2DPlugin, `destruction.js`, `plane.js` in order (creating `#plane-canvas`), then `PaperPlane.toggle()`. Reloads the stack on the next page if sessionStorage `portfolio-plane` is 'on'. |
+| `plane.js`, `destruction.js` | `plane-key.js`, on demand | Paper plane + text destruction, off by default. plane.js exposes `window.PaperPlane = {toggle, isOn}` and no longer builds a toggle button. It creates its own WebGLRenderer (a second context on the homepage while on). `DESTRUCTIBLE_SELECTOR` targets the gallery's HTML text and project page text. |
 
 Retired on 2026-11-09 with the Dolly Gallery: `card-hand.js`, `page-transition.js`, `text-rearrange.js` (title flight), `toolbar.js` (theme switcher). They are in git history (last at commit 2ad4150).
 
@@ -35,7 +36,7 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 | `Stage(host, w, h, o)` | Scene, lights, grid floor, `screen()`, `pin()` (HTML pinned to 3D points), render on demand (`render`, `later`), `dispose()`. `o.k` scales pinned HTML on narrower desktops. |
 | `shot(m, w)` | Camera per breakpoint. Base sizes from the prototype (desktop 1192x470, phone 358x500). Desktop height = clamp(w*0.394, 400, 470); camera pulls back only sqrt of the aspect change and pins scale by `k` (min 0.72) so sign and bubble don't collide at 812-1100px. |
 | `PHONE` | 640: stage width below this uses the phone shot (sign = lead line only, About body as `.ab-m` under the stage, bubble beside the guide). |
-| `bubHTML(i)` | Bubble content: logs + stack + Open link (only if `href`); University Projects lists its three items as "to come". |
+| `bubHTML(i)` | Bubble content: logs + stack + Open link (only if `href`); University Projects lists its three items, each an Open link to its anchor (`open(s, k)` pushes into screen k). |
 | `select(s, anim, announce)` | Moves camera (`put`), walks the guide round the bay dividers (`route` via z=2.45 on desktop), then `arrive` -> `say` (bubble + live region) + `showOv` (clip). |
 | `act(s)` | Shot-list click/Enter: select, or Open if already there. |
 | `open(s)` | Sets `sessionStorage['dolly-return'] = id`, pushes the camera into the screen (0.6s), then `location.href = href`. Reduced motion: navigates at once. |
@@ -58,14 +59,14 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 
 ## shared.js (project pages)
 - Scroll reveal (`.reveal` -> `.visible`), `window.revealObserver`.
-- If `sessionStorage['dolly-return']` is set: focus `.project-hero-title` (tabindex=-1).
+- If `sessionStorage['dolly-return']` is set: focus `.project-hero-title` (tabindex=-1), or, when the URL has `#item`, that section's `.section-heading`. Focus runs after `load` because the browser's own fragment focus step would undo it.
 - `video[data-src]`: src set when within 200px of the viewport, play while visible, pause when not. Reduced motion: `controls`, no loop, `preload=none`, no autoplay.
 
 ---
 
-## Dormant: destruction.js and plane.js (not loaded by any page)
+## destruction.js and plane.js (loaded on the P key)
 
-The reference below is from before the Dolly Gallery and still describes the code. The pages it mentions (card hand, toolbar, hero h1 selectors) are gone, so `DESTRUCTIBLE_SELECTOR` needs new targets before this is switched on again.
+The reference below predates the Dolly Gallery; line numbers and the selector list have drifted (the selectors now target the gallery and project pages, and the toggle button/toolbar slot is gone).
 
 ## destruction.js (~447 lines)
 

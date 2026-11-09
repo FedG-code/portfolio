@@ -8,6 +8,8 @@ index.html              - Dolly Gallery homepage (name strip, About, 3D wall + g
 casino_games.html       - Logifuture case study
 eve_of_destruction.html - Lost Satellite Studios case study
 my_games.html           - "Other Games" case study (file name kept; title renamed from My Games)
+over_the_hill.html      - Over the Hill / Feedbot case study
+university_projects.html - Climbing, Fishing and Rally Game (one page, one section each)
 css/
   gallery.css           - Homepage only (self-contained, one identity)
   shared.css            - Project pages (bold theme; other theme blocks are dead CSS)
@@ -16,8 +18,8 @@ js/
   gallery.js            - The gallery: data, plain list, Three.js stage, guide, open/return
   shared.js             - Project pages: scroll reveal, lazy mp4 loops, title focus
   analytics.js          - GA4 events
-  plane.js, destruction.js - Paper plane + text destruction: dormant, not loaded anywhere
-assets/                 - Captures. *.mp4 + *-poster.jpg are the loops; the *.gif originals are kept until the user OKs deleting them
+  plane-key.js          - P key: loads GSAP + destruction.js + plane.js on demand and toggles the paper plane
+assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF originals were deleted 2026-11-09; they are in git history)
 ```
 
 ## Detailed Documentation
@@ -34,15 +36,20 @@ assets/                 - Captures. *.mp4 + *-poster.jpg are the loops; the *.gi
 - **Open / return**: Open pushes the camera into the screen, then loads the project page. The back link (`← All projects`) goes to `index.html#<section-id>`; with `sessionStorage['dolly-return']` the gallery pulls back out and focuses that section's button. No title flight (user removed it).
 - **Media**: muted H.264 mp4 loops (ffmpeg recipe in `design/HANDOFF.md`), loaded only when needed: the gallery overlay loads the selected section's clip only; project pages load clips near the viewport.
 - **Content rules** (user): no availability line; gambling metrics only inside the Casino case study; don't apply `cv.md` content without asking; no major rewriting of page copy.
-- **Placeholders**: University Projects (titles, captures, write-ups, which item is the main one) and Over the Hill (no project page yet, so no Open) wait for the content pass.
+- **Pages**: `over_the_hill.html` (Feedbot, built from cv.md + the sentiment-tracker repo) and `university_projects.html` (Climbing Game = main item, Fishing Game, Rally Game; anchors `#climbing`, `#fishing`, `#rally`). Each university item in the gallery bubble opens its own anchor. **No reference to AI use on the university page** (user rule).
+- **Content still to come**:
+  - **Rally Game showcase video**: the user has one coming. Swap the still (`assets/rally.jpg`) for it on `university_projects.html` (muted mp4 loop + poster) and as the Rally screen/clip in the gallery's University bay.
+  - Climbing Game capture (placeholder screen and "Capture to come" box); Fishing Game gameplay capture (only the island preview exists).
+  - Real game titles (repos only have working names), and confirmation of module/year/solo for each university project.
+  - A real Feedbot dashboard capture (needs player data blurred); the page uses the public site's illustrative example.
 
 ## Serving Locally
 ```
 npx http-server -p 8080 -c-1
 ```
 
-## Paper plane + destruction (dormant)
-`js/plane.js` and `js/destruction.js` are kept but not loaded by any page. How the plane gets switched on is still the user's call (idea in HANDOFF: the guide's toy). Mind the one-WebGL-context rule: plane.js creates its own renderer. The 2026-04-04 mobile performance notes and the destruction test descriptions below apply when it comes back; the suites live in `tests/plane-archive/`.
+## Paper plane + destruction (P key)
+Off by default; pressing **P** on any page (`js/plane-key.js`) loads GSAP, `js/destruction.js` and `js/plane.js`, then calls `PaperPlane.toggle()` (user: "pressing p for now", untested by them). It stays on across pages until a reload. plane.js creates its own renderer, so with the plane on the homepage runs two WebGL contexts. The 2026-04-04 mobile performance notes and the destruction test descriptions below apply when it comes back; the suites live in `tests/plane-archive/`.
 
 ### Mobile Destruction Performance — Investigation Notes (2026-04-04)
 

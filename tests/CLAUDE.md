@@ -13,13 +13,14 @@ Playwright (Chromium). The `playwright` package is in the repo's `package.json`;
 | Open | Enter on the selected key: bubble hides during the push, eve_of_destruction.html loads, focus on the H1 |
 | Project clips | none loaded at first; first one gets `src` once scrolled near |
 | Return | back link -> `#eve-of-destruction`, bubble hidden during the pull-out then shown, focus on the Eve key |
-| University | bubble lists 3 items, no Open |
+| University | bubble lists 3 Open links (#climbing, #fishing, #rally); Rally opens with focus on its heading; back focuses the University button |
+| Over the Hill | Open loads over_the_hill.html |
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
 | Reduced motion | instant cut, no clip; project clips have controls and stay paused |
 
 ## plane-archive/ (dormant)
 
-The destruction/plane suites (`run-destruction-suite.js`, `destruction-*-test.js`, `perf-test*.js`, `gsap-diagnostic-test.js`, `baselines/`). They drive `TextDestruction` and the plane on the old homepage, which no longer loads `destruction.js`/`plane.js`, so they **won't run against the current pages**. Kept for when the paper plane is switched back on (how is still undecided); they'll need a page that loads those scripts and new destructible targets.
+The destruction/plane suites (`run-destruction-suite.js`, `destruction-*-test.js`, `perf-test*.js`, `gsap-diagnostic-test.js`, `baselines/`). They were written for the old homepage and expect `TextDestruction`/the plane to be loaded at page load and the old hero/#about markup, so they **won't run as-is**. The plane now loads on the P key (`js/plane-key.js`); to revive them, press P (or load the scripts) in their setup and retarget the element selectors.
 
 ## Removed (2026-11-09)
 

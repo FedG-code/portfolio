@@ -19,10 +19,15 @@
   // Arriving from the gallery's Open (js/gallery.js sets 'dolly-return'): focus moves to the case title.
   var from = null;
   try { from = sessionStorage.getItem('dolly-return'); } catch (e) {}
-  var title = document.querySelector('.project-hero-title');
+  // A link to one item (e.g. university_projects.html#rally) focuses that item's heading instead.
+  var target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  var title = (target && target.querySelector('.section-heading')) || document.querySelector('.project-hero-title');
+  if (title && title !== document.querySelector('.project-hero-title')) title.tabIndex = -1;
   if (from && title) {
     title.classList.add('visible');
-    title.focus({ preventScroll: true });
+    // After load: scrolling to a #fragment runs the browser's own focus step, which would undo an earlier focus.
+    var go = function () { setTimeout(function () { title.focus({ preventScroll: !location.hash }); }, 0); };
+    if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once: true });
   }
 
   // Clips: muted mp4 loops (converted from the old GIFs). Each loads only when it nears the viewport,

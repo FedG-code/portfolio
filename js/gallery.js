@@ -22,11 +22,11 @@ var H = {
   about:'At Funselektor I built Feedbot for Over the Hill. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on live web games at Logifuture.'
 };
 var P = [
-  { id:'over-the-hill', t:'Over the Hill', sub:'Tool programmer at Funselektor Labs, 2026', subM:'Tool programmer at Funselektor Labs, 2026',
-    img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill key art', marks:[{chip:'Funselektor key art'}], href:null,
-    blurb:"Key art from Funselektor's game. I built Feedbot, which sorts the game's player feedback from six platforms into bugs and requests. The first version shipped two days after the brief.",
-    spec:[['Studio','Funselektor Labs'],['Role','Tool Programmer'],['Stack','Web, LLM pipeline'],['Year','2026'],['Result','45k player messages triaged in launch week']],
-    logs:['Feedbot sorts feedback from six platforms into bugs and requests','First version shipped two days after the brief','45k player messages triaged in launch week'] },
+  { id:'over-the-hill', t:'Over the Hill', sub:'Tool designer at Funselektor Labs, 2026', subM:'Tool designer at Funselektor Labs, 2026',
+    img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill key art', marks:[{chip:'Funselektor key art'}], href:'over_the_hill.html',
+    blurb:"Key art from Funselektor's game. I built Feedbot, which sorts the game's player feedback from six feedback streams into bugs and requests. The first version went live two days after the brief.",
+    spec:[['Studio','Funselektor Labs'],['Role','Tool Designer'],['Stack','Python, Claude API, Streamlit'],['Year','2026'],['Result','45k player messages handled in launch week']],
+    logs:['45k player messages handled in launch week','First version live two days after the brief','60+ bug reports and sentiment write-ups'] },
   { id:'eve-of-destruction', t:'Eve of Destruction', sub:'Technical designer at Lost Satellite Studios, 2024', subM:'Technical designer at Lost Satellite, 2024',
     img:'assets/knightboss-poster.jpg', clip:'assets/knightboss.mp4', px:true, ar:800/494, alt:'Eve of Destruction knight boss attacking, with hitboxes visible', marks:[{chip:'Hitbox debug view on'}],
     href:'eve_of_destruction.html', blurb:'The knight boss with my hitbox debug view on.',
@@ -37,13 +37,15 @@ var P = [
     href:'casino_games.html', blurb:'Three years at Logifuture shipping live web games in PixiJS and Unity WebGL.',
     spec:[['Studio','Logifuture'],['Role','Game Developer'],['Stack','PixiJS, Unity WebGL'],['Year','2023 to 2026']],
     logs:['8+ game releases, start to finish','PixiJS and Unity WebGL'] },
-  /* placeholders until the content pass (titles, captures, write-ups, which one is the main item) */
-  { id:'university-projects', t:'University Projects', sub:'Three games from university (to come)', subM:'Three games from university',
-    rs:'Three games · to come', ph:true, href:null,
-    img:null, ar:16/9, alt:'Placeholder for a university project capture', marks:[{chip:'Placeholder: capture to come'}],
-    blurb:'Three games from university. Titles, captures and write-ups are on their way.',
-    spec:[['Studio','University'],['Role','To come'],['Stack','To come'],['Year','To come']],
-    items:[{t:'University project 1'},{t:'University project 2'},{t:'University project 3'}],
+  /* Climbing Game is the main item (big screen); its capture is still a placeholder */
+  { id:'university-projects', t:'University Projects', sub:'Climbing, fishing and rally prototypes in Unity', subM:'Three prototypes in Unity',
+    rs:'Three Unity prototypes', href:'university_projects.html',
+    img:null, ar:16/9, alt:'Placeholder for the Climbing Game capture', marks:[{chip:'Climbing Game: capture to come'}],
+    blurb:'Three university prototypes, each built around one action: climbing hand over hand, casting a line, and returning a ball off a wall.',
+    spec:[['Studio','University'],['Role','Solo developer'],['Stack','Unity 6, C#'],['Year','2026']],
+    items:[{t:'Climbing Game', href:'university_projects.html#climbing'},
+           {t:'Fishing Game', href:'university_projects.html#fishing', img:'assets/fishing-island.jpg', ar:1},
+           {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally.jpg', ar:1043/586}],
     logs:[] },
   { id:'other-games', t:'Other Games', sub:'A stealth game in Unity, plus jam games, since 2025', subM:'Stealth game in Unity, plus jam games',
     img:'assets/visionsystemimg.png', clip:'assets/visionsystem.mp4', ar:800/456, alt:'Top-down stealth game with the guard vision cone drawn on the floor', marks:[{x:43.5,y:9,w:10.5,h:43,l:'Vision cone: HLSL shader'}],
@@ -63,7 +65,7 @@ function phURL(label){
   g.font = '500 18px "IBM Plex Mono", monospace'; g.fillStyle = 'rgba(243,244,240,.75)'; g.fillText('capture to come', 320, 206);
   return (phC[label] = cv.toDataURL('image/png'));
 }
-P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ it.img = phURL(it.t); }); p.img = p.items[0].img; } });
+P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ if (!it.img){ it.img = phURL(it.t); it.ar = 16/9; } }); p.img = p.items[0].img; } });
 function idxOf(id){ for (var i = 0; i < P.length; i++) if (P[i].id === id) return i; return -1; }
 
 /* ------------------------------ clock: on-demand tweens ------------------------------ */
@@ -249,7 +251,7 @@ var GUIDE = 'Walk with me: drag, scroll sideways or pick a section below.';
 function bubHTML(i){
   if (i < 0) return '<p class="bt">' + GUIDE + '</p>';
   var p = P[i];
-  if (p.items) return '<ul class="its">' + p.items.map(function(it){ return '<li><span class="it-t">' + it.t + '</span><span class="it-o">to come</span></li>'; }).join('') + '</ul>';
+  if (p.items) return '<ul class="its">' + p.items.map(function(it, k){ return '<li><a class="itb" href="' + it.href + '" data-k="' + k + '"><span class="it-t">' + it.t + '</span><span class="it-o">Open <span aria-hidden="true">&rarr;</span></span></a></li>'; }).join('') + '</ul>';
   return '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul><p class="bs"><span>Stack</span> ' + p.spec[2][1] + '</p>' + (p.href ? openLink(p, 'openb') : '');
 }
 /* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
@@ -303,7 +305,7 @@ function buildDolly(start){
       var sx2 = gl + mw + gap + smw/2, sh2 = smw/(16/9), dy2 = sh2/2 + .1;
       p.items.forEach(function(it, k){
         var w = k ? smw : mw, px = k ? sx2 : scx, py = k ? sy + (k === 1 ? dy2 : -dy2) : sy;
-        var g = st.screen({img:it.img, ar:16/9}, w); g.position.set(px, py, .03);
+        var g = st.screen({img:it.img, ar:it.ar}, w); g.position.set(px, py, .03);
         var lab = el('span', 'pin tl', it.t); lab.setAttribute('aria-hidden', 'true'); host.appendChild(lab);
         st.pin(lab, new T.Vector3(px - w/2 - .08, py - g.userData.h/2 - .1, .05), 0, 0, {clamp:false});
         scr3.push({sc:g, scx:px, sy:py, sw:w});
@@ -347,6 +349,7 @@ function buildDolly(start){
   function say(s, announce){
     bub.innerHTML = bubHTML(s - 1);
     var ob = bub.querySelector('.openb'); if (ob) ob.addEventListener('click', function(e){ e.preventDefault(); open(s, 0); });
+    bub.querySelectorAll('.itb').forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(s, +b.getAttribute('data-k')); }); });
     bub.hidden = false; if (!RM) restart(bub);
     if (announce) live.textContent = s ? P[s - 1].t : 'About';
   }
@@ -410,12 +413,13 @@ function buildDolly(start){
   /* push into the screen, then load the project page */
   function open(s, k){
     var p = P[s - 1]; if (busy || s < 1 || !p || !p.href) return;
+    var href = p.items && k != null ? p.items[k].href : p.href;
     remember(p);
-    if (RM){ location.href = p.href; return; }
+    if (RM){ location.href = href; return; }
     busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true;
     var p0 = st.cam.position.clone(), l0 = st.look.clone(), tpv = new T.Vector3(), tl = new T.Vector3();
     pushed = pushTarget(s, k);
-    clock.add(.6, function(q){ var e = eio(q); tpv.copy(p0).lerp(pushed.p, e); tl.copy(l0).lerp(pushed.l, e); st.setCam(tpv, tl); st.render(); }, function(){ location.href = p.href; });
+    clock.add(.6, function(q){ var e = eio(q); tpv.copy(p0).lerp(pushed.p, e); tl.copy(l0).lerp(pushed.l, e); st.setCam(tpv, tl); st.render(); }, function(){ location.href = href; });
   }
   /* back from the case study: start inside the screen and pull out to the section shot */
   function pullBack(s){
