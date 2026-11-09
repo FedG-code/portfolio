@@ -1,6 +1,6 @@
 # Tests Reference Map
 
-Playwright (Chromium). The `playwright` package is in the repo's `package.json`; run `npm install` first if `node_modules` is missing (worktrees don't have their own: set `NODE_PATH` to the main checkout's `node_modules`).
+Playwright (Chromium). `playwright` is the only dependency in `package.json`; run `npm install` first if `node_modules` is missing (worktrees don't have their own: set `NODE_PATH` to the main checkout's `node_modules`).
 
 ## gallery-test.js (live site)
 
@@ -19,6 +19,5 @@ Playwright (Chromium). The `playwright` package is in the repo's `package.json`;
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
 | Reduced motion | instant cut, no clip; project clips have controls and stay paused |
 
-## Removed (2026-11-09)
-
-Card hand / title flight / theme tests whose systems are gone, plus the paper plane / destruction suites (removed with the plane): blur-overlay-cleanup, fly-clone-alignment, fly-swap-diagnostic, fullstop-shift, home-title-jump-diagnostic, title-jump-diagnostic, hero-layout, mobile-hand, mobile-touch, toolbar-shadow, transition-refresh. See git history (commit 2ad4150) if needed.
+## Archived
+The card-hand / title-flight / theme tests and the paper-plane / destruction suites are in `archive/card-hand/tests/` and `archive/paper-plane/tests/`. They target code that is no longer loaded, so they don't run against the current site.

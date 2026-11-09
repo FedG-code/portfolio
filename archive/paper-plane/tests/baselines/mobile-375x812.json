@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-04-02T21:23:16.849Z",
+  "device": "mobile-375x812",
+  "scenarios": {
+    "scatter_spike": {
+      "scatter_active": {
+        "totalFrames": 86,
+        "droppedFrames": 0,
+        "droppedFramePct": 0,
+        "avgFrameMs": 16.67,
+        "p95FrameMs": 16.7,
+        "maxFrameMs": 16.8
+      },
+      "cdp": {
+        "LayoutCount": 2,
+        "RecalcStyleCount": 158,
+        "ScriptDurationMs": 34.73,
+        "LayoutDurationMs": 2.7,
+        "TaskDurationMs": 486.28
+      }
+    },
+    "dense_burst": {
+      "burst_scatter": {
+        "totalFrames": 122,
+        "droppedFrames": 0,
+        "droppedFramePct": 0,
+        "avgFrameMs": 16.66,
+        "p95FrameMs": 16.8,
+        "maxFrameMs": 16.8
+      },
+      "cdp": {
+        "LayoutCount": 6,
+        "RecalcStyleCount": 203,
+        "ScriptDurationMs": 108.52,
+        "LayoutDurationMs": 4.88,
+        "TaskDurationMs": 941.91
+      }
+    },
+    "figure8_scroll_fire": {
+      "scroll_fire": {
+        "totalFrames": 396,
+        "droppedFrames": 0,
+        "droppedFramePct": 0,
+        "avgFrameMs": 16.67,
+        "p95FrameMs": 16.8,
+        "maxFrameMs": 16.8
+      },
+      "reform_tail": {
+        "totalFrames": 181,
+        "droppedFrames": 0,
+        "droppedFramePct": 0,
+        "avgFrameMs": 16.67,
+        "p95FrameMs": 16.8,
+        "maxFrameMs": 16.8
+      },
+      "cdp": {
+        "LayoutCount": 54,
+        "RecalcStyleCount": 760,
+        "ScriptDurationMs": 340.25,
+        "LayoutDurationMs": 36.92,
+        "TaskDurationMs": 3779.67
+      }
+    },
+    "sustained_annihilation": {
+      "annihilation": {
+        "totalFrames": 91,
+        "droppedFrames": 3,
+        "droppedFramePct": 3.3,
+        "avgFrameMs": 17.22,
+        "p95FrameMs": 16.8,
+        "maxFrameMs": 33.5
+      },
+      "cooldown": {
+        "totalFrames": 240,
+        "droppedFrames": 0,
+        "droppedFramePct": 0,
+        "avgFrameMs": 16.67,
+        "p95FrameMs": 16.7,
+        "maxFrameMs": 16.8
+      },
+      "cdp": {
+        "LayoutCount": 14,
+        "RecalcStyleCount": 540,
+        "ScriptDurationMs": 358.4,
+        "LayoutDurationMs": 17.29,
+        "TaskDurationMs": 2356.28
+      }
+    }
+  }
+}

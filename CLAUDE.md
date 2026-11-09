@@ -12,13 +12,15 @@ over_the_hill.html      - Over the Hill / Feedbot case study
 university_projects.html - Climbing, Rally and Fishing Game (one page, one section each, in that order)
 css/
   gallery.css           - Homepage only (self-contained, one identity)
-  shared.css            - Project pages (bold theme; other theme blocks are dead CSS)
+  shared.css            - Project pages: base, tidbits, section headings, reveal (bold look; pruned to live rules)
   project.css           - Project page layout, back link
 js/
   gallery.js            - The gallery: data, plain list, Three.js stage, guide, open/return
   shared.js             - Project pages: scroll reveal, lazy mp4 loops, title focus
   analytics.js          - GA4 events
 assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF originals were deleted 2026-11-09; they are in git history)
+tests/gallery-test.js   - Playwright checks for the gallery and project pages
+archive/                - Retired code, not loaded anywhere: card hand + theme switcher, paper plane, legacy backups (see archive/README.md)
 ```
 
 ## Detailed Documentation
@@ -29,6 +31,7 @@ assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF 
 
 ## Key Details
 - **Section order** (user): About, Over the Hill, Eve of Destruction, Casino Games, University Projects, Other Games. Over the Hill leads.
+- **Opening a section**: the bubble's "Learn more" button, a click on the capture itself, or Enter on an already-selected section button. All push the camera into the screen first.
 - **One identity**: no theme switcher. Green only for colliders/triggers, orange only for selection. Archivo (variable width) + IBM Plex Mono.
 - **HTML first**: `index.html` ships About + a plain list; Three.js r128 (cdnjs, async) upgrades it. Without WebGL, or with `?flat`, the list stays.
 - **One WebGL context** on the page. The phone shot is a breakpoint (stage < 640px), not a second canvas.
@@ -46,8 +49,8 @@ assets/                 - Captures. *.mp4 + *-poster.jpg are the loops (the GIF 
 npx http-server -p 8080 -c-1
 ```
 
-## Paper plane (removed)
-The paper plane and text destruction (`js/plane.js`, `js/destruction.js`, the P-key loader, `assets/plane.glb` and their test suites) were removed on 2026-11-09 at the user's request. They are in git history (last in commit 7471f29).
+## Archive
+The card hand, title flight and theme switcher (retired with the Dolly Gallery) and the paper plane + text destruction (removed at the user's request) live in `archive/` with their tests. Nothing there is loaded by a page. The plane's model (`assets/plane.glb`) was deleted; it's in git history (commit 7471f29). See [archive/README.md](archive/README.md).
 
 ## Verification
 After visual changes, check whether port 8080 is already serving (`curl -s -o /dev/null -w "%{http_code}" http://localhost:8080`). Make sure it is serving **this** checkout (worktrees: use another port, e.g. `npx http-server -p 8091 -c-1`). Screenshot at 1920x1080, 1024x768, 390x844 and 812x375, and run:
@@ -72,4 +75,4 @@ Headless Chromium needs `--use-gl=angle --use-angle=swiftshader --enable-unsafe-
 
 ## Preferences
 - **Use CLAUDE.md for persistent notes**, not the auto-memory directory. If something needs to be remembered across sessions, add it here.
-- **Be surgical with file reads** — ALWAYS use `offset` and `limit` parameters. Never read more than 80 lines at once. Use Grep to find the right line numbers first, then read only that section. This applies to subagents too — when launching Explore/Plan agents, explicitly instruct them to use offset+limit and never read whole files. Whole-file reads of `shared.css` or `index.html` waste 2-4k tokens each and cause auto-compaction.
+- **Be surgical with file reads** — ALWAYS use `offset` and `limit` parameters. Never read more than 80 lines at once. Use Grep to find the right line numbers first, then read only that section. This applies to subagents too — when launching Explore/Plan agents, explicitly instruct them to use offset+limit and never read whole files. Whole-file reads of `js/gallery.js` (~520 lines) waste tokens and cause auto-compaction.

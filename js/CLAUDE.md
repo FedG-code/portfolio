@@ -4,11 +4,11 @@ Overview: no build step, no modules, all IIFEs. Three.js r128 comes from cdnjs (
 
 | File | Loaded by | Purpose |
 |------|-----------|---------|
-| `gallery.js` (~490 lines) | `index.html` | The Dolly Gallery homepage |
-| `shared.js` (~60 lines) | project pages | Scroll reveal, lazy mp4 loops, title focus on arrival from the gallery |
+| `gallery.js` (~514 lines) | `index.html` | The Dolly Gallery homepage |
+| `shared.js` (~63 lines) | project pages | Scroll reveal, lazy mp4 loops, title focus on arrival from the gallery |
 | `analytics.js` (~57 lines) | all pages | GA4 events: case_open, email_click, social_click, scroll_depth |
 
-Retired on 2026-11-09 with the Dolly Gallery: `card-hand.js`, `page-transition.js`, `text-rearrange.js` (title flight), `toolbar.js` (theme switcher); later the same day `plane.js`, `destruction.js` and `plane-key.js` (paper plane, removed at the user's request). They are in git history (last at commit 2ad4150).
+Retired code (card hand, page transitions, title flight, theme toolbar, paper plane, text destruction) is in `archive/` (see archive/README.md); none of it is loaded.
 
 ---
 

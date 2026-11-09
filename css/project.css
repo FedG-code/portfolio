@@ -1,4 +1,5 @@
-/* ========== PROJECT NAV ========== */
+/* Project page layout: back link, hero, sections (.project-content, --reversed, --text), captures
+   (.work-image, .work-figure, .work-capture-tbc), stats, video embeds. Loaded with css/shared.css. */
 .project-nav {
   display: flex;
   justify-content: space-between;
@@ -14,8 +15,14 @@
   color: var(--text-primary);
 }
 
-.project-hero-title:focus { outline: none; }
-.project-hero-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.project-hero-title:focus {
+  outline: none;
+}
+
+.project-hero-title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
 
 .project-nav-link {
   font-family: var(--font-mono);
@@ -29,7 +36,6 @@
   color: var(--accent);
 }
 
-/* ========== PROJECT HERO ========== */
 .project-hero {
   padding: 2rem 0 4rem;
 }
@@ -72,7 +78,6 @@
   margin-top: 2rem;
 }
 
-/* ========== PROJECT SECTIONS ========== */
 .project-section {
   padding: 4rem 0;
 }
@@ -88,17 +93,26 @@
   grid-template-columns: 1fr 1.2fr;
 }
 
-/* text-only block (no capture): one column at reading width */
-.project-content--text { grid-template-columns: minmax(0, 46rem); }
+.project-content--text {
+  grid-template-columns: minmax(0, 46rem);
+}
 
-.work-figure { margin: 0; }
-.work-figure .work-image { aspect-ratio: auto; height: auto; }
+.work-figure {
+  margin: 0;
+}
+
+.work-figure .work-image {
+  aspect-ratio: auto;
+  height: auto;
+}
+
 .work-figure figcaption {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-muted);
   margin-top: 0.5rem;
 }
+
 .work-capture-tbc {
   background: var(--bg-warm);
   border: 1px dashed var(--border-hover);
@@ -107,8 +121,13 @@
   color: var(--text-muted);
 }
 
-.project-content--reversed > :first-child { order: 2; }
-.project-content--reversed > :last-child  { order: 1; }
+.project-content--reversed > :first-child {
+  order: 2;
+}
+
+.project-content--reversed > :last-child {
+  order: 1;
+}
 
 .project-text p {
   font-size: 0.9rem;
@@ -125,7 +144,6 @@
   line-height: 1.3;
 }
 
-/* ========== IMAGE PLACEHOLDERS & IMAGES ========== */
 .work-image-placeholder {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -140,10 +158,6 @@
   text-transform: uppercase;
 }
 
-.work-image-placeholder.warm { background: linear-gradient(135deg, #fef0e7 0%, #fde1cb 100%); }
-.work-image-placeholder.cool { background: linear-gradient(135deg, #edf2ff 0%, #dbe4ff 100%); }
-.work-image-placeholder.fresh { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
-
 .work-image {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -151,7 +165,6 @@
   object-fit: cover;
 }
 
-/* ========== STATS ========== */
 .work-stats {
   display: flex;
   gap: 1.5rem;
@@ -181,27 +194,10 @@
   color: var(--text-muted);
 }
 
-/* ========== SCREENSHOT GALLERY ========== */
-.screenshot-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.screenshot-gallery img,
-.screenshot-gallery .work-image-placeholder {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-}
-
-/* ========== VIDEO EMBED ========== */
 .video-embed {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 */
+  padding-bottom: 56.25%;
   height: 0;
   overflow: hidden;
   border-radius: var(--radius-sm);
@@ -218,29 +214,11 @@
   border-radius: var(--radius-sm);
 }
 
-/* ========== WIP BADGE ========== */
-.wip-badge {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: var(--accent);
-  background: var(--accent-soft);
-  padding: 0.25rem 0.6rem;
-  border-radius: 100px;
-  margin-left: 0.75rem;
-  vertical-align: middle;
-}
-
-/* ========== PROJECT LINK ========== */
 .project-link {
   margin-top: 1.25rem;
   display: inline-block;
 }
 
-/* ========== PORTRAIT IMAGE DUO ========== */
 .project-images-duo {
   display: flex;
   gap: 1rem;
@@ -254,34 +232,35 @@
   max-height: 480px;
 }
 
-/* ========== NEON THEME OVERRIDES ========== */
-[data-theme="neon"] .project-hero-title { font-weight: 600; font-style: normal; }
-[data-theme="neon"] .project-text h4 { font-weight: 600; }
-[data-theme="neon"] .project-hero-badge { border-radius: 6px; }
-[data-theme="neon"] .wip-badge { border-radius: 6px; }
-[data-theme="neon"] .project-link { border-radius: 8px; }
-[data-theme="neon"] .work-image-placeholder.warm { background: radial-gradient(circle at 30% 40%, #c9f05915 0%, transparent 50%), #18181f; }
-[data-theme="neon"] .work-image-placeholder.cool { background: radial-gradient(circle at 30% 40%, #59b8f015 0%, transparent 50%), #18181f; }
-[data-theme="neon"] .work-image-placeholder.fresh { background: radial-gradient(circle at 30% 40%, #59f0a015 0%, transparent 50%), #18181f; }
-
-/* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
-  .project-content { grid-template-columns: 1fr; }
-  .project-content--reversed { grid-template-columns: 1fr; }
-  .project-content--reversed > * { order: unset; }
-  .project-meta { flex-wrap: wrap; }
-  .project-images-duo { max-width: 500px; }
-  .project-images-duo .work-image { max-height: 400px; }
+  .project-content {
+    grid-template-columns: 1fr;
+  }
+  .project-content--reversed {
+    grid-template-columns: 1fr;
+  }
+  .project-content--reversed > * {
+    order: unset;
+  }
+  .project-meta {
+    flex-wrap: wrap;
+  }
+  .project-images-duo {
+    max-width: 500px;
+  }
+  .project-images-duo .work-image {
+    max-height: 400px;
+  }
 }
 
 @media (max-width: 480px) {
-  .project-images-duo { max-width: 100%; }
-  .project-images-duo .work-image { max-height: 300px; }
+  .project-images-duo {
+    max-width: 100%;
+  }
+  .project-images-duo .work-image {
+    max-height: 300px;
+  }
 }
-/* ========================================================================
-   BOLD THEME — project.css additions
-   Add this block after the [data-theme="neon"] section in project.css.
-   ======================================================================== */
 
 [data-theme="bold"] .project-hero-title {
   font-family: var(--font-serif);
@@ -302,145 +281,6 @@
   font-family: var(--font-mono);
 }
 
-[data-theme="bold"] .wip-badge {
-  border-radius: 0;
-}
-
 [data-theme="bold"] .project-link {
   border-radius: 0;
-}
-
-[data-theme="bold"] .work-image-placeholder.warm {
-  background: linear-gradient(135deg, #fef0e7 0%, #fde1cb 100%);
-}
-[data-theme="bold"] .work-image-placeholder.cool {
-  background: linear-gradient(135deg, #edf2ff 0%, #dbe4ff 100%);
-}
-[data-theme="bold"] .work-image-placeholder.fresh {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-}
-/* ========== CINEMATIC THEME — PROJECT PAGE OVERRIDES ========== */
-
-[data-theme="cinematic"] .project-hero-title {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-style: normal;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-}
-
-[data-theme="cinematic"] .project-text h4 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-style: normal;
-}
-
-[data-theme="cinematic"] .project-hero-badge {
-  border-radius: 0;
-  font-family: var(--font-mono);
-}
-
-[data-theme="cinematic"] .wip-badge {
-  border-radius: 0;
-}
-
-[data-theme="cinematic"] .project-link {
-  border-radius: 0;
-}
-
-/* Image placeholders */
-[data-theme="cinematic"] .work-image-placeholder.warm {
-  background: radial-gradient(circle at 30% 40%, rgba(214,0,28,0.1) 0%, transparent 50%), #161616;
-}
-[data-theme="cinematic"] .work-image-placeholder.cool {
-  background: radial-gradient(circle at 30% 40%, rgba(100,120,180,0.1) 0%, transparent 50%), #161616;
-}
-[data-theme="cinematic"] .work-image-placeholder.fresh {
-  background: radial-gradient(circle at 30% 40%, rgba(80,180,120,0.1) 0%, transparent 50%), #161616;
-}
-/* ══════════════════════════════════════════════════════════
-   BRUTALIST TYPOGRAPHIC THEME — project.css overrides
-   ══════════════════════════════════════════════════════════ */
-
-[data-theme="brutalist"] .project-hero-title {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-style: normal;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
-}
-
-[data-theme="brutalist"] .project-text h4 {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-style: normal;
-}
-
-[data-theme="brutalist"] .project-hero-badge {
-  border-radius: 0;
-  border: 2px solid var(--accent);
-  font-family: var(--font-mono);
-}
-
-[data-theme="brutalist"] .wip-badge {
-  border-radius: 0;
-}
-
-[data-theme="brutalist"] .project-link {
-  border-radius: 0;
-}
-
-[data-theme="brutalist"] .work-image-placeholder {
-  border: 1px solid var(--border);
-}
-
-[data-theme="brutalist"] .work-image-placeholder.warm { background: #DDD8CE; }
-[data-theme="brutalist"] .work-image-placeholder.cool { background: #D0D4DC; }
-[data-theme="brutalist"] .work-image-placeholder.fresh { background: #CED8D0; }
-
-[data-theme="brutalist"] .project-section--spaced-top {
-  padding-top: 7rem;
-}
-/* ═══════════════════════════════════════════════════════
-   RETRO THEME — project.css overrides
-   ═══════════════════════════════════════════════════════ */
-
-[data-theme="retro"] .project-hero-title {
-  font-family: 'Shrikhand', cursive;
-  font-style: normal;
-  font-weight: 400;
-}
-
-[data-theme="retro"] .project-text h4 {
-  font-family: 'Shrikhand', cursive;
-  font-weight: 400;
-  font-style: normal;
-}
-
-[data-theme="retro"] .project-hero-badge {
-  border-radius: 0;
-  background: transparent;
-  border: 2px solid var(--accent);
-  color: var(--accent);
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-[data-theme="retro"] .wip-badge {
-  border-radius: 0;
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-[data-theme="retro"] .project-link {
-  border-radius: 0;
-}
-
-/* Image placeholders — warm cream + teal tints */
-[data-theme="retro"] .work-image-placeholder.warm {
-  background: linear-gradient(135deg, #F5EED8 0%, #EDE5C8 100%);
-}
-[data-theme="retro"] .work-image-placeholder.cool {
-  background: linear-gradient(135deg, #D4E8E2 0%, #C4DCD6 100%);
-}
-[data-theme="retro"] .work-image-placeholder.fresh {
-  background: linear-gradient(135deg, #E8E4C8 0%, #DCD8B8 100%);
 }

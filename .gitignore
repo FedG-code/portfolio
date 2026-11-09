@@ -1,7 +1,6 @@
 .playwright-cli/
 *.png
 !assets/spin+img.png
-!assets/ult+bossfightimg.png
 !assets/visionsystemimg.png
 node_modules/
 .worktrees/
