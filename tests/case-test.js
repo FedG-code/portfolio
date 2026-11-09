@@ -132,14 +132,14 @@ const st = p => p.evaluate(() => ({
   await p.close();
 
   // phone: Learn more keeps the page where it is (the swap under the stage used to shrink the page and snap it to the top)
-  const pc = await b.newContext({ viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+  const pc = await b.newContext({ viewport: { width: 412, height: 700 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   const pp = await pc.newPage();
   await pp.goto(BASE + 'index.html'); await pp.waitForTimeout(1500);
   await pp.tap('.key[data-i="3"]'); await pp.waitForTimeout(2500);
-  await pp.evaluate(() => { scrollTo(0, 48); window.__ys = []; addEventListener('scroll', () => __ys.push(Math.round(scrollY))); });
+  const y0 = await pp.evaluate(() => { scrollTo(0, 48); window.__ys = []; addEventListener('scroll', () => __ys.push(Math.round(scrollY))); return Math.round(scrollY); });
   await pp.tap('#guide-bubble .openb'); await pp.waitForTimeout(3000);
   const ph = await pp.evaluate(() => ({ y: scrollY, ys: __ys, hash: location.hash, bubble: !document.querySelector('#case-bubble').hidden }));
-  check('phone: opening a case keeps the scroll position, bubble shown', ph.hash === '#casino-games/case' && ph.y === 48 && ph.ys.every(y => y === 48) && ph.bubble, ph);
+  check('phone: opening a case keeps the scroll position, bubble shown', ph.hash === '#casino-games/case' && y0 === 48 && ph.y === 48 && ph.ys.every(y => y === 48) && ph.bubble, { y0, ...ph });
   await pc.close();
 
   // 5. project files

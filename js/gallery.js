@@ -22,7 +22,7 @@ var GB = window.Greybox, Clock = GB.Clock, eio = GB.eio, lerp = GB.lerp, clamp =
 var H = {
   city:'London, UK',
   lead:"I'm a technical designer who writes the tools and gameplay code behind the design.",
-  about:'At Funselektor I built Feedbot for Over the Hill. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on live web games at Logifuture.'
+  about:'At Funselektor I built Feedbot for Over the Hill. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on casino web games at Logifuture.'
 };
 var P = [
   { id:'over-the-hill', t:'Over the Hill', sub:'Tool designer at Funselektor Labs, 2026', subM:'Tool designer at Funselektor Labs, 2026',
@@ -129,8 +129,9 @@ function flatList(){
 /* ================================ the gallery ================================ */
 /* The About sign comes first, then the projects. The capsule guide walks with the camera and talks. */
 var GUIDE = 'Walk with me: drag, scroll sideways or pick a section below.';
-function bubHTML(i){
-  if (i < 0) return '<p class="bt">' + GUIDE + '</p>';
+/* About: on desktop the sign carries the About text and the guide gives directions; on phone the sign only fits the lead line, so the guide says the About text (user, 2026-11-09: not in a box under the stage) */
+function bubHTML(i, m){
+  if (i < 0) return m ? '<p class="bt ab-say">' + H.about + '</p><p class="bs">' + GUIDE + '</p>' : '<p class="bt">' + GUIDE + '</p>';
   var p = P[i];
   if (p.items) return '<ul class="its">' + p.items.map(function(it, k){ return '<li><a class="itb" href="' + it.href + '" data-k="' + k + '"><span class="it-t">' + it.t + '</span><span class="it-o">Learn more <span aria-hidden="true">&rarr;</span></span></a></li>'; }).join('') + '</ul>';
   return '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul><p class="bs"><span>Stack</span> ' + p.spec[2][1] + '</p>' + (p.href ? openLink(p, 'openb') : '');
@@ -154,9 +155,7 @@ function buildDolly(start){
   var keys = '<div class="keys" role="group" aria-label="Sections"><span class="track" aria-hidden="true"><i></i></span>' +
     '<button type="button" class="key abk" data-i="0" tabindex="0"><span class="rt">About</span><span class="rs">' + H.city + '</span></button>' +
     P.map(function(p, i){ return '<button type="button" class="key' + (i ? '' : ' lead') + '" data-i="' + (i + 1) + '" tabindex="-1"><span class="rt">' + p.t + '</span><span class="rs">' + roleYear(p) + '</span></button>'; }).join('') + '</div>';
-  /* phone: the About body text sits under the stage as plain HTML; the sign keeps only the lead line */
-  home.innerHTML = '<div class="st" aria-label="Gallery"></div>' +
-    (m ? '<p class="ab-m">' + H.about + '</p>' : '') + keys +
+  home.innerHTML = '<div class="st" aria-label="Gallery"></div>' + keys +
     '<div class="cmb" hidden></div><div class="keys ckeys" role="group" aria-label="Parts" hidden></div><p class="sr live" aria-live="polite"></p>';
   var host = home.querySelector('.st'), kb = home.querySelector('.keys');
   /* the bar's height before first layout can read far too tall (fonts, empty stage): cap it at its usual size */
@@ -241,7 +240,7 @@ function buildDolly(start){
   var head = new T.Vector3();
   st.pin(bub, null, m ? 0 : .5, m ? .05 : 1, {get:function(){ head.set(plr.position.x + (m ? .38 : 0), m ? .7 : 1.42, plr.position.z); return head; }, dy:m ? 0 : -6, dx:m ? 8 : 0});
   function say(s, announce){
-    bub.innerHTML = bubHTML(s - 1);
+    bub.innerHTML = bubHTML(s - 1, m);
     var ob = bub.querySelector('.openb'); if (ob) ob.addEventListener('click', function(e){ e.preventDefault(); open(s, 0); });
     bub.querySelectorAll('.itb').forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(s, +b.getAttribute('data-k')); }); });
     bub.hidden = false; if (!RM) restart(bub);

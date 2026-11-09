@@ -16,7 +16,7 @@ One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light
 |-------|-----------|
 | Base | reset, `[hidden]{display:none !important}` (needed: see js/CLAUDE.md gotchas), `.pg` (max 1280px, 44px gutters) |
 | Name strip | `.tb`, `.tb-id`, `.nm`, `.rl`, `.tb-city`, `.edu` (`.full`/`.short` swap on phone), `.tb-ln` (contact links) |
-| About | `.ab`, `.ab-lead`, `.ab-txt`; phone body under the stage: `.ab-m` |
+| About | `.ab`, `.ab-lead`, `.ab-txt`; phone: the About body is in the guide's bubble (`.bub .bt.ab-say`) |
 | Plain list | `.mn`, `.menu`, `.row` (`.lead`, `.on`), `.rt`, `.rs`, `.pv*` preview + spec (`.pv-view.go` = clickable), `.pv-open` |
 | Gizmo marks | `.pv-mk`, `.mk`, `.mk-chip` |
 | Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.st.over` (pointer over a capture), `.pin` (transform-origin 0 0; JS adds scale), `.tp` placards, `.sign`, `.tl`, `.bub` (+ `.side` on phone, `.its` University items), `.openb`, `.vov` motion overlay |
