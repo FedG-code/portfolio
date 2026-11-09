@@ -46,7 +46,7 @@ archive/                - Retired code, not loaded anywhere: card hand + theme s
 - **Pages**: `over_the_hill.html` (Feedbot, built from cv.md + the sentiment-tracker repo) and `university_projects.html` (order: Climbing Game = main item, Rally Game, Fishing Game last; anchors `#climbing`, `#rally`, `#fishing`). Each university item in the gallery bubble opens its own anchor. **No reference to AI use on the university page** (user rule).
 - **Content still to come**:
   - **Next session (user, 2026-11-09): university videos + content.** **Showcase videos for all three university projects** (Climbing, Fishing, Rally): the user is making them. When each arrives, convert it to a muted mp4 loop + poster (ffmpeg recipe in `design/HANDOFF.md`) and swap it in on `university_projects.html` (`video[data-src]`, replacing the "Capture to come" box / island preview / court still; the case in the scene reads it from that HTML) and in the gallery's University bay (`items[k].img` = poster, plus a clip; today only `scr[0]` gets a gallery motion overlay, and `js/case.js` plays no clips on University frames (`clips()` skips them: `!order`), so both need extending for the University clips to move; otherwise they stay stills).
-  - Real game titles (repos only have working names), and confirmation of module/year/solo for each university project.
+  - Game titles: **Climbing Game, Rally Game, Fishing Game are the names for now** (user, 2026-11-09). Still to confirm: module/year/solo for each university project.
   - A real Feedbot dashboard capture (needs player data blurred); the page uses the public site's illustrative example.
 
 ## Redesign history
@@ -86,5 +86,6 @@ Headless Chromium needs `--use-gl=angle --use-angle=swiftshader --enable-unsafe-
 - `@playwright/cli` for screenshots (`npm install -g @playwright/cli@latest` if not installed)
 
 ## Preferences
+- **Work directly on `master`** (user, 2026-11-09): no `claude/` branches or worktrees. Commit on `master`; ask before pushing (GitHub Pages serves `master`).
 - **Use CLAUDE.md for persistent notes**, not the auto-memory directory. If something needs to be remembered across sessions, add it here.
 - **Be surgical with file reads** — ALWAYS use `offset` and `limit` parameters. Never read more than 80 lines at once. Use Grep to find the right line numbers first, then read only that section. This applies to subagents too — when launching Explore/Plan agents, explicitly instruct them to use offset+limit and never read whole files. Whole-file reads of `js/gallery.js` (~520 lines) waste tokens and cause auto-compaction.
