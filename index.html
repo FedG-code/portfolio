@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/gallery.css">
+<!-- While Three.js loads, hold the gallery's space instead of flashing the plain list (js/gallery.js clears this). -->
+<script>if (!/[?&]flat(&|$)/.test(location.search) && window.WebGLRenderingContext) document.documentElement.classList.add('g3d-wait');</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6FQ4G8G6B"></script>
 <script>
@@ -18,7 +20,7 @@
   gtag('config', 'G-E6FQ4G8G6B', { anonymize_ip: true });
 </script>
 <!-- HTML first: the page below works without this. When Three.js arrives, js/gallery.js upgrades the list to the 3D gallery. -->
-<script async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onload="window.__three=1;document.dispatchEvent(new Event('three-ready'))"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onload="window.__three=1;document.dispatchEvent(new Event('three-ready'))" onerror="document.dispatchEvent(new Event('three-failed'))"></script>
 </head>
 <body>
 

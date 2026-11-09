@@ -50,6 +50,7 @@ Ported from `design/blockout/dolly-r4.html` (round 4 prototype). Grep for the na
 - `prefers-reduced-motion`: `Clock.add` completes tweens instantly, no walk, no bubble pop, no motion overlay, no push/pull.
 
 ### Gotchas
+- **No flash of the plain list**: an inline `<head>` script adds `html.g3d-wait` (unless `?flat` or no WebGL support), and gallery.css hides `#gallery`'s children behind a stage-shaped placeholder. It's removed when the gallery is built (before anything takes focus: hidden elements can't hold focus), on the `three-failed` event (script `onerror`), or after 4s, when the plain list shows. A `#section` return focus that couldn't land on the hidden list is carried by `G.wantFocus`.
 - `[hidden]{display:none !important}` in gallery.css is required: `.bub{display:grid}` would otherwise beat the UA `[hidden]` rule and the bubble would never hide.
 - If Three.js arrives after the plain list was shown, a pending pull-back (`G.pull`) is applied on upgrade unless the visitor already moved (`G.moved`).
 - Don't give page elements ids equal to section ids (`over-the-hill`, ...): the back link's hash would scroll to them.

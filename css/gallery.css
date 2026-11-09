@@ -77,6 +77,15 @@ img.px, .vov.px video, .vov.px img{image-rendering:pixelated}
 .pv-mk.anim > *{animation:gzIn .3s steps(4, end) both}
 @keyframes gzIn{from{opacity:0; transform:scale(.86)} to{opacity:1; transform:none}}
 
+/* ---- waiting for Three.js: a stage-shaped placeholder instead of the plain list (html.g3d-wait, set in <head>) ---- */
+html.g3d-wait #gallery{position:relative; min-height:560px}
+html.g3d-wait #gallery > *{visibility:hidden}
+html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; top:0; height:470px; background:var(--stage); border:1.5px solid var(--ink)}
+@media (max-width: 639px){
+  html.g3d-wait #gallery{min-height:640px}
+  html.g3d-wait #gallery::before{height:500px}
+}
+
 /* ---- 3D stage ---- */
 .st{position:relative; overflow:hidden; border:1.5px solid var(--ink); background:var(--stage); touch-action:pan-y; -webkit-user-select:none; user-select:none}
 .st.no3d{background:none; border:0; overflow:visible; touch-action:auto; -webkit-user-select:auto; user-select:auto}

@@ -16,6 +16,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | University | bubble lists 3 Open links (#climbing, #rally, #fishing); Rally opens with focus on its heading; back focuses the University button |
 | Over the Hill | Learn more loads over_the_hill.html |
 | Stage input | button reads "Learn more"; no dolly-track label; a drag scrubs and snaps; a click on a capture opens its page |
+| No flash | with Three.js slowed to 1.5s, the plain list is never visible before the gallery appears |
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
 | Reduced motion | instant cut, no clip; project clips have controls and stay paused |
 

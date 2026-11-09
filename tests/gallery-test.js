@@ -107,6 +107,20 @@ const state = p => p.evaluate(() => ({
   await p.waitForURL('**/my_games.html', { timeout: 5000 });
   check('clicking the screen opens its page', true);
 
+  // No flash of the plain list while Three.js loads (it's slowed to 1.5s here)
+  {
+    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+    await ctx.route(/three\.min\.js/, async r => { await new Promise(x => setTimeout(x, 1500)); r.continue(); });
+    const q = await ctx.newPage(); q.goto(BASE + 'index.html');
+    let shown = false;
+    for (let i = 0; i < 25; i++) {
+      await q.waitForTimeout(100);
+      shown = shown || await q.evaluate(() => { const m = document.querySelector('.menu'); return !!m && getComputedStyle(m).visibility === 'visible'; }).catch(() => false);
+    }
+    check('no flash of the plain list while Three.js loads', !shown && (await q.evaluate(() => document.querySelectorAll('canvas').length)) === 1);
+    await ctx.close();
+  }
+
   // 5. ?flat
   await p.goto(BASE + 'index.html?flat'); await p.waitForTimeout(800);
   s = await state(p);

@@ -150,7 +150,7 @@ function flatList(){
   /* clicking the preview capture opens the selected section's page */
   host.querySelector('.pv-view').addEventListener('click', function(){ var p = P[G.sel - 1]; if (p && p.href){ remember(p); location.href = p.href; } });
   var h = hashIdx(); if (h >= 0) G.picked = true; sel(h >= 0 ? h : Math.max(0, G.sel - 1));
-  if (h >= 0) rows[h].focus({preventScroll:true});
+  if (h >= 0){ rows[h].focus({preventScroll:true}); G.wantFocus = true; }  /* the row may be hidden (g3d-wait); the gallery takes the focus over */
 }
 
 /* ================================ 3D stage (one renderer for the page) ================================ */
@@ -298,6 +298,7 @@ function buildDolly(start){
   host.style.height = c.h + 'px';
   var st = Stage(host, c.w, c.h, {fov:c.fov, k:c.k, sun:[-7, 13, 10], sb:24, fs:110});
   if (!st){ home.classList.remove('g3d'); flatList(); return false; }
+  document.documentElement.classList.remove('g3d-wait');  /* visible before anything takes focus */
   G.mode = m ? 'm' : 'd'; G.w = home.clientWidth;
   var keyEls = [].slice.call(home.querySelectorAll('.key')), live = home.querySelector('.live'), busy = false, pushed = null, clock = new Clock();
   var T = st.T, M = st.M;
@@ -483,6 +484,7 @@ function buildDolly(start){
 
 /* ------------------------------ boot ------------------------------ */
 function canUpgrade(){ return !FLAT && !!window.THREE && glOK !== false; }
+function canUpgradeSoon(){ return !FLAT && glOK !== false && !!window.WebGLRenderingContext; }
 function upgrade(start){
   if (!canUpgrade()) return false;
   if (G.api){ G.api.dispose(); G.api = null; }
@@ -494,11 +496,22 @@ function boot(){
   var start = {sel:h >= 0 ? h + 1 : 0, focus:h >= 0, pull:h >= 0 && retId === P[h].id};
   /* if Three.js isn't here yet, the pull back out of the screen waits for it (unless the visitor moves first) */
   if (!upgrade(start)){ flatList(); G.pull = start.pull; }
+  /* the plain list stays hidden behind a placeholder (html.g3d-wait) while Three.js loads; show it if the
+     gallery can't be built (no WebGL, script error) or Three.js takes longer than 4s */
+  function unwait(){
+    var root = document.documentElement; if (!root.classList.contains('g3d-wait')) return;
+    root.classList.remove('g3d-wait');
+    var r = home.querySelector('.row[aria-current]');
+    if (G.mode === 'flat' && G.wantFocus && !G.moved && r) r.focus({preventScroll:true});
+  }
+  if (G.mode !== 'flat' || !canUpgradeSoon()) unwait();
+  document.addEventListener('three-failed', unwait);
+  setTimeout(unwait, 4000);
   /* HTML first: when Three.js arrives, the list becomes the gallery and keeps the visitor's place */
   document.addEventListener('three-ready', function(){
     if (G.mode !== 'flat') return;
     var had = home.contains(document.activeElement), pull = G.pull && !G.moved; G.pull = false;
-    upgrade({sel:G.picked || had ? G.sel : 0, focus:had, pull:pull});
+    if (!upgrade({sel:G.picked || had ? G.sel : 0, focus:had || (G.wantFocus && !G.moved), pull:pull})) unwait();
   });
   /* the phone shot is a breakpoint: rebuild on width changes (not height: phone URL bars resize the viewport) */
   var rt = 0;
