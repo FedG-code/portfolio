@@ -77,6 +77,7 @@ const st = p => p.evaluate(() => ({
   // another case's link while one is open: this one closes, that one opens (same page)
   await p.goto(BASE + 'index.html#casino-games/case'); await p.waitForTimeout(500); await ready(p);
   await p.waitForFunction(() => document.querySelector('.ckeys .key.on .rt') && document.querySelector('.ckeys .key[data-g="0"] .rs').textContent === 'Casino Games', null, { timeout: 9000 }).catch(() => {});
+  await ready(p);
   check('another case link while one is open switches cases', (await st(p)).hash === '#casino-games/case' && await p.evaluate(() => document.querySelector('.ckeys .key[data-g="0"] .rs').textContent) === 'Casino Games');
   await p.click('.ckeys .key[data-g="2"]'); await p.waitForTimeout(700); s = await st(p);
   check('Casino: a two-clip part plays both clips', s.clips.length === 2 && /hitfor6/.test(s.clips[0]) && /hopit/.test(s.clips[1]), s.clips);
