@@ -8,3 +8,8 @@ node_modules/
 # Personal CV (reference only, contains contact details)
 *CV*.pdf
 cv.md
+
+# design history and prototypes (local only; see CLAUDE.md "Redesign history")
+design/
+# raw screen recordings dropped in the repo root (converted loops go in assets/)
+/*.mp4
