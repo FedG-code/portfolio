@@ -44,7 +44,7 @@ var P = [
   { id:'university-projects', t:'University Projects', sub:'Climbing, rally and fishing prototypes in Unity', subM:'Three prototypes in Unity',
     rs:'Three Unity prototypes', href:'university_projects.html',
     img:null, ar:960/464, alt:'Climbing Game: the climber on a wall of ledges', marks:[{chip:'Climbing Game'}],
-    blurb:'Three university prototypes, each built around one action: climbing hand over hand, returning a ball off a wall, and casting a line.',
+    blurb:'',
     spec:[['Studio','University'],['Role','Solo developer'],['Stack','Unity 6, C#'],['Year','2026']],
     items:[{t:'Climbing Game', href:'university_projects.html#climbing', img:'assets/climbing-poster.jpg', clip:'assets/climbing.mp4', ar:960/464},
            {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally-poster.jpg', clip:'assets/rally.mp4', ar:960/542},
@@ -99,7 +99,7 @@ function setPV(root, p){
   im.src = p.img; im.alt = p.alt; im.classList.toggle('px', !!p.px);
   pin.style.setProperty('--ar', p.ar); pin.style.width = inWidth(p.ar);
   mkl.innerHTML = marksHTML(p.marks); if (!RM) restart(mkl);
-  root.querySelector('.pv-cap').textContent = p.blurb;
+  var cap = root.querySelector('.pv-cap'); cap.textContent = p.blurb || ''; cap.hidden = !p.blurb;
   root.querySelector('.pv-spec').innerHTML = specHTML(p.spec);
   var ol = root.querySelector('.pv-open'); if (ol) ol.remove();
   if (p.href) root.querySelector('.pv').insertAdjacentHTML('beforeend', openLink({href:flatHref(p.href)}, 'pv-open'));

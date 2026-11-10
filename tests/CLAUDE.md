@@ -26,7 +26,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | Check | What |
 |-------|------|
 | Viewports | 4 viewports x 5 cases (`index.html#<id>/case`): case bar shown, section bar hidden, one canvas, one key per part, bubble, no overflow, no errors |
-| Parts | Next / Back, bar click, ArrowRight (focus follows), live region "Part 2 of N: The brief", feedbot.co.uk tag |
+| Parts | Next / Back, bar click, ArrowRight (focus follows), live region "Part 2 of N: Launch week", feedbot.co.uk tag |
 | Switch | another case's hash while one is open switches cases |
 | Media | Casino two-clip part plays hitfor6 + hopit, split side by side on the one screen, clear of the bubble; stat chips 300k / #1; Eve overview plays knightboss.mp4; Play trailer zooms in (embed > 75% of the stage width), Esc zooms back out; Rally: big frame loops rally.mp4, "Play with sound" zooms in with an unmuted `<video>`, Esc closes; gallery University bay plays the big frame's clip (Climbing, then Rally after leaving its case) |
 | University | `#university-projects/case/rally` opens Rally; a small frame (tap, and real clicks above the labels, in any order) rotates to big and the URL names the game; from the homepage a small frame rotates first, then the case opens on it |

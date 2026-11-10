@@ -33,7 +33,7 @@
     <div class="project-hero-badge">Funselektor Labs</div>
     <h1 class="project-hero-title reveal" tabindex="-1">Over the Hill</h1>
     <p class="project-hero-desc reveal">
-      Over the Hill is Funselektor Labs' off-road driving game. A week before release, the studio asked me for a tool that could turn player feedback into grouped, readable information the developers could triage. I built Feedbot: a pipeline that pulls messages from the game's Discord channels, in-game bug reporter and Steam reviews, labels them with an LLM and groups them into bug and feedback items on a password-protected web dashboard. The first version was live two days after the brief, and in launch week it handled 45k player messages.
+      A week before Over the Hill's launch, Funselektor Labs asked me for a tool to turn player feedback into grouped bugs and feedback the team could triage. I built Feedbot and had a testable version within two days.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
@@ -62,24 +62,10 @@
         <figure class="work-figure"><img class="work-image" src="assets/oth.jpg" alt="Over the Hill key art" loading="lazy"><figcaption>Over the Hill key art, Funselektor Labs.</figcaption></figure>
       </div>
       <div class="project-text">
-        <h4>The brief</h4>
-        <p>
-          The team had a launch a week away and player feedback spread across several places, with no time to read all of it. The brief was to pull messages from the selected channels, sort them into bugs, feedback and topics, and show them on a dashboard the whole team could open. The deadline shaped every decision: I wrote the scope down on day one, listed what was out (integrations, bug status editing, message filtering) and built the simplest version that worked.
-        </p>
-        <p>
-          The first version fetched, labelled and grouped messages and was running on a server the day after the project started. I kept a log of every design decision so the team and I could check why something behaved the way it did.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>Pulling in the feedback</h4>
-        <p>
-          Everything arrives through Discord. Feedbot logs in, fetches new messages from the configured channels and every thread inside them (archived and private threads and forum posts included), then exits. The public community server holds the beta and launch channels, including the feedback and bug-report forums. The internal server receives the in-game bug reporter, which posts each player report through a webhook, and a bot that reposts every Steam review.
-        </p>
-        <p>
-          In-game reports needed their own handling. Each one carries the build, a device summary and the player's area and position, so I parse those out and show location at the top of a report, because where something happens matters a lot in this game. The player's contact details are never sent to the model and are hidden on the dashboard.
-        </p>
+        <h4>Launch week</h4>
+        <ul>
+          <li>Handled 45k player messages across 6 feedback streams, turned into 60+ actionable bug reports and player sentiment write-ups.</li>
+        </ul>
       </div>
     </div>
     <div class="project-content project-content--reversed reveal">
@@ -87,32 +73,17 @@
         <figure class="work-figure"><img class="work-image" src="assets/feedbot-example.jpg" alt="Feedbot example: player messages labelled Bug, Feedback or Discussion, grouped into items with message counts and daily trends" loading="lazy"><figcaption>From the public Feedbot site: an illustrative example, not real player data.</figcaption></figure>
       </div>
       <div class="project-text">
-        <h4>Sorting bugs from requests</h4>
-        <p>
-          The pipeline runs in two stages. First, an LLM reads messages in batches and marks each one as a bug, feedback or neither, with a one-line summary and a sentiment. Then each flagged message is either assigned to an existing item or starts a new one, so 30 people reporting the same crash become one bug with 30 messages behind it. Every prompt includes a short brief on the game, so the model knows that a complaint about grip is a design opinion while a car falling through the map is a bug.
-        </p>
-        <p>
-          Grouping drifts over time, so I added a recurring clean-up pass. A cheaper model proposes items that look like duplicates, a stronger one checks them against the real messages, and confident merges apply on their own. Anything the team has already touched waits in a review queue with Approve, Reject and Undo. I tested model choices and prompt changes on real batches before switching, and settled on Claude Haiku for labelling, which costs a few dollars per 50k messages.
-        </p>
+        <h4>How it works</h4>
+        <ul>
+          <li>Once message content is determined and categorised, a second model tries to fit the message in previously grouped bugs and feedback.</li>        </ul>
       </div>
     </div>
     <div class="project-content project-content--text reveal">
       <div class="project-text">
-        <h4>How the team used it</h4>
-        <p>
-          The dashboard opens on a list of items for each source, sorted by how many messages mention them, with a small daily trend line and a "New" badge for anything that appeared in the last three days. Opening an item shows a daily chart and the messages behind it, each linking back to the original Discord post. A quick fetch runs every hour during the working day and a full run every morning, and anyone logged in can trigger either.
-        </p>
-        <p>
-          Most features after launch came from the team's own requests. They asked for a status on each item (To do, WIP, Done, Icebox) and a notes field, so the list doubles as a triage board, and for a CSV download so an item's messages can go into other tools.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>Reading Steam reviews</h4>
-        <p>
-          After launch I added a Reviews tab. Each Steam review is split into the specific things the player liked or disliked, and those points are grouped into Positive and Negative items. A complaint inside a thumbs-up review still lands in Negative, and each item shows how many of its reviews were positive or negative, so the team can tell a minor gripe from a reason people ask for refunds.
-        </p>
+        <h4>After 1.0</h4>
+        <ul>
+          <li>Steam reviews and in-game reports were added after 1.0, including a suite of UX improvements for better triaging and Notion integration.</li>
+        </ul>
       </div>
     </div>
   </div>

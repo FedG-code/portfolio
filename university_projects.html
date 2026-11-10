@@ -32,9 +32,6 @@
   <div class="container">
     <div class="project-hero-badge">University</div>
     <h1 class="project-hero-title reveal" tabindex="-1">University Projects</h1>
-    <p class="project-hero-desc reveal">
-      Three games I've built as university projects, each one an experiment in how a single action can carry a game: climbing hand over hand, returning a ball off a wall, and casting a line. All three are Unity prototypes where I designed and programmed the systems myself.
-    </p>
     <div class="project-meta reveal">
       <div class="tidbit">
         <p class="tidbit-label">Role</p>
@@ -62,43 +59,7 @@
         <figure class="work-figure"><video class="work-image" data-src="assets/climbing.mp4" poster="assets/climbing-poster.jpg" width="960" height="464" muted loop playsinline preload="none" disablepictureinpicture aria-label="Climbing Game: the climber shimmying along and climbing up the ledges of a wall"></video></figure>
       </div>
       <div class="project-text">
-        <h4>Hands first</h4>
-        <p>
-          A third-person climbing prototype and my main assignment for Game Programming 1. The course is about improving my programming, so I built every system myself in C#: the player state machine, ledge grabbing, shimmying, ledge switching, clambering and belaying on a rope. The idea driving the feel is that the hands decide where the climber is. They reach for the ledge one at a time and the body trails behind them, so climbing reads as effort rather than sliding along a rail.
-        </p>
-        <p>
-          The hands are separate objects from the body on purpose. If they were parented to the body they would move every time the player moved, so instead each hand chases its own target with smoothing that is tuned separately for when the player is on the wall and when they are on the ground. Shimmying is a reach-and-match loop: the leading hand reaches one stride along the ledge, then the other closes back to shoulder width behind it. The body's position along the ledge is the midpoint of the two hands, clamped between them, so it can never get ahead of what you can see the hands doing.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>Ledges as lines</h4>
-        <p>
-          Every ledge is a prefab with a left and a right edge, and the ledge owns the maths for converting a world position into a 0&ndash;1 value along its length and back. Both the player and the hands need that conversion, so moving it onto the ledge kept them in agreement. Strides and shoulder width are converted into the same 0&ndash;1 space, so the hands behave the same on a short ledge and a long one.
-        </p>
-        <p>
-          Grabbing only starts from a jump. Two trigger volumes around the player collect nearby ledges, a wider one for jumping and a tighter one sized from arm length for when you are hanging, and the closest point on the closest ledge becomes the grab point. Playtesters found the last part of the swing in dragged before you actually connected, so I end the swing a few centimetres early and let the body smoothing finish the movement.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>Moving up and down the wall</h4>
-        <p>
-          Horizontal input shimmies and vertical input switches to the nearest ledge above or below. A switch moves one hand first and the second only once the first has landed, and the leading hand alternates each time, so it reads as climbing hand over hand. Playtesting showed players skipping between ledges too fast; making a switch wait until both hands have finished moving fixed it.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>States, rope and idle</h4>
-        <p>
-          Player behaviour runs through a single state machine: Grounded, Jumping, Falling, Idle, Swinging, Climbing and Belaying. The states are grouped as free or attached, and crossing between the two groups is where the work happens: the character controller turns off, the climbing detector swaps in, and the hands are told to grab or release. That kept two quite different movement systems from leaking into each other.
-        </p>
-        <p>
-          Belaying starts by interacting near an anchor. Forward lowers you and back pulls you up, between a minimum rope length and the anchor's maximum, and a second Cinemachine camera takes over with a steeper downward angle. When the player stands still they breathe, with the hands bobbing a little more than the body.
-        </p>
+        <p>Climbing Game is my attempt at recreating Sokpop's Klym game without using any AI to write code. So far the main amount of work has been on making incredibly clean hand movement logic that runs independent of the player controller. The goal is to make such a cohesive visual system that will make Lara Croft proud.</p>
       </div>
     </div>
   </div>
@@ -115,29 +76,7 @@
         <figure class="work-figure"><video class="work-image" data-src="assets/rally.mp4" poster="assets/rally-poster.jpg" width="960" height="542" data-sound muted loop playsinline controls preload="none" disablepictureinpicture aria-label="Rally Game: returning the ball off the front wall as the feedback layers are added one by one"></video><figcaption>Has sound: the impact audio is one of the layers.</figcaption></figure>
       </div>
       <div class="project-text">
-        <h4>Ball flight that is solved, not simulated</h4>
-        <p>
-          A wall-rally prototype in the spirit of Sega's Cosmic Smash. You stand in a court facing a wall, squash-style, and hit the ball so it strikes the front wall and comes back to you, breaking floating targets along the way.
-        </p>
-        <p>
-          I tried three ways to move the ball: Unity's Rigidbody physics, hand-authored curves, and analytic trajectories. I chose the third. Rigidbody physics can't tell you where the ball will land, and a game about hitting targets and guaranteeing returnable rallies needs that answer. At the moment of a hit, the game picks where the shot should go and how high it should peak, then solves the projectile maths backwards for the launch velocity. Contact is scheduled rather than detected: the court is a box, so the time an arc meets a wall is a closed-form solve, and no speed can tunnel through a surface.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>One stick, forgiving contact, precise aim</h4>
-        <p>
-          The game is gamepad only and uses one stick for both moving and aiming, with the swing on the right trigger. Judging depth from a fixed camera is hard, so I made contact forgiving and put the skill in where the ball goes. Contact is a timing window plus a hit envelope authored in the Inspector, and aim is read as one of eight directions at contact. Up returns high, neutral rallies low, and down slams the floor so the ball comes back higher than a neutral shot ever does.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>Making hits feel fast</h4>
-        <p>
-          For the last stretch I worked on how impacts feel rather than on new mechanics, using Lethal League Blaze as the reference. A connecting swing freezes the ball on the racket for a moment, and camera shake, racket sound and the freeze length all scale from one value driven by ball speed, so one number tunes the whole ladder. An effect showcase mode switches every effect off and turns them back on one per few hits, so each can be judged on its own.
-        </p>
+        <p>This is an attempt at a squash based roguelike, one of the main things I worked on early is the following polish study, I wanted to know how fast I could make the ball feel through mostly layered visual effects. Since another inspiration is Lethal League I wanted to explore if mimicking their effects would help the game feel more punchy, when the gameplay system I have won't allow me to reach those speeds.</p>
       </div>
     </div>
   </div>
@@ -153,30 +92,13 @@
         <figure class="work-figure"><video class="work-image" data-src="assets/fishing.mp4" poster="assets/fishing-poster.jpg" width="960" height="474" muted loop playsinline preload="none" disablepictureinpicture aria-label="Fishing Game: casting from the shore, the float drifting, and the weather turning to rain"></video></figure>
       </div>
       <div class="project-text">
-        <h4>Fishing with nothing on the hook</h4>
-        <p>
-          A first-person game about fishing from an island about 500 m across. There is one fish in the whole game, and catching it is the ending, so everything before that is fishing without a catch. The project asks whether the act of fishing, the cast, the drift and the wait, can carry a game on its own.
-        </p>
-        <p>
-          Most fishing games tell you in the first minutes that a bite is coming soon; if this game did the same, an empty line would read as a bug or a grind. So every bite comes from the one fish. The player meets it, fights it, and it always escapes, leaving notes that help them get closer. Progress comes from messages in bottles scattered over the island, and the first one unlocks the rod. I chose not to add grading or accuracy targets, because a good cast should feel good rather than score well.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>A cast you swing</h4>
-        <p>
-          The cast is physical. You draw the rod back, swing forward and let go during the stroke, with the mouse or the right stick. How fast the rod was moving sets the distance, where it was when you let go sets the arc (early for a high lob, late for a low one), and a sideways stroke turns it. Mouse and gamepad were treated as equally important, and a debug readout shows each cast's device, rod speed, release angle and distance so the two can be tuned against each other. The cast maths is kept in pure functions so it can be unit tested outside Play mode.
-        </p>
-      </div>
-    </div>
-    <div class="project-content project-content--text reveal">
-      <div class="project-text">
-        <h4>An island built from regions</h4>
-        <p>
-          The island comes from an editor tool I wrote that uses no noise at all. Seeds grow into about 90 irregular regions, which are then marked as sea, coves, hills or chasms and raised with ramps, banks and rolling domes, with a shallow shelf at every shore for the water's foam bands. The same seed and settings always give the same island, and good islands can be saved to a library and kept. The look draws on Proteus and A Short Hike: a low-resolution pixel frame, a palette that changes across a day and night cycle, and weather that glides between clear, haze, fog, overcast and rain.
-        </p>
-        <figure class="work-figure"><img class="work-image" src="assets/fishing-island.jpg" alt="Top-down preview of a generated island" loading="lazy"><figcaption>A generated island, seen from above in the editor tool.</figcaption></figure>
+        <!-- div.part: its paragraphs are one bubble in the case -->
+        <div class="part">
+          <p>I was initially inspired to make this game by the idea of making a game about nothing.</p>
+          <p>Eventually I settled on the idea of a "fishing game where you can only catch the fish at the end".</p>
+          <p>There's an interesting design challenge here, how much can polish and meditative feelings make a player enjoy standing still? Can I make the player "fight" the fish and still reward them if they don't catch it?</p>
+        </div>
+        <p>This seemed like a good place to overlay a narrative where the player reads a lot of emotionally charged notes in a bottle, some about my late father, some written by friends. At the end the player will be able to write their own note, and will wake up to a beach full of user submitted notes.</p>
       </div>
     </div>
   </div>

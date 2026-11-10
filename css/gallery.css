@@ -153,6 +153,9 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .cbub .h span + span{color:var(--mut); font-weight:500; white-space:nowrap}
 .cbub .t{padding:6px 14px 12px; font-size:14.5px; line-height:1.55; overflow:auto; overscroll-behavior:contain}
 .cbub .t a{color:var(--link)}
+.cbub .t ul{padding:0 0 0 18px; gap:5px; font-size:inherit; line-height:1.45}
+.cbub .t p + ul{padding-top:6px}
+.cbub .t p + p{margin-top:8px}
 .cstats{display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0 14px 12px}
 .cstats div{display:flex; gap:6px; align-items:baseline; background:var(--chip); color:var(--p2); padding:4px 8px}
 .cstats dt{font-weight:800; font-stretch:115%; font-size:15px; color:var(--sig-hi)}

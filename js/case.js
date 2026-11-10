@@ -32,9 +32,11 @@ function parse(doc, p){
   var mode = secs.filter(function(s){ return s.querySelector('.section-heading'); }).length > 1 ? 'h2' : 'h4';
   var itemOf = function(id){ var k = null; (p.items || []).forEach(function(it, j){ if (it.href.split('#')[1] === id) k = j; }); return k; };
   var desc = doc.querySelector('.project-hero-desc');
-  groups.push({t:'Overview', start:0, item:null});
-  /* the overview shows what the gallery screen showed, so the push in and the pull out are one shot */
-  beats.push({g:0, h:'Overview', html:desc ? desc.innerHTML.trim() : '', caps:[{img:p.img, clip:p.clip, px:p.px}], stats:null, links:[], yt:null, item:null});
+  /* the overview shows what the gallery screen showed, so the push in and the pull out are one shot; no intro on the page (University), no Overview part */
+  if (desc && desc.textContent.trim()){
+    groups.push({t:'Overview', start:0, item:null});
+    beats.push({g:0, h:'Overview', html:'<p>' + desc.innerHTML.trim() + '</p>', caps:[{img:p.img, clip:p.clip, px:p.px}], stats:null, links:[], yt:null, item:null});
+  }
   secs.forEach(function(sec){
     var h2 = sec.querySelector('.section-heading'), t2 = h2 ? h2.textContent.trim() : '', mine = [], links = [], caps = null, h4 = '', item = itemOf(sec.id);
     sec.querySelectorAll('.project-link').forEach(function(a){ links.push({href:a.getAttribute('href'), t:a.textContent.replace(/[→↗]/g, '').trim(), ext:a.target === '_blank'}); });
@@ -46,13 +48,23 @@ function parse(doc, p){
       if (found.length) caps = found.slice(0, 2);
       var txt = blk.querySelector('div.project-text'), last = null;
       if (!txt) return;
+      /* one part per <p>; a <ul> joins the <p> just before it (lead line + bullets), or is a part of its own after an h4 */
+      function part(html){
+        var gk = mode === 'h2' ? t2 : (h4 || t2);
+        if (!groups.length || groups[groups.length - 1].t !== gk) groups.push({t:gk, start:beats.length, item:item});
+        last = {g:groups.length - 1, h:mode === 'h2' ? (h4 || t2) : gk, html:html, caps:caps, stats:null, links:links, yt:null, item:item};
+        beats.push(last); mine.push(last);
+      }
+      var prev = null;
       [].slice.call(txt.children).forEach(function(n){
-        if (n.tagName === 'H4'){ h4 = n.textContent.trim(); return; }
-        if (n.tagName === 'P' && n.textContent.trim()){
-          var gk = mode === 'h2' ? t2 : (h4 || t2);
-          if (groups[groups.length - 1].t !== gk) groups.push({t:gk, start:beats.length, item:item});
-          last = {g:groups.length - 1, h:mode === 'h2' ? (h4 || t2) : gk, html:n.innerHTML.trim(), caps:caps, stats:null, links:links, yt:null, item:item};
-          beats.push(last); mine.push(last);
+        var tag = n.tagName;
+        if (tag === 'H4'){ h4 = n.textContent.trim(); prev = 'H4'; return; }
+        if (tag === 'P' && n.textContent.trim()){ part('<p>' + n.innerHTML.trim() + '</p>'); prev = 'P'; return; }
+        if (tag === 'DIV' && n.classList.contains('part') && n.textContent.trim()){ part(n.innerHTML.trim()); prev = 'P'; return; }
+        if (tag === 'UL' && n.querySelector('li')){
+          var ul = '<ul>' + n.innerHTML.trim() + '</ul>';
+          if (prev === 'P' && last) last.html += ul; else part(ul);
+          prev = 'UL'; return;
         }
         if (n.classList.contains('work-stats') && last){
           last.stats = [].slice.call(n.querySelectorAll('.work-stat')).map(function(s){ return [s.querySelector('.work-stat-num').textContent.trim(), s.querySelector('.work-stat-label').textContent.trim()]; });
@@ -241,7 +253,7 @@ window.CaseMode = function(X){
     var b = D.beats[i], g = D.groups[b.g], n = g.end - g.start + 1;
     bub.querySelector('.bh').textContent = b.h;
     bub.querySelector('.bp').textContent = n > 1 ? (i - g.start + 1) + ' / ' + n : '';
-    var t = bub.querySelector('.t'); t.innerHTML = '<p>' + b.html + '</p>'; t.scrollTop = 0;
+    var t = bub.querySelector('.t'); t.innerHTML = b.html; t.scrollTop = 0;
     var sd = bub.querySelector('.cstats'); sd.hidden = !b.stats;
     sd.innerHTML = b.stats ? b.stats.map(function(s){ return '<div><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('') : '';
     bub.querySelector('.dots').innerHTML = n > 1 ? Array.apply(null, Array(n)).map(function(_, k){ return '<i' + (g.start + k === i ? ' class="on"' : '') + '></i>'; }).join('') : '';

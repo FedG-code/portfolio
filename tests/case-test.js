@@ -15,7 +15,7 @@
 const { chromium } = require('playwright');
 const BASE = (process.env.BASE || 'http://localhost:8080').replace(/\/$/, '') + '/';
 const GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
-const CASES = [['over-the-hill', 6], ['eve-of-destruction', 4], ['casino-games', 6], ['university-projects', 4], ['other-games', 4]];
+const CASES = [['over-the-hill', 4], ['eve-of-destruction', 4], ['casino-games', 6], ['university-projects', 3], ['other-games', 4]];
 
 let failed = 0;
 function check(name, ok, detail) {
@@ -63,13 +63,15 @@ const st = p => p.evaluate(() => ({
   // 2. parts
   await p.goto(BASE + 'index.html#over-the-hill/case'); await ready(p);
   await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(400); let s = await st(p);
-  check('Next: first part of The brief, live region names it', s.key === 'The brief' && s.part === '1 / 2' && /^Part 2 of \d+: The brief/.test(s.live), s);
+  check('Next: the Launch week part, live region names it', s.key === 'Launch week' && /^Part 2 of \d+: Launch week/.test(s.live), s);
   await p.click('#case-bubble [data-step="-1"]'); await p.waitForTimeout(400); s = await st(p);
   check('Back: overview again', s.key === 'Overview' && s.head === 'Overview', s.key);
-  await p.click('.ckeys .key[data-g="3"]'); await p.waitForTimeout(400); s = await st(p);
-  check('bar click jumps to that part', s.key === 'Sorting bugs from requests', s.key);
+  await p.click('.ckeys .key[data-g="2"]'); await p.waitForTimeout(400); s = await st(p);
+  check('bar click jumps to that part', s.key === 'How it works', s.key);
+  const lis = await p.evaluate(() => document.querySelectorAll('#case-bubble .t ul li').length);
+  check('bullets reach the bubble (How it works: 1)', lis === 1, lis);
   await p.keyboard.press('ArrowRight'); await p.waitForTimeout(400); s = await st(p);
-  check('arrow key on the bar moves to the next part, focus follows', s.key === 'How the team used it' && s.active.indexOf('How the team used it') === 0, s);
+  check('arrow key on the bar moves to the next part, focus follows', s.key === 'After 1.0' && s.active.indexOf('After 1.0') === 0, s);
   const tag = await p.evaluate(() => [...document.querySelectorAll('.ctags a')].map(a => a.getAttribute('href')));
   check('link tag under the screen (feedbot.co.uk)', tag.indexOf('https://www.feedbot.co.uk') >= 0, tag);
 
@@ -108,6 +110,11 @@ const st = p => p.evaluate(() => ({
   check('Rally: Esc closes the clip and zooms back out', await p.evaluate(() => !document.querySelector('.cyt video') && !document.querySelector('#case-bubble').hidden));
   await p.evaluate(() => window.__caseMode.tap({ s: 4, k: 2 })); await p.waitForTimeout(800); s = await st(p);
   check('clicking the small Fishing screen makes it the big one (Fishing part, URL names it)', s.key === 'Fishing Game' && s.hash === '#university-projects/case/fishing', s);
+  // a div.part is one bubble (Fishing: three paragraphs), the next <p> its own; Over the Hill's bullets reach the bubble
+  const bt = () => p.evaluate(() => { const t = document.querySelector('#case-bubble .t'); return { part: document.querySelector('#case-bubble .bp').textContent, p: t.querySelectorAll('p').length, li: t.querySelectorAll('ul li').length }; });
+  const b1 = await bt(); await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(500); const b2 = await bt();
+  check('a div.part is one bubble (Fishing: 3 paragraphs, then 1)', b1.part === '1 / 2' && b1.p === 3 && b2.part === '2 / 2' && b2.p === 1, { b1, b2 });
+  await p.click('#case-bubble [data-step="-1"]'); await p.waitForTimeout(500);
   // a real click on a small frame (just above its label) inside the case: it rotates to the big spot, no zoom
   const clickFrame = async (pg, name) => { const r = await pg.evaluate(n => { const l = [...document.querySelectorAll('.pin.tl')].find(e => e.textContent === n); const b = l.getBoundingClientRect(); return { x: b.left + 40, y: b.top - 25 }; }, name); await pg.mouse.click(r.x, r.y); };
   await clickFrame(p, 'Climbing Game'); await p.waitForTimeout(900); s = await st(p);

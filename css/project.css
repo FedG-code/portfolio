@@ -142,6 +142,26 @@
   margin-bottom: 1.25rem;
 }
 
+.project-text ul {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: -0.5rem 0 1.25rem;
+  padding-left: 1.2rem;
+}
+
+.project-text h4 + ul {
+  margin-top: 0;
+}
+
+.project-text li + li {
+  margin-top: 0.4rem;
+}
+
+.project-text li::marker {
+  color: var(--accent);
+}
+
 .project-text h4 {
   font-family: var(--font-serif);
   font-size: 1.4rem;
