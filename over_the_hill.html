@@ -33,7 +33,7 @@
     <div class="project-hero-badge">Funselektor Labs</div>
     <h1 class="project-hero-title reveal" tabindex="-1">Over the Hill</h1>
     <p class="project-hero-desc reveal">
-      A week before Over the Hill's launch, Funselektor Labs asked me for a tool to turn player feedback into grouped bugs and feedback the team could triage. I built Feedbot and had a testable version within two days.
+      A week before Over the Hill's launch, Funselektor Labs asked me for a tool to turn over the upcoming thousands of Discord messages into grouped bugs and feedback the team could triage. I built Feedbot and had a testable version within two days.
     </p>
     <div class="project-meta reveal">
       <div class="tidbit">
@@ -46,7 +46,7 @@
       </div>
       <div class="tidbit">
         <p class="tidbit-label">Stack</p>
-        <p class="tidbit-value">Python, Claude API, Streamlit</p>
+        <p class="tidbit-value">Unity, Python, Claude API</p>
       </div>
     </div>
   </div>
@@ -64,7 +64,10 @@
       <div class="project-text">
         <h4>Launch week</h4>
         <ul>
-          <li>Handled 45k player messages across 6 feedback streams, turned into 60+ actionable bug reports and player sentiment write-ups.</li>
+          <li>The app handled 45k player messages across multiple channels, feedback forums, reviews and internal bug reports, turning them into 60+ actionable bug and feedback reports.</li>
+        </ul>
+        <ul>
+          <li>Given the pipeline's good contextual understanding the app can recognise when old bugs return and can also distinguish nuanced issues, I found it particularly interesting grouping reviews based off of the MAIN reason for their review, but still tracking remaining elements of the review and whether they happen to emotionally differ from the main body.</li>
         </ul>
       </div>
     </div>
@@ -75,14 +78,21 @@
       <div class="project-text">
         <h4>How it works</h4>
         <ul>
-          <li>Once message content is determined and categorised, a second model tries to fit the message in previously grouped bugs and feedback.</li>        </ul>
+          <li>A Discord bot pulls content from multiple channels and forums, while other bots aggregate reviews and internal bug reports.</li>
+        </ul>
+        <ul>
+          <li>Message content is determined and categorised by an LLM, a second model tries to fit the message in previously grouped bugs and feedback before making new issues.</li>
+        </ul>
       </div>
     </div>
-    <div class="project-content project-content--text reveal">
+    <div class="project-content reveal">
+      <div>
+        <figure class="work-figure"><img class="work-image" src="assets/bug-map.jpg" alt="Bug map: in-game bug reports drawn as coloured dots on a top-down map of one area" loading="lazy"><figcaption>The bug map, with example dots (not real reports).</figcaption></figure>
+      </div>
       <div class="project-text">
         <h4>After 1.0</h4>
         <ul>
-          <li>Steam reviews and in-game reports were added after 1.0, including a suite of UX improvements for better triaging and Notion integration.</li>
+          <li>After the app worked well with release message load, I built out Unity and Notion integration for the app. Now there's an in-Unity bug map, which takes developers straight to the bug location. The developers can then paste Notion tickets into the map  to find all the locations pertaining to the issue.</li>
         </ul>
       </div>
     </div>
@@ -90,7 +100,7 @@
 </section>
 <section class="project-section">
   <div class="container">
-    <p class="project-text reveal"><a class="project-link" href="https://www.feedbot.co.uk" target="_blank" rel="noopener">feedbot.co.uk</a></p>
+    <p class="project-text reveal"><a class="project-link" href="https://www.feedbot.co.uk" target="_blank" rel="noopener">feedbot.co.uk</a> · <a class="project-link" href="https://www.funselektor.com" target="_blank" rel="noopener">funselektor.com</a></p>
   </div>
 </section>
 

@@ -40,6 +40,16 @@ Clock.prototype.run = function(){
 function eio(p){ return p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2; }
 function lerp(a, b, t){ return a + (b - a) * t; }
 function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+/* headings: the short way round, so the guide never spins the long way or snaps 180 */
+function wrapA(a){ return Math.atan2(Math.sin(a), Math.cos(a)); }
+function lerpA(a, b, t){ return a + wrapA(b - a) * t; }
+/* turn o towards heading ry by real time: damped (rate per second) and capped at TURN rad/s, so a 180 reads as a turn, not a snap; call once per frame from a tween */
+var TURN = 8;
+function steer(o, ry, rate){
+  var now = performance.now(), u = o.userData, gap = u.stT ? (now - u.stT) / 1000 : 0, dt = gap > .1 ? 1/60 : gap; u.stT = now;
+  var d = wrapA(ry - o.rotation.y), mv = d * (1 - Math.exp(-(rate || 9) * dt)), cap = TURN * dt;
+  o.rotation.y += Math.max(-cap, Math.min(cap, mv));
+}
 function el(tag, cls, html){ var e = document.createElement(tag); e.className = cls; if (html != null) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
 function restart(e){ e.classList.remove('anim'); void e.offsetWidth; e.classList.add('anim'); }
 
@@ -172,6 +182,6 @@ function stand(T, S, x, z){
   return g;
 }
 
-window.Greybox = {RM:RM, Clock:Clock, eio:eio, lerp:lerp, clamp:clamp, el:el, restart:restart, phURL:phURL,
+window.Greybox = {RM:RM, Clock:Clock, eio:eio, lerp:lerp, clamp:clamp, lerpA:lerpA, steer:steer, el:el, restart:restart, phURL:phURL,
   renderer:renderer, glOK:function(){ return glOK; }, gridTex:gridTex, Stage:Stage, capsule:capsule, stand:stand, STAND_H:STAND_H, dragX:dragX};
 })();

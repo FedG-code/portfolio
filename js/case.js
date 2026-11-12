@@ -221,7 +221,7 @@ window.CaseMode = function(X){
       for (var j = 0; j < segs.length; j++){ if (dist <= segs[j].s + segs[j].d){ sg = segs[j]; break; } }
       var f = clamp((dist - sg.s)/sg.d, 0, 1), ry = Math.atan2(sg.b.x - sg.a.x, sg.b.z - sg.a.z);
       plr.position.set(lerp(sg.a.x, sg.b.x, f), .02 + (H - .02)*up, lerp(sg.a.z, sg.b.z, f));
-      plr.rotation.y = up > 0 ? lerp(ry, .35, up) : ry;
+      GB.steer(plr, up > 0 ? .35 : ry, up > 0 ? 14 : 9);
       bd.position.y = t < .8 ? Math.abs(Math.sin(dist*1.6))*.07 : Math.sin(up*Math.PI)*.1; bd.rotation.x = t > 0 && t < .8 ? .15 : 0;
       st.render(); phoneTail();
     }, function(){ onStand(); if (done) done(); });

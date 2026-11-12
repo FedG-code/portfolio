@@ -16,18 +16,18 @@ var RET_KEY = 'dolly-return';
 var PHONE = 640;
 /* shared greybox stage: js/greybox.js (loaded first) */
 var GB = window.Greybox, Clock = GB.Clock, eio = GB.eio, lerp = GB.lerp, clamp = GB.clamp, el = GB.el, restart = GB.restart, phURL = GB.phURL,
-  renderer = GB.renderer, Stage = GB.Stage, capsule = GB.capsule, dragX = GB.dragX;
+  renderer = GB.renderer, Stage = GB.Stage, capsule = GB.capsule, dragX = GB.dragX, steer = GB.steer, lerpA = GB.lerpA;
 
 /* ------------------------------ content ------------------------------ */
 var H = {
   city:'London, UK',
-  lead:"I'm a technical designer who writes the tools and gameplay code behind the design.",
-  about:'At Funselektor I built Feedbot for Over the Hill. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on casino web games at Logifuture.'
+  lead:"I'm a technical designer with 3 years programming experience across multiple engines and languages.",
+  about:'Currently building tools for Funselektor. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on live web games at Logifuture.'
 };
 var P = [
   { id:'over-the-hill', t:'Over the Hill', sub:'Tool designer at Funselektor Labs, 2026', subM:'Tool designer at Funselektor Labs, 2026',
-    img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill key art', marks:[{chip:'Funselektor key art'}], href:'over_the_hill.html',
-    blurb:"Key art from Funselektor's game. I built Feedbot, which sorts the game's player feedback from six feedback streams into bugs and requests. The first version went live two days after the brief.",
+    img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill', marks:[{chip:'Funselektor'}], href:'over_the_hill.html',
+    blurb:"I built Feedbot, which sorts the game's player feedback from six feedback streams into bugs and requests. The first version went live two days after the brief.",
     spec:[['Studio','Funselektor Labs'],['Role','Tool Designer'],['Stack','Python, Claude API, Streamlit'],['Year','2026'],['Result','45k player messages handled in launch week']],
     logs:['45k player messages handled in launch week','First version live two days after the brief','60+ bug reports and sentiment write-ups'] },
   { id:'eve-of-destruction', t:'Eve of Destruction', sub:'Technical designer at Lost Satellite Studios, 2024', subM:'Technical designer at Lost Satellite, 2024',
@@ -259,7 +259,8 @@ function buildDolly(start){
     trk.style.left = (f < 0 ? ce(0) + f*(ce(1) - ce(0)) : f > 1 ? ce(N - 1) + (f - 1)*(ce(N - 1) - ce(N - 2)) : lerp(ce(j), ce(j + 1), f0)) + 'px';
   }
   /* face the viewer, turned a little towards what the guide presents: on desktop the sign/screen is to its left, on phone to its right */
-  function face(){ plr.rotation.y = m ? .35 : -.45; }
+  function rest(){ return m ? .35 : -.45; }
+  function face(){ plr.rotation.y = rest(); }
   /* on desktop the guide stands between the bay dividers (z 0 to 2.0), so it steps out past their ends, walks, and steps back in */
   var ZOUT = 2.45;
   function route(a, b){
@@ -276,14 +277,25 @@ function buildDolly(start){
     var t = clamp((dist - sg.s)/sg.d, 0, 1);
     return {x:lerp(sg.a.x, sg.b.x, t), z:lerp(sg.a.z, sg.b.z, t), ry:Math.atan2(sg.b.x - sg.a.x, sg.b.z - sg.a.z)};
   }
-  function arrive(s, announce){ body.position.y = 0; body.rotation.x = 0; face(); at = s; say(s, announce); showOv(s); st.render(); }
-  function select(s, anim, announce){
+  /* soft (after a walk): the guide eases round to face the viewer and settles its bob, instead of snapping */
+  function arrive(s, announce, soft){
+    if (soft && !RM){
+      var y0 = body.position.y, x0 = body.rotation.x, left = Math.abs(lerpA(plr.rotation.y, rest(), 1) - plr.rotation.y);
+      walk = clock.add(clamp(left/5 + .2, .3, .85), function(q){
+        if (inCase()) return; var e = 1 - Math.pow(1 - q, 3);
+        if (q < 1) steer(plr, rest(), 12); else face();
+        body.position.y = y0*(1 - e); body.rotation.x = x0*(1 - e); st.render();
+      });
+    } else { body.position.y = 0; body.rotation.x = 0; face(); }
+    at = s; say(s, announce); showOv(s); st.render();
+  }
+  function select(s, anim, announce, soft){
     G.sel = s; setRove(keyEls, s);
     keyEls.forEach(function(kk, j){ if (j === s) kk.setAttribute('aria-describedby', bub.id); else kk.removeAttribute('aria-describedby'); });
     secs.forEach(function(o, j){ if (o.tp){ o.tp.classList.toggle('on', j === s); o.sc.userData.sel.visible = j === s; } });
     clock.kill(tw); clock.kill(walk);
     var from = camX, to = sx[s], a = {x:plr.position.x, z:plr.position.z}, b = secs[s].zone;
-    if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce); return; }
+    if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce, soft); return; }
     var dur = clamp(Math.abs(to - from)/9, .4, .9);
     bub.hidden = true; hideOv();
     tw = clock.add(dur, function(p){ put(lerp(from, to, eio(p))); st.render(); });
@@ -293,10 +305,11 @@ function buildDolly(start){
     var wd = dur + (rt.segs.length > 1 ? .3 : 0);
     walk = clock.add(wd + .18, function(p){
       var q = clamp((p*(wd + .18) - .08)/wd, 0, 1), dist = eio(q)*rt.tot, o = along(rt, dist);
-      plr.position.set(o.x, .02, o.z); plr.rotation.y = o.ry;
+      /* heading turns smoothly into each leg, and back towards the viewer over the last steps */
+      plr.position.set(o.x, .02, o.z); steer(plr, q > .82 ? rest() : o.ry);
       body.position.y = Math.abs(Math.sin(dist*1.6))*.07; body.rotation.x = .2*Math.sin(Math.PI*q);
       st.render();
-    }, function(){ arrive(s, announce); });
+    }, function(){ arrive(s, announce, true); });
   }
   function act(s){ if (busy) return; if (G.sel === s && at === s && Math.abs(camX - sx[s]) < .05){ if (s > 0) open(s, 0); } else select(s, true, true); }
   function pushTarget(s, k){
@@ -329,10 +342,10 @@ function buildDolly(start){
     walk = clock.add(pause, function(){}, function(){
       walk = clock.add(clamp(dz/5, .5, 1.1), function(q){
         var dn = clamp(q/.2, 0, 1), e = eio(q);
-        plr.position.set(lerp(pd.x, zn.x, e), GB.STAND_H - (GB.STAND_H - .02)*dn, lerp(pd.z, zn.z, e)); plr.rotation.y = Math.atan2(zn.x - pd.x, zn.z - pd.z);
+        plr.position.set(lerp(pd.x, zn.x, e), GB.STAND_H - (GB.STAND_H - .02)*dn, lerp(pd.z, zn.z, e)); steer(plr, q > .75 ? rest() : Math.atan2(zn.x - pd.x, zn.z - pd.z));
         body.position.y = Math.abs(Math.sin(e*dz*1.6))*.07; body.rotation.x = .2*Math.sin(Math.PI*q);
         st.render();
-      }, function(){ busy = false; select(s, false); if (done) done(); });
+      }, function(){ busy = false; select(s, false, false, true); if (done) done(); });
     });
   }
   /* back from the case study: start inside the screen and pull out to the section shot */
@@ -350,7 +363,7 @@ function buildDolly(start){
     function toSpot(){ standToSpot(s, .35); }
     walk = clock.add(1.4, function(q){
       var w = clamp(q/.86, 0, 1), up = clamp((q - .82)/.18, 0, 1), dist = eio(w)*rt.tot, o = along(rt, dist);
-      plr.position.set(o.x, .02 + (GB.STAND_H - .02)*up, o.z); plr.rotation.y = up > 0 ? lerp(o.ry, m ? .35 : -.45, up) : o.ry;
+      plr.position.set(o.x, .02 + (GB.STAND_H - .02)*up, o.z); steer(plr, up > 0 ? rest() : o.ry, up > 0 ? 14 : 9);
       body.position.y = q < .82 ? Math.abs(Math.sin(dist*1.6))*.07 : Math.sin(up*Math.PI)*.1; body.rotation.x = q < .82 ? .15 : 0;
       st.render();
     }, toSpot);
