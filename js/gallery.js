@@ -487,6 +487,22 @@ function buildDolly(start){
     else if (hadFocus) keyEls[s0].focus({preventScroll:true});
   }
 
+  /* test hook: projected stage-px rects of the meshes the tests can't measure from the DOM (no side effects) */
+  var rv = new T.Vector3();
+  function prj(pts){
+    var ps = pts.map(function(q){ return st.proj(rv.set(q[0], q[1], q[2])); }), xs = ps.map(function(q){ return q[0]; }), ys = ps.map(function(q){ return q[1]; });
+    var x = Math.min.apply(null, xs), y = Math.min.apply(null, ys);
+    return {x:x, y:y, w:Math.max.apply(null, xs) - x, h:Math.max.apply(null, ys) - y};
+  }
+  function picRect(g){ var u = g.userData, k = g.scale.x, x = g.position.x, y = g.position.y, z = g.position.z, w = u.w*k/2, h = u.h*k/2; return prj([[x - w, y - h, z], [x + w, y - h, z], [x - w, y + h, z], [x + w, y + h, z]]); }
+  function objRect(o){ if (!o || !o.visible) return null; o.updateMatrixWorld(true); var b = new T.Box3().setFromObject(o), a = b.min, z = b.max; return prj([[a.x, a.y, z.z], [z.x, a.y, z.z], [a.x, z.y, z.z], [z.x, z.y, z.z], [a.x, a.y, a.z], [z.x, z.y, a.z]]); }
+  window.__dolly = {rects:function(){
+    var hd = st.proj(rv.set(plr.position.x, plr.position.y + 1.42, plr.position.z));
+    return {stage:{w:c.w, h:c.h}, head:{x:hd[0], y:hd[1]}, mon:G.mon ? G.mon() : null,
+      bays:secs.map(function(o, s){ if (!o.scr) return {s:s}; var bk = bigK(s);
+        return {s:s, main:picRect(o.scr[bk].sc), pics:o.scr.map(function(q){ return picRect(q.sc); }), sign:o.sign ? objRect(o.sign) : null}; })};
+  }, objRect:objRect};
+
   G.api = {
     dispose:function(){ if (G.cs) G.cs.dispose(); clock.killAll(); hideOv(); GB.clipPut(ov, null); st.dispose(); },
     caseState:function(){ return G.cs && G.cs.on() ? G.cs.state() : null; },
