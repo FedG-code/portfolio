@@ -12,7 +12,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | Keyboard | focus About key, ArrowRight x2 -> Eve; live region = "Eve of Destruction" only; `aria-describedby="guide-bubble wall-label"` on the active key; ult+bossfightgif.mp4 overlay (the Combat clip) |
 | Open | Enter on the selected key: bubble hides during the push; `#eve-of-destruction/case` in the same page, one canvas, case bar shown, focus on its first part (Combat: no Overview) |
 | All projects | bubble hidden during the push / pull-out / walk, then shown; section bar back, focus on the Eve key, no `/case` in the URL |
-| University | bubble = the user's summary + one Learn more (#climbing, the big frame); wall label = just the stack; Learn more opens Climbing; with Rally made big in the case, browser Back closes it (focus on the University button) and Learn more then opens Rally |
+| University | bubble = the user's summary + one Learn more (#climbing, the big frame); wall monitor = just the stack; Learn more opens Climbing; with Rally made big in the case, browser Back closes it (focus on the University button) and Learn more then opens Rally |
 | Summaries | Over the Hill, Eve, Casino: the bubble's `.sum` text equals the page's `.project-hero-desc` (whitespace-normalised; fails when they drift); Eve's Steam link: new tab, noopener, no inline style, `--link` colour |
 | Over the Hill | Learn more opens `#over-the-hill/case` |
 | Other Games | bubble = the summary + one Learn more (#stealth) |
