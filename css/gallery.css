@@ -95,11 +95,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .st.over{cursor:pointer}
 .pv-view.go{cursor:pointer}
 .pin{position:absolute !important; left:0; top:0; z-index:2; transform-origin:0 0}
-.tp{display:grid; gap:1px; padding:5px 9px 6px; background:rgba(248,249,246,.93); box-shadow:0 1px 0 rgba(21,24,27,.3)}
-.tp .rt{font-size:19px}
-.tp.lead .rt{font-size:27px}
-.tp .rs{grid-column:auto; margin-top:0; font-size:12px; white-space:nowrap}
-.tp.on{background:var(--p2)}
 .sign{width:330px; background:var(--p2); border:1.5px solid var(--ink); padding:14px 16px 15px; display:grid; gap:7px; box-shadow:0 2px 0 rgba(21,24,27,.22)}
 .sign .ab-lead{font-size:19px; line-height:1.28}
 .sign .ab-txt{font-size:13px; line-height:1.5}
@@ -264,9 +259,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
   .row.lead .rt{font-size:28px}
   .rs{font-size:12px; margin-top:5px}
   .pv-cap{font-size:12px}
-  .tp .rt{font-size:15px; font-stretch:112%}
-  .tp.lead .rt{font-size:19px}
-  .tp .rs{font-size:10.5px}
   .sign{width:300px; padding:10px 12px 11px; gap:5px}
   .sign .ab-lead{font-size:15px}
   .bub, .bub.sm{width:205px}

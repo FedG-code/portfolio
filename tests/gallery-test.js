@@ -159,6 +159,18 @@ const state = p => p.evaluate(() => ({
   await p.waitForFunction(() => location.hash === '#other-games/case/stealth', null, { timeout: 5000 }).catch(() => {});
   check('clicking the big frame opens its game\'s case (Stealth Game)', /#other-games\/case\/stealth$/.test(p.url()), p.url());
 
+  // The titles are 3D signs (no HTML plates): a click on one selects its section, a second click opens it; the outline marks the selected screen
+  await p.goto('about:blank'); await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
+  const signAt = async i => { const r = await p.evaluate(i => window.__dolly.rects().bays[i].sign, i), sb = await p.locator('.st').boundingBox(); return { x: sb.x + r.x + r.w / 2, y: sb.y + r.y + r.h / 2 }; };
+  check('no HTML title plates on the stage', !(await p.$('.st .tp')));
+  let sp = await signAt(1); await p.mouse.click(sp.x, sp.y); await p.waitForTimeout(1800);
+  await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {}); await p.waitForTimeout(300);
+  const sel1 = await p.evaluate(() => window.__dolly.rects().bays.map(b => !!b.sel));
+  check('clicking Over the Hill\'s sign selects it; the outline shows on its screen only', (await state(p)).key === 'Over the Hill' && sel1.join() === 'false,true,false,false,false,false', { key: (await state(p)).key, sel1 });
+  sp = await signAt(1); await p.mouse.click(sp.x, sp.y);
+  await p.waitForFunction(() => location.hash === '#over-the-hill/case', null, { timeout: 5000 }).catch(() => {});
+  check('a second click on the sign opens its case', /#over-the-hill\/case$/.test(p.url()), p.url());
+
   // No flash of the plain list while Three.js loads (it's slowed to 1.5s here)
   {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });

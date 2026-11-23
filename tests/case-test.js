@@ -24,7 +24,7 @@ const label = async p => { await p.waitForFunction(() => { const w = document.qu
   const r = w.getBoundingClientRect(), sr = document.querySelector('.st').getBoundingClientRect();
   const hit = q => r.left < q.right - 1 && r.right > q.left + 1 && r.top < q.bottom - 1 && r.bottom > q.top + 1;
   const vis = e => !e.hidden && e.offsetWidth > 0 && getComputedStyle(e).opacity !== '0';
-  const others = [...document.querySelectorAll('#case-bubble, #guide-bubble, .ctags, .cplay, .tp, .pin.tl, .vov')].filter(vis);
+  const others = [...document.querySelectorAll('#case-bubble, #guide-bubble, .ctags, .cplay, .pin.tl, .vov')].filter(vis);
   const screens = [...document.querySelectorAll('.vov:not([hidden])')].map(e => e.getBoundingClientRect());
   return { exists: true, at: w.dataset.at, shown: vis(w), left: r.left, right: r.right, top: r.top, bottom: r.bottom, inStage: r.left >= sr.left && r.right <= sr.right && r.top >= sr.top && r.bottom <= sr.bottom,
     hits: others.filter(e => hit(e.getBoundingClientRect())).map(e => e.id || e.className),

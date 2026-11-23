@@ -167,6 +167,21 @@ function Stage(host, w, h, o){
     [-1, 1].forEach(function(sd){ var ln = box(.012, 12, .012, M.dark, sd*(w/2 - .25), h/2 + .07 + 6, 0, g); ln.castShadow = false; ln.receiveShadow = false; });
     g.userData = {w:w, h:h, W:w + .14, H:h + .14, face:face}; return g;
   }
+  /* a lit sign (the section title, 2026-11-23): a thin card whose front is a canvas (draw(ctx, W, H) paints it; at least 1400
+     px wide), sides like the props, two small dark bolts; casts and receives shadows. Its texture and material are disposed
+     with the stage (dispose() keeps mapped materials, which are the shared capture textures) */
+  var own = [];
+  function sign(w, h, draw){
+    var g = new T.Group(); S.add(g);
+    var cv = document.createElement('canvas'); cv.width = Math.max(1400, Math.round(w*480)); cv.height = Math.round(cv.width*h/w);
+    var t = new T.CanvasTexture(cv); t.minFilter = T.LinearMipmapLinearFilter; t.generateMipmaps = true;   /* seen small: mipmaps keep the sub line clean */ t.anisotropy = R.capabilities.getMaxAnisotropy ? Math.min(8, R.capabilities.getMaxAnisotropy()) : 1;
+    var front = new T.MeshLambertMaterial({map:t}); own.push(t, front);
+    var card = new T.Mesh(new T.BoxGeometry(w, h, .05), [M.prop, M.prop, M.prop, M.prop, front, M.prop]); card.castShadow = true; card.receiveShadow = true; g.add(card);
+    [-1, 1].forEach(function(sd){ var bt = new T.Mesh(new T.CylinderGeometry(.03, .03, .03, 12), M.dark); bt.rotation.x = Math.PI/2; bt.position.set(sd*(w/2 - .1), h/2 - .1, .035); bt.castShadow = true; g.add(bt); });
+    function paint(){ if (dead) return; var x = cv.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); draw(x, cv.width, cv.height); t.needsUpdate = true; later(); }
+    paint();
+    g.userData = {w:w, h:h, paint:paint, card:card}; return g;
+  }
   function pin(elm, v, ax, ay, extra){ var p = {el:elm, v:v, ax:ax || 0, ay:ay || 0}; if (extra) for (var k in extra) p[k] = extra[k]; pins.push(p); return p; }
   /* which tagged object (userData.hit) is under a client point */
   var ray = new T.Raycaster(), nd = new T.Vector2();
@@ -182,10 +197,11 @@ function Stage(host, w, h, o){
   /* drop this scene's GPU objects (textures are shared across rebuilds and kept) */
   function dispose(){
     dead = true; if (q) cancelAnimationFrame(q);
-    S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
+    S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(function(q){ if (!q.map) q.dispose(); }); });
+    own.forEach(function(o){ o.dispose(); }); own = [];
     ft.dispose(); if (sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; }
   }
-  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, monitor:monitor, pin:pin, pick:pick, sunSpan:sunSpan, dispose:dispose};
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, monitor:monitor, sign:sign, pin:pin, pick:pick, sunSpan:sunSpan, dispose:dispose};
 }
 function capsule(T, mat, s){
   var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;

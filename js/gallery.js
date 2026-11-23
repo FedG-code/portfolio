@@ -218,7 +218,21 @@ function buildDolly(start){
     st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0).castShadow = false;
     st.box(.2, 3.5, 2.2, SHM, x + .05, 1.45, .8).receiveShadow = false;
   }
-  var x = x0, hits = []; divider(x);
+  var x = x0, hits = [], signs = []; divider(x);
+  /* the sign's face: title in Archivo 800, the sub line in Plex Mono caps, a short green rule (colours from the page's tokens) */
+  var css = getComputedStyle(document.documentElement), tok = function(n){ return css.getPropertyValue(n).trim(); };
+  function signDraw(t, sub){
+    return function(x, W, H){
+      x.fillStyle = tok('--p2'); x.fillRect(0, 0, W, H);
+      var ts = Math.round(H*.38); x.font = '800 ' + ts + 'px Archivo'; var tw = x.measureText(t).width;
+      if (tw > W*.88){ ts = Math.floor(ts*W*.88/tw); x.font = '800 ' + ts + 'px Archivo'; }
+      x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillStyle = tok('--ink'); x.fillText(t, W/2, H*.47);
+      var ss = Math.round(H*.155); x.font = '500 ' + ss + 'px "IBM Plex Mono"'; var u = sub.toUpperCase(), uw = x.measureText(u).width;
+      if (uw > W*.92){ ss = Math.floor(ss*W*.92/uw); x.font = '500 ' + ss + 'px "IBM Plex Mono"'; }
+      x.fillStyle = tok('--mut'); x.fillText(u, W/2, H*.72);
+      x.fillStyle = tok('--sig'); x.fillRect(W/2 - H*.3, H*.84, H*.6, Math.max(4, H*.03));
+    };
+  }
   /* every bay has a stand (the player-start pad). On desktop it sits left of the screen, where the guide stands on the
      project page's low shot, so the two line up; the guide talks from its spot on the right. It steps onto the stand
      only when it walks in from off screen (coming back from a project page), then walks over to its spot */
@@ -260,13 +274,17 @@ function buildDolly(start){
       scr3.push({sc:sc, scx:scx, sy:sy, sw:sw});
     }
     st.box(sw*.6, .3, .5, i ? M.prop : M.lead, scx, .15, 1.0);
-    var tp = el('button', 'pin tp' + (i ? '' : ' lead'), '<span class="rt">' + p.t + '</span><span class="rs">' + (m ? p.subM : p.sub) + '</span>');
-    tp.tabIndex = -1; tp.setAttribute('aria-hidden', 'true'); host.appendChild(tp);
-    var tpv = new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05); st.pin(tp, tpv, 0, 1, {clamp:false});
-    tp.addEventListener('click', function(){ act(s); });
+    /* the title: a lit 3D sign centred .24 above the main screen / big frame (2026-11-23; was an HTML plate). A click on it
+       selects the section, or opens it if it is already selected (act) */
+    var lead = !i, gw = lead ? Math.min(sw*.86, 3.9) : Math.min(sw*.8, 3.6), gh = lead ? .84 : .74;
+    var sg = st.sign(gw, gh, signDraw(p.t, m ? p.subM : p.sub)); sg.position.set(scx, sy + sc.userData.h/2 + .08 + .24 + gh/2, .05);
+    sg.userData.hit = {s:s, sign:true}; hits.push(sg); signs.push(sg);
     scr3.forEach(function(o, k){ o.sc.userData.hit = {s:s, k:k}; hits.push(o.sc); });
-    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, s), sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, tpv:tpv, i:i, scr:scr3, place:place};
+    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, s), sc:sc, sw:sw, sy:sy, scx:scx, sign:sg, i:i, scr:scr3, place:place};
   });
+  /* the signs were painted with whatever fonts were in: repaint once Archivo and Plex Mono have loaded */
+  if (document.fonts && document.fonts.load) Promise.all(['800 40px Archivo', '500 20px "IBM Plex Mono"'].map(function(f){ return document.fonts.load(f); }))
+    .then(function(){ signs.forEach(function(g){ g.userData.paint(); }); }, function(){});
   /* the guide: capsule + speech bubble */
   var plr = capsule(T, M.white, 1.1), body = plr.userData.body; plr.position.set(secs[0].zone.x, .02, secs[0].zone.z); st.S.add(plr);
   var bub = el('div', 'pin bub' + (m ? ' side' : ''), ''); bub.id = 'guide-bubble'; host.appendChild(bub);
@@ -477,7 +495,7 @@ function buildDolly(start){
   function select(s, anim, announce, soft){
     G.sel = s; setRove(keyEls, s);
     keyEls.forEach(function(kk, j){ if (j === s) kk.setAttribute('aria-describedby', bub.id + (wl && s ? ' ' + wl.id : '')); else kk.removeAttribute('aria-describedby'); });
-    secs.forEach(function(o, j){ if (o.tp){ o.tp.classList.toggle('on', j === s); o.sc.userData.sel.visible = j === s; } });
+    secs.forEach(function(o, j){ if (o.sc) o.sc.userData.sel.visible = j === s; });
     clock.kill(tw); clock.kill(walk);
     var from = camX, to = sx[s], a = {x:plr.position.x, z:plr.position.z}, b = secs[s].zone;
     if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce, soft); return; }
@@ -563,8 +581,8 @@ function buildDolly(start){
     function(dx){ if (!drag) return; put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); },
     function(){ if (drag) snap(); },
     /* clicking a capture opens its page, the same way as Learn more */
-    function(e){ var h = st.pick(e.clientX, e.clientY, hits); if (G.cs && G.cs.on()){ G.cs.tap(h); return; } if (h && P[h.s - 1].href) open(h.s, h.k); },
-    function(e){ var h = st.pick(e.clientX, e.clientY, hits); host.classList.toggle('over', G.cs && G.cs.on() ? G.cs.canTap(h) : !!(h && P[h.s - 1].href)); });
+    function(e){ var h = st.pick(e.clientX, e.clientY, hits); if (G.cs && G.cs.on()){ G.cs.tap(h); return; } if (h && h.sign){ act(h.s); return; } if (h && P[h.s - 1].href) open(h.s, h.k); },
+    function(e){ var h = st.pick(e.clientX, e.clientY, hits); host.classList.toggle('over', G.cs && G.cs.on() ? G.cs.canTap(h) : !!(h && (h.sign || P[h.s - 1].href))); });
   var wt = 0;
   host.addEventListener('wheel', function(e){
     var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy || (G.cs && G.cs.on())) return;
@@ -606,7 +624,7 @@ function buildDolly(start){
     var hd = st.proj(rv.set(plr.position.x, plr.position.y + 1.42, plr.position.z));
     return {stage:{w:c.w, h:c.h}, head:{x:hd[0], y:hd[1]}, mon:G.mon ? G.mon() : null,
       bays:secs.map(function(o, s){ if (!o.scr) return {s:s}; var bk = bigK(s);
-        return {s:s, main:picRect(o.scr[bk].sc), pics:o.scr.map(function(q){ return picRect(q.sc); }), sign:o.sign ? objRect(o.sign) : null}; })};
+        return {s:s, sel:o.sc.userData.sel.visible, main:picRect(o.scr[bk].sc), pics:o.scr.map(function(q){ return picRect(q.sc); }), sign:o.sign ? objRect(o.sign) : null}; })};
   }, objRect:objRect};
 
   G.api = {

@@ -436,7 +436,7 @@ window.CaseMode = function(X){
   }
 
   /* clicking a screen while a case is open: a small University screen becomes the big one */
-  function canTap(h){ return !!(on && order && h && h.s === S && order[h.k] !== 0); }
+  function canTap(h){ return !!(on && order && h && !h.sign && h.s === S && order[h.k] !== 0); }
   function tap(h){
     if (!canTap(h) || busy) return;
     D.groups.forEach(function(g){ if (g.item === h.k) go(g.start, true); });
