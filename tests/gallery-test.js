@@ -23,6 +23,14 @@ function check(name, ok, detail) {
   console.log((ok ? 'PASS  ' : 'FAIL  ') + name + (detail !== undefined ? '  ' + JSON.stringify(detail) : ''));
   if (!ok) failed++;
 }
+const norm = t => (t || '').replace(/\s+/g, ' ').trim();
+// select section i (shot list button) and wait for the guide's bubble
+const pick = async (p, i) => { await p.waitForFunction(() => !document.querySelector('.keys:not(.ckeys)').hidden, null, { timeout: 8000 }).catch(() => {}); await p.click(`.key[data-i="${i}"]`); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {}); await p.waitForTimeout(250); };
+const bubble = p => p.evaluate(() => { const b = document.querySelector('#guide-bubble'), o = b.querySelector('.openb'), sm = b.querySelector('.sum'), sr = document.querySelector('.st').getBoundingClientRect(), r = o && o.getBoundingClientRect();
+  return { sum: sm ? sm.textContent : '', opens: b.querySelectorAll('.openb').length, href: o ? o.getAttribute('href') : null, items: b.querySelectorAll('.itb, ul').length,
+    openIn: !!r && r.top >= sr.top && r.bottom <= sr.bottom + 1 && r.left >= sr.left && r.right <= sr.right + 1 }; });
+const wallLabel = p => p.evaluate(() => { const w = document.querySelector('#wall-label'); if (!w) return { exists: false }; const r = w.getBoundingClientRect(), v = document.querySelector('#gallery .vov:not([hidden])'), vr = v && v.getBoundingClientRect();
+  return { exists: true, shown: !w.hidden && w.offsetWidth > 0, text: w.textContent, items: [...w.querySelectorAll('li')].map(l => l.textContent), leftOfScreen: !!vr && r.right <= vr.left + 1 }; });
 const state = p => p.evaluate(() => ({
   g3d: document.querySelector('#gallery').classList.contains('g3d'),
   canvases: document.querySelectorAll('canvas').length,
@@ -48,6 +56,11 @@ const state = p => p.evaluate(() => ({
     const sw = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     check(`${w}x${h} gallery built, one canvas, About first`, s.g3d && s.canvases === 1 && s.key === 'About' && s.bubble, s);
     check(`${w}x${h} no horizontal overflow, no errors`, sw <= 0 && !errs.length, { overflow: sw, errs });
+    await pick(p, 3);
+    const cb = await bubble(p), cl = await wallLabel(p), phone = await p.evaluate(() => document.querySelector('#gallery').clientWidth < 640);
+    check(`${w}x${h} Casino: the bubble is the summary + Learn more, Learn more inside the stage`, /^At Logifuture I worked on 8\+ game releases/.test(cb.sum) && cb.opens === 1 && cb.openIn && !cb.items, cb);
+    if (phone) check(`${w}x${h} phone: no wall label in the gallery`, !cl.exists, cl);
+    else check(`${w}x${h} Casino: the wall label hangs left of the screen (facts incl. 700k+, stack)`, cl.shown && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games|PixiJS and Unity WebGL' && /Stack/.test(cl.text), cl);
     await ctx.close();
   }
 
@@ -60,7 +73,7 @@ const state = p => p.evaluate(() => ({
   let s = await state(p);
   check('arrow keys select Eve of Destruction', s.key === 'Eve of Destruction' && s.active.indexOf('Eve of Destruction') === 0, s);
   check('live region says only the section name', s.live === 'Eve of Destruction', s.live);
-  check('bubble describes the active button', s.describedBy === 'guide-bubble', s.describedBy);
+  check('bubble and wall label describe the active button', s.describedBy === 'guide-bubble wall-label', s.describedBy);
   check('clip plays over the selected screen', /knightboss\.mp4$/.test(s.clip || ''), s.clip);
   await p.keyboard.press('Enter'); await p.waitForTimeout(250);
   check('bubble hides during the push', (await state(p)).bubble === false);
@@ -69,7 +82,7 @@ const state = p => p.evaluate(() => ({
   await p.waitForFunction(() => { const b = document.querySelector('#case-bubble'); return b && !b.hidden && !document.querySelector('.ckeys').hidden; }, null, { timeout: 8000 }).catch(() => {});
   let cs = await p.evaluate(() => ({ url: location.pathname + location.hash, canvases: document.querySelectorAll('canvas').length, bar: !document.querySelector('.ckeys').hidden, sections: !document.querySelector('.keys:not(.ckeys)').hidden, active: document.activeElement.textContent.trim().slice(0, 30), head: document.querySelector('#case-bubble .bh').textContent }));
   check('Open: the case opens in the scene (same page, one canvas)', /index\.html#eve-of-destruction\/case$/.test(cs.url) && cs.canvases === 1 && cs.bar && !cs.sections, cs);
-  check('Open: focus on the Overview part, bubble on the overview', cs.active.indexOf('Overview') === 0 && cs.head === 'Overview', cs);
+  check('Open: no Overview part, focus and bubble on the first part (Combat)', cs.active.indexOf('Combat') === 0 && cs.head === 'Combat', cs);
   await p.click('.ckeys .cback');
   const seen = [];
   for (let i = 0; i < 10; i++) { seen.push(await p.evaluate(() => { const b = document.querySelector('#guide-bubble'); return b ? (b.hidden ? 'H' : 'V') : '-'; }).catch(() => '-')); await p.waitForTimeout(100); }
@@ -79,28 +92,52 @@ const state = p => p.evaluate(() => ({
   check('All projects: back out of the screen (bubble hidden, then shown)', seen.join('').indexOf('H') >= 0 && s.bubble, seen.join(''));
   check('All projects: section bar back, focus on the Eve button, no case in the URL', s.active.indexOf('Eve of Destruction') === 0 && !/\/case/.test(p.url()) && await p.evaluate(() => document.querySelector('.ckeys').hidden), { active: s.active, url: p.url() });
 
-  // University Projects: three items, each opens its game in the scene
-  await p.click('.key[data-i="4"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
-  await p.waitForSelector('.bub .its .itb', { timeout: 4000 }).catch(() => {});
-  check('University Projects bubble lists three items with Open', await p.evaluate(() => [...document.querySelectorAll('.bub .its .itb')].map(a => a.getAttribute('href')).join() === 'university_projects.html#climbing,university_projects.html#rally,university_projects.html#fishing'));
-  await p.click('.bub .itb[data-k="1"]');
+  // University Projects: the summary + one Learn more, which opens the game in the big frame
+  await pick(p, 4);
+  let ub = await bubble(p);
+  check('University Projects bubble: the summary and one Learn more (the big frame: Climbing)', ub.sum === "These are the main projects I've worked on in or during university, where I tried to reach beyond my assignment brief and show off my best skills as a technical designer." && ub.opens === 1 && ub.href === 'university_projects.html#climbing' && !ub.items, ub);
+  const ul0 = await wallLabel(p);
+  check('University: the wall label carries just the stack (no facts)', ul0.shown && !ul0.items.length && /Unity 6, C#/.test(ul0.text), ul0);
+  await p.click('#guide-bubble .openb');
   await p.waitForFunction(() => { const b = document.querySelector('#case-bubble'); return b && !b.hidden; }, null, { timeout: 8000 }).catch(() => {});
-  const ry = await p.evaluate(() => ({ url: location.hash, active: document.activeElement.textContent.trim(), key: (document.querySelector('.ckeys .key.on .rt') || {}).textContent }));
-  check('University item opens its game in the scene, focus on its part', ry.url === '#university-projects/case/rally' && ry.active.indexOf('Rally Game') === 0 && ry.key === 'Rally Game', ry);
+  let ry = await p.evaluate(() => ({ url: location.hash, active: document.activeElement.textContent.trim(), key: (document.querySelector('.ckeys .key.on .rt') || {}).textContent }));
+  check('University Learn more opens the big frame\'s game (Climbing), focus on its part', ry.url === '#university-projects/case/climbing' && ry.active.indexOf('Climbing Game') === 0 && ry.key === 'Climbing Game', ry);
+  // make Rally big in the case, go back: Learn more now opens Rally
+  await p.click('.ckeys .key[data-g="1"]'); await p.waitForTimeout(900);
   await p.goBack();
   await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 6000 }).catch(() => {});
   check('browser Back closes the case, focus on the University button', (await state(p)).active.indexOf('University Projects') === 0 && await p.evaluate(() => document.querySelector('.ckeys').hidden));
+  ub = await bubble(p);
+  check('University: with Rally big, Learn more points at Rally', ub.href === 'university_projects.html#rally', ub);
+  await p.click('#guide-bubble .openb');
+  await p.waitForFunction(() => { const b = document.querySelector('#case-bubble'); return b && !b.hidden; }, null, { timeout: 8000 }).catch(() => {});
+  ry = await p.evaluate(() => ({ url: location.hash, key: (document.querySelector('.ckeys .key.on .rt') || {}).textContent }));
+  check('University: Learn more opens Rally, the game in the big frame', ry.url === '#university-projects/case/rally' && ry.key === 'Rally Game', ry);
+  await p.click('.ckeys .cback'); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden && document.querySelector('.ckeys').hidden; }, null, { timeout: 8000 }).catch(() => {});
+
+  // the summaries of Over the Hill, Eve and Casino are their project page's intro, word for word (edit the page: the test fails until P matches)
+  for (const [i, file] of [[1, 'over_the_hill.html'], [2, 'eve_of_destruction.html'], [3, 'casino_games.html']]) {
+    await pick(p, i);
+    const hero = await p.evaluate(async f => { const t = await (await fetch(f)).text(); return new DOMParser().parseFromString(t, 'text/html').querySelector('.project-hero-desc').textContent; }, file);
+    const sb = await bubble(p);
+    check(`${file}: the bubble's summary is the page's intro, verbatim`, norm(sb.sum) === norm(hero) && sb.opens === 1, norm(sb.sum) === norm(hero) ? undefined : { bubble: norm(sb.sum), page: norm(hero) });
+  }
+  await pick(p, 2);
+  const sl = await p.evaluate(() => { const a = document.querySelector('#guide-bubble .sum a'); return a ? { href: a.href, target: a.target, rel: a.rel, style: a.getAttribute('style'), color: getComputedStyle(a).color } : null; });
+  check('Eve: the Steam demo link works (new tab, noopener) in the gallery\'s link style', sl && /store\.steampowered\.com\/app\/2839460/.test(sl.href) && sl.target === '_blank' && /noopener/.test(sl.rel) && !sl.style && sl.color === 'rgb(11, 122, 46)', sl);
 
   // Over the Hill opens its case
   await p.click('.key[data-i="1"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
+  check('bubble button reads Learn more', (await p.textContent('.bub .openb')).trim().indexOf('Learn more') === 0);
   await p.click('.bub .openb');
   await p.waitForFunction(() => location.hash === '#over-the-hill/case', null, { timeout: 5000 }).catch(() => {});
-  check('Over the Hill opens its case', /#over-the-hill\/case$/.test(p.url()), p.url());
+  check('Over the Hill opens its case', /#over-the-hill\/case$/.test(p.url()), { url: p.url(), st: await state(p), on: await p.evaluate(() => window.__caseMode && window.__caseMode.on()) });
 
   // Clicking a capture opens its page like Learn more; a drag still scrubs
   await p.goto(BASE + 'index.html'); await p.waitForTimeout(1200);
   await p.click('.key[data-i="5"]'); await p.waitForTimeout(1800); await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {});
-  check('bubble button reads Learn more', (await p.textContent('.bub .openb')).trim().indexOf('Learn more') === 0);
+  const ogb = await bubble(p);
+  check('Other Games bubble: the summary and one Learn more (the big frame: Stealth Game)', ogb.sum === "My remaining projects, a stealth game using Darkwood's fog of war system that I spent 9 months on and two smaller game jam games." && ogb.opens === 1 && ogb.href === 'my_games.html#stealth' && !ogb.items, ogb);
   check('no dolly track label', !(await p.$('.dbg')));
   const bx = await p.locator('.st').boundingBox();
   await p.mouse.move(bx.x + bx.width * .3, bx.y + bx.height * .9); await p.mouse.down();
@@ -110,8 +147,8 @@ const state = p => p.evaluate(() => ({
   await p.waitForSelector('.vov:not([hidden])', { timeout: 4000 }).catch(() => {});
   const ov = await p.locator('.vov:not([hidden])').first().boundingBox();
   await p.mouse.click(ov.x + ov.width / 2, ov.y + ov.height / 2);
-  await p.waitForFunction(() => location.hash === '#other-games/case', null, { timeout: 5000 }).catch(() => {});
-  check('clicking the screen opens its case', /#other-games\/case$/.test(p.url()), p.url());
+  await p.waitForFunction(() => location.hash === '#other-games/case/stealth', null, { timeout: 5000 }).catch(() => {});
+  check('clicking the big frame opens its game\'s case (Stealth Game)', /#other-games\/case\/stealth$/.test(p.url()), p.url());
 
   // No flash of the plain list while Three.js loads (it's slowed to 1.5s here)
   {
@@ -124,6 +161,44 @@ const state = p => p.evaluate(() => ({
       shown = shown || await q.evaluate(() => { const m = document.querySelector('.menu'); return !!m && getComputedStyle(m).visibility === 'visible'; }).catch(() => false);
     }
     check('no flash of the plain list while Three.js loads', !shown && (await q.evaluate(() => document.querySelectorAll('canvas').length)) === 1);
+    await ctx.close();
+  }
+
+  // Clip overlays: never visible before their video has a frame (it used to show a black box), on a slow network too;
+  // the neighbours' clips are pre-warmed; University's Climbing clip starts at its poster's moment (15 s)
+  {
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+    const q = await ctx.newPage();
+    await q.addInitScript(() => {
+      window.__ovBad = []; window.__ovFirst = {};
+      const loop = () => {
+        document.querySelectorAll('.vov').forEach(o => {
+          if (o.hidden || +getComputedStyle(o).opacity === 0) return;
+          const v = o.querySelector('video'); if (!v) return;
+          const src = v.getAttribute('src');
+          if (v.readyState < 2) window.__ovBad.push(src + ' rs=' + v.readyState);
+          else if (!(src in window.__ovFirst)) window.__ovFirst[src] = v.currentTime;
+        });
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    });
+    const cdp = await ctx.newCDPSession(q);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 6e6 / 8, uploadThroughput: 1e6 / 8 });
+    await q.goto(BASE + 'index.html'); await q.waitForFunction(() => document.querySelector('#gallery.g3d'), null, { timeout: 20000 }); await q.waitForTimeout(1500);
+    const warm = () => q.evaluate(() => [...document.querySelectorAll('.vhold video')].map(v => ({ src: v.getAttribute('src'), paused: v.paused, preload: v.preload })));
+    await pick(q, 2); await q.waitForTimeout(3000);
+    const w2 = await warm();
+    check('Eve selected: its neighbour\'s clip (Casino) is pre-warmed, paused', w2.some(v => v.src === 'assets/spin+.mp4' && v.paused && v.preload === 'auto'), w2);
+    for (const i of [3, 4]) { await pick(q, i); await q.waitForTimeout(3000); }
+    const w4 = await warm();
+    check('University selected: Casino and Other Games are pre-warmed', ['assets/spin+.mp4', 'assets/visionsystem.mp4'].every(s => w4.some(v => v.src === s && v.paused)), w4);
+    for (const i of [5, 2, 4]) { await pick(q, i); await q.waitForTimeout(2000); }
+    const ov = await q.evaluate(() => ({ bad: window.__ovBad.slice(0, 5), n: window.__ovBad.length, first: window.__ovFirst }));
+    check('a clip overlay is never visible before its video has a frame (slow network)', !ov.n && Object.keys(ov.first).length >= 4, ov);
+    const tc = ov.first['assets/climbing.mp4'];
+    check('University: Climbing\'s clip starts at its poster\'s moment (15 s)', tc >= 14.9 && tc < 16, ov.first);
     await ctx.close();
   }
 

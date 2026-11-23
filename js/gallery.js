@@ -22,41 +22,53 @@ var GB = window.Greybox, Clock = GB.Clock, eio = GB.eio, lerp = GB.lerp, clamp =
 var H = {
   city:'London, UK',
   lead:"I'm a technical designer with 3 years programming experience across multiple engines and languages.",
-  about:'Currently building tools for Funselektor. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on live web games at Logifuture.'
+  about:'Currently building tools for Funselektor. Before that I designed combat and enemies for Eve of Destruction at Lost Satellite Studios, and spent three years on casino web games at Logifuture.'
 };
+/* blurb: the guide's summary in the gallery bubble. Over the Hill, Eve and Casino: the project page's .project-hero-desc,
+   verbatim (tests/case-test.js fails if they drift: edit both). cap: the plain list's preview caption.
+   logs + spec[2] (Stack): the wall label beside the screen (desktop gallery) */
 var P = [
-  { id:'over-the-hill', t:'Over the Hill', sub:'Tool designer at Funselektor Labs, 2026', subM:'Tool designer at Funselektor Labs, 2026',
+  { id:'over-the-hill', t:'Over the Hill', sub:'Tool programmer & designer at Funselektor Labs, 2026', subM:'Tool designer & programmer at Funselektor Labs, 2026',
     img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill', marks:[{chip:'Funselektor'}], href:'over_the_hill.html',
-    blurb:"I built Feedbot, which sorts the game's player feedback from six feedback streams into bugs and requests. The first version went live two days after the brief.",
+    blurb:"A week before Over the Hill's launch, Funselektor Labs asked me for a tool to turn over the upcoming thousands of Discord messages into grouped bugs and feedback the team could triage. I built Feedbot and had a testable version within two days.",
+    cap:"I built Feedbot, which sorts the game's player feedback from six feedback streams into bugs and requests. The first version went live two days after the brief.",
     spec:[['Studio','Funselektor Labs'],['Role','Tool Designer'],['Stack','Python, Claude API, Streamlit'],['Year','2026'],['Result','45k player messages handled in launch week']],
     logs:['45k player messages handled in launch week','First version live two days after the brief','60+ bug reports and sentiment write-ups'] },
   { id:'eve-of-destruction', t:'Eve of Destruction', sub:'Technical designer at Lost Satellite Studios, 2024', subM:'Technical designer at Lost Satellite, 2024',
     img:'assets/knightboss-poster.jpg', clip:'assets/knightboss.mp4', px:true, ar:800/494, alt:'Eve of Destruction knight boss attacking, with hitboxes visible', marks:[{chip:'Hitbox debug view on'}],
-    href:'eve_of_destruction.html', blurb:'The knight boss with my hitbox debug view on.',
+    href:'eve_of_destruction.html', cap:'The knight boss with my hitbox debug view on.',
+    blurb:'A 2D action-platformer built around combo combat, unlockable abilities, and branching progression. As Technical Designer on a small team, I designed and implemented the player\'s combat and movement systems along with mob and boss enemy logic, all in GDScript. <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener">Steam demo available</a>.',
     spec:[['Studio','Lost Satellite Studios'],['Role','Technical Designer'],['Stack','Godot, GDScript'],['Year','2024']],
     logs:['Combat: each attack is an FSM state, with input buffering','Crystal Eaters: ten-state FSM, three detection ranges','Steam demo out'] },
   { id:'casino-games', t:'Casino Games', sub:'Game developer at Logifuture, 2023 to 2026', subM:'Game developer at Logifuture, 2023 to 2026',
     img:'assets/spin+img.png', clip:'assets/spin+.mp4', ar:16/9, alt:'Spin and Win free spins round', marks:[{x:26,y:1,w:40,h:97,l:'Spin and Win wheel'}],
-    href:'casino_games.html', blurb:'Three years at Logifuture shipping live web games in PixiJS and Unity WebGL.',
+    href:'casino_games.html', cap:'Three years at Logifuture shipping live casino games in PixiJS and Unity WebGL.',
+    blurb:'At Logifuture I worked on 8+ game releases from start to finish, working on both the individual games, engine code and tools. I also maintained a back catalogue of 40+ games, making patches based on business needs. I also redesigned, pitched and implemented a mini version of their flagship game to drive cross product user engagement. After a strong initial performance I rebuilt 2 more games for the initiative, reaching a peak of 700k+ users across all 3 games.',
     spec:[['Studio','Logifuture'],['Role','Game Developer'],['Stack','PixiJS, Unity WebGL'],['Year','2023 to 2026']],
-    logs:['8+ game releases, start to finish','PixiJS and Unity WebGL'] },
+    logs:['8+ game releases, start to finish','700k+ peak users across 3 games','PixiJS and Unity WebGL'] },
   /* Climbing Game is the main item (big screen). Each item: poster (img) + muted loop (clip); Rally's clip has sound (the case plays it behind a Play button) */
   { id:'university-projects', t:'University Projects', sub:'Climbing, rally and fishing prototypes in Unity', subM:'Three prototypes in Unity',
     rs:'Three Unity prototypes', href:'university_projects.html',
     img:null, ar:960/464, alt:'Climbing Game: the climber on a wall of ledges', marks:[{chip:'Climbing Game'}],
-    blurb:'',
+    blurb:"These are the main projects I've worked on in or during university, where I tried to reach beyond my assignment brief and show off my best skills as a technical designer.", cap:'',
     spec:[['Studio','University'],['Role','Solo developer'],['Stack','Unity 6, C#'],['Year','2026']],
-    items:[{t:'Climbing Game', href:'university_projects.html#climbing', img:'assets/climbing-poster.jpg', clip:'assets/climbing.mp4', ar:960/464},
-           {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally-poster.jpg', clip:'assets/rally.mp4', ar:960/542},
-           {t:'Fishing Game', href:'university_projects.html#fishing', img:'assets/fishing-poster.jpg', clip:'assets/fishing.mp4', ar:960/474}],
+    items:[{t:'Climbing Game', href:'university_projects.html#climbing', img:'assets/climbing-poster.jpg', clip:'assets/climbing.mp4', start:15, ar:960/464},
+           {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally-poster.jpg', clip:'assets/rally.mp4', start:18, ar:960/542},
+           {t:'Fishing Game', href:'university_projects.html#fishing', img:'assets/fishing-poster.jpg', clip:'assets/fishing.mp4', start:1, ar:960/474}],
     logs:[] },
+  /* same three frames as University: Stealth Game is the main item (its case plays each part's own clip in the big frame) */
   { id:'other-games', t:'Other Games', sub:'A stealth game in Unity, plus jam games, since 2025', subM:'Stealth game in Unity, plus jam games',
-    img:'assets/visionsystemimg.png', clip:'assets/visionsystem.mp4', ar:800/456, alt:'Top-down stealth game with the guard vision cone drawn on the floor', marks:[{x:43.5,y:9,w:10.5,h:43,l:'Vision cone: HLSL shader'}],
-    href:'my_games.html', blurb:'A top-down stealth game in Unity. The guard vision cone is a shader I wrote in HLSL. Jam games sit under the same heading.',
+    img:null, ar:640/364, alt:'Top-down stealth game with the guard vision cone drawn on the floor', marks:[{x:43.5,y:9,w:10.5,h:43,l:'Vision cone: HLSL shader'}],
+    href:'my_games.html',
+    blurb:"My remaining projects, a stealth game using Darkwood's fog of war system that I spent 9 months on and two smaller game jam games.",
+    cap:'A top-down stealth game in Unity. The guard vision cone is a shader I wrote in HLSL. Jam games sit under the same heading.',
     spec:[['Studio','Independent'],['Role','Solo developer'],['Stack','Unity 6, HLSL'],['Year','2025 onwards']],
+    items:[{t:'Stealth Game', href:'my_games.html#stealth', img:'assets/visionsystem-poster.jpg', clip:'assets/visionsystem.mp4', ar:640/364},
+           {t:'Tetrarcana', href:'my_games.html#tetrarcana', img:'assets/tetrarcana-poster.jpg', clip:'assets/tetrarcana.mp4', ar:640/372},
+           {t:'Calm Before the Storm', href:'my_games.html#calm', img:'assets/calm-poster.jpg', clip:'assets/calm.mp4', ar:640/358}],
     logs:['Guard vision cone: a shader I wrote in HLSL','Built in Unity 6'] }
 ];
-P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ if (!it.img){ it.img = phURL(it.t); it.ar = 16/9; } }); p.img = p.items[0].img; p.clip = p.items[0].clip; } });
+P.forEach(function(p){ if (p.items){ p.items.forEach(function(it){ if (!it.img){ it.img = phURL(it.t); it.ar = 16/9; } if (it.start) GB.START[it.clip] = it.start; }); p.img = p.items[0].img; p.clip = p.items[0].clip; } });
 function idxOf(id){ for (var i = 0; i < P.length; i++) if (P[i].id === id) return i; return -1; }
 
 
@@ -99,7 +111,7 @@ function setPV(root, p){
   im.src = p.img; im.alt = p.alt; im.classList.toggle('px', !!p.px);
   pin.style.setProperty('--ar', p.ar); pin.style.width = inWidth(p.ar);
   mkl.innerHTML = marksHTML(p.marks); if (!RM) restart(mkl);
-  var cap = root.querySelector('.pv-cap'); cap.textContent = p.blurb || ''; cap.hidden = !p.blurb;
+  var cap = root.querySelector('.pv-cap'); cap.textContent = p.cap || ''; cap.hidden = !p.cap;
   root.querySelector('.pv-spec').innerHTML = specHTML(p.spec);
   var ol = root.querySelector('.pv-open'); if (ol) ol.remove();
   if (p.href) root.querySelector('.pv').insertAdjacentHTML('beforeend', openLink({href:flatHref(p.href)}, 'pv-open'));
@@ -133,8 +145,13 @@ var GUIDE = 'Walk with me: drag, scroll sideways or pick a section below.';
 function bubHTML(i, m){
   if (i < 0) return m ? '<p class="bt ab-say">' + H.about + '</p><p class="bs">' + GUIDE + '</p>' : '<p class="bt">' + GUIDE + '</p>';
   var p = P[i];
-  if (p.items) return '<ul class="its">' + p.items.map(function(it, k){ return '<li><a class="itb" href="' + it.href + '" data-k="' + k + '"><span class="it-t">' + it.t + '</span><span class="it-o">Learn more <span aria-hidden="true">&rarr;</span></span></a></li>'; }).join('') + '</ul>';
-  return '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul><p class="bs"><span>Stack</span> ' + p.spec[2][1] + '</p>' + (p.href ? openLink(p, 'openb') : '');
+  /* the section's summary (its text scrolls inside when the stage is short) + Learn more (an items bay: the game in the big frame) */
+  return '<p class="sum">' + p.blurb + '</p>' + (p.href ? openLink(p, 'openb') : '');
+}
+/* the wall label beside the screen: the section's facts + its stack (University has no facts: just the stack) */
+function wlHTML(i){
+  var p = P[i]; if (!p) return '';
+  return (p.logs.length ? '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul>' : '') + '<p class="wl-st"><span>Stack</span>' + p.spec[2][1] + '</p>';
 }
 /* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
 function shot(m, w, avail){
@@ -163,29 +180,40 @@ function buildDolly(start){
   var avail = window.innerHeight - (host.getBoundingClientRect().top + window.scrollY) - Math.min(kb.offsetHeight, 84) - 16 - 20;
   var c = shot(m, host.clientWidth, avail);
   host.style.height = c.h + 'px';
-  var st = Stage(host, c.w, c.h, {fov:c.fov, k:c.k, sun:[-7, 13, 10], sb:24, fs:110});
+  var st = Stage(host, c.w, c.h, {fov:c.fov, k:c.k, sun:[-7, 13, 10], sb:24, fs:110, sm:m ? 1024 : 2048});
   if (!st){ home.classList.remove('g3d'); flatList(); return false; }
   document.documentElement.classList.remove('g3d-wait');  /* visible before anything takes focus */
   G.mode = m ? 'm' : 'd'; G.w = home.clientWidth; G.h = window.innerHeight;
   var keyEls = [].slice.call(home.querySelectorAll('.key')), live = home.querySelector('.live'), busy = false, pushed = null, clock = new Clock();
   var T = st.T, M = st.M;
-  /* section widths: About, then the projects (the lead bay and the three-screen bay are widest) */
-  var BW = [6.4].concat(P.map(function(p, i){ return m ? (i === 0 || p.items ? 8.0 : 6.6) : (i === 0 || p.items ? 9.0 : 7.6); })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
-  var SL = m ? .5 : 1.6;   /* screen's left edge from the bay's left divider (desktop: the stand sits in front of that gap) */
-  st.box(x1 - x0 + .3, 6.4, .3, M.wall, (x0 + x1)/2, 3.2, -.15);
-  var x = x0, hits = []; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
+  /* section widths: About, then the projects (the lead bay and the three-frame bays are widest). Desktop bays carry WX more
+     on the left for the wall label (2026-11-23), and the frame bays a little more on the right, where the label goes in a case;
+     the About bay is WX narrower, so the first shot still frames the About sign and the whole lead screen */
+  var WX = m ? 0 : 1.15;
+  var BW = [6.4 - WX].concat(P.map(function(p, i){ return m ? (i === 0 || p.items ? 8.0 : 6.6) : (i === 0 || p.items ? 9.0 : 7.6) + WX + (p.items ? .5 : 0); })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
+  var SL = m ? .5 : 1.6 + WX;   /* screen's left edge from the bay's left divider (desktop: the wall label hangs in that gap, the stand in front of it) */
+  st.box(x1 - x0 + .3, 6.4, .3, M.wall, (x0 + x1)/2, 3.2, -.15); st.sunSpan(x0, x1);
+  /* bay dividers: the visible wall only receives shadows. r128 draws back faces into the shadow map, so the divider's own
+     shadow-side face sat within a texel of the back wall and floor and a lit band leaked along the joins; an invisible
+     caster (front faces only) inset .1 on the lit sides (sun at -x, +y, +z) and running .3 into the wall and floor casts instead */
+  var SHM = new T.MeshBasicMaterial({colorWrite:false, depthWrite:false}); SHM.shadowSide = T.FrontSide;
+  function divider(x){
+    st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0).castShadow = false;
+    st.box(.2, 3.5, 2.2, SHM, x + .05, 1.45, .8).receiveShadow = false;
+  }
+  var x = x0, hits = []; divider(x);
   /* every bay has a stand (the player-start pad). On desktop it sits left of the screen, where the guide stands on the
      project page's low shot, so the two line up; the guide talks from its spot on the right. It steps onto the stand
      only when it walks in from off screen (coming back from a project page), then walks over to its spot */
-  function standAt(z, l){ var q = m ? {x:z.x + .45, z:z.z - .8} : {x:l + .8, z:z.z}; GB.stand(T, st.S, q.x, q.z); return q; }
+  function standAt(z, l, s){ var q = m ? {x:z.x + .45, z:z.z - .8} : {x:s ? l + SL - 1.0 : l + .8, z:z.z}; GB.stand(T, st.S, q.x, q.z); return q; }
   var secs = BW.map(function(bw, s){
-    var l = x, cx = x + bw/2; x += bw; st.box(.3, 3.3, 2.0, M.wall, x, 1.65, 1.0);
-    var zone = {x:l + bw - (s ? 1.35 : .62), z:1.6};            /* where the guide stands on desktop (About: clear of the sign) */
+    var l = x, cx = x + bw/2; x += bw; divider(x);
+    var zone = {x:l + bw - (s ? 1.35 : .5), z:1.6};             /* where the guide stands on desktop (About: clear of the sign) */
     if (m) zone = {x:s ? cx - 1.35 : cx - .95, z:s ? 3.6 : 4.9}; /* phone: front left, in from the edge */
     if (s === 0){
       var sign = el('div', 'pin sign', '<span class="k">About</span><p class="ab-lead">' + H.lead + '</p>' + (m ? '' : '<p class="ab-txt">' + H.about + '</p>')); host.appendChild(sign);
       st.pin(sign, new T.Vector3(m ? cx : l + .28, m ? 3.5 : 3.3, .05), m ? .5 : 0, 0, {clamp:false});
-      return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l)};
+      return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, 0)};
     }
     var i = s - 1, p = P[i], scr3 = [], sc, sw, sy, scx;
     if (p.items){
@@ -201,7 +229,7 @@ function buildDolly(start){
         var lab = el('span', 'pin tl', it.t), lv = new T.Vector3(); lab.setAttribute('aria-hidden', 'true'); host.appendChild(lab);
         /* follows its screen (the case view swaps the University screens round) */
         st.pin(lab, null, 0, 0, {clamp:false, get:function(){ var sc = g.scale.x; return lv.set(g.position.x - (w*sc)/2 - .08, g.position.y - (g.userData.h*sc)/2 - .1, .05); }});
-        scr3.push({sc:g, scx:px, sy:py, sw:w});
+        scr3.push({sc:g, scx:px, sy:py, sw:w, lab:lab});
       });
       sc = scr3[0].sc;
     } else {
@@ -212,41 +240,93 @@ function buildDolly(start){
     st.box(sw*.6, .3, .5, i ? M.prop : M.lead, scx, .15, 1.0);
     var tp = el('button', 'pin tp' + (i ? '' : ' lead'), '<span class="rt">' + p.t + '</span><span class="rs">' + (m ? p.subM : p.sub) + '</span>');
     tp.tabIndex = -1; tp.setAttribute('aria-hidden', 'true'); host.appendChild(tp);
-    st.pin(tp, new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05), 0, 1, {clamp:false});
+    var tpv = new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05); st.pin(tp, tpv, 0, 1, {clamp:false});
     tp.addEventListener('click', function(){ act(s); });
     scr3.forEach(function(o, k){ o.sc.userData.hit = {s:s, k:k}; hits.push(o.sc); });
-    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l), sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, i:i, scr:scr3};
+    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, s), sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, tpv:tpv, i:i, scr:scr3};
   });
   /* the guide: capsule + speech bubble */
   var plr = capsule(T, M.white, 1.1), body = plr.userData.body; plr.position.set(secs[0].zone.x, .02, secs[0].zone.z); st.S.add(plr);
   var bub = el('div', 'pin bub' + (m ? ' side' : ''), ''); bub.id = 'guide-bubble'; host.appendChild(bub);
   /* motion on the wall: the selected screen's clip plays in an HTML layer pinned over the still texture */
   var ov = el('div', 'pin vov', ''); ov.setAttribute('aria-hidden', 'true'); ov.hidden = true; host.insertBefore(ov, host.querySelector('.pin'));
-  var ovS = -1, ovK = 0, ovSrc = '', cn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
+  var ovS = -1, ovK = 0, cn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
   st.pin(ov, null, 0, 0, {rect:function(proj){
     var o = secs[ovS]; if (!o) return; var tg = o.scr[ovK], u = tg.sc.userData, k = tg.sc.scale.x, a0 = tg.scx - u.iw*k/2, a1 = tg.scx + u.iw*k/2, y0 = tg.sy - u.ih*k/2, y1 = tg.sy + u.ih*k/2;
     cn[0].set(a0, y0, .035); cn[1].set(a1, y0, .035); cn[2].set(a0, y1, .035); cn[3].set(a1, y1, .035);
     var ps = cn.map(proj), lx = Math.min.apply(null, ps.map(function(q){ return q[0]; })), rx = Math.max.apply(null, ps.map(function(q){ return q[0]; })), ty = Math.min.apply(null, ps.map(function(q){ return q[1]; })), by = Math.max.apply(null, ps.map(function(q){ return q[1]; }));
     ov.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'; ov.style.width = (rx - lx).toFixed(1) + 'px'; ov.style.height = (by - ty).toFixed(1) + 'px';
   }});
-  /* clips load only when their section is selected; University: the clip of the game that is big (the case may have swapped them) */
+  /* section s's clip and the frame it plays in (an items bay: the game that is big; the case may have swapped them) */
+  function clipOf(s){
+    var p = s > 0 ? P[s - 1] : null, k = p && p.items && secs[s].order ? secs[s].order.indexOf(0) : 0, c = p && p.items ? p.items[k] : p;
+    return c && c.clip ? {c:c, k:k} : null;
+  }
+  /* the selected section's clip; its <video> comes from the clip cache (GB.clip), so a section you come back to resumes at once.
+     The overlay stays invisible (.wait) until the video has a frame, so the still shows instead of a black box */
   function showOv(s){
-    var p = s > 0 ? P[s - 1] : null, k = p && p.items && secs[s].order ? secs[s].order.indexOf(0) : 0, c = p && p.items ? p.items[k] : p, src = c && !RM ? c.clip : '';
-    if (!src){ hideOv(); return; }
-    if (src !== ovSrc){ ovSrc = src; ov.classList.toggle('px', !!c.px); ov.innerHTML = '<video src="' + src + '" poster="' + c.img + '" muted loop playsinline autoplay preload="auto" disablepictureinpicture></video>'; }
-    ovS = s; ovK = k; ov.hidden = false;
-    var v = ov.querySelector('video'); if (v){ v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
+    var q = RM ? null : clipOf(s); if (!q){ hideOv(); return; }
+    var c = q.c, v = ov.querySelector('video'), fresh = ov.hidden || !v || v.getAttribute('src') !== c.clip;
+    if (!v || v.getAttribute('src') !== c.clip){ v = GB.clip(c.clip, c.img); GB.clipPut(ov, v); ov.classList.toggle('px', !!c.px); }
+    if (fresh) GB.clipGate(ov, v);
+    ovS = s; ovK = q.k; ov.hidden = false;
+    v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){});
+    /* once it plays, pre-warm the neighbours' clips (paused, preloading), so arriving there shows motion straight away */
+    function warm(){ if (ovS !== s) return; [s - 1, s + 1].forEach(function(j){ var w = j > 0 && j < secs.length && clipOf(j); if (w) GB.clip(w.c.clip, w.c.img); }); }
+    if (!v.paused && v.readyState >= 3) warm(); else v.addEventListener('playing', warm, {once:true});
   }
   function hideOv(){ ov.hidden = true; ovS = -1; var v = ov.querySelector('video'); if (v) v.pause(); }
   var head = new T.Vector3();
-  st.pin(bub, null, m ? 0 : .5, m ? .05 : 1, {get:function(){ head.set(plr.position.x + (m ? .38 : 0), m ? .7 : 1.42, plr.position.z); return head; }, dy:m ? 0 : -6, dx:m ? 8 : 0});
+  var bubPin = st.pin(bub, null, m ? 0 : .5, m ? .05 : 1, {get:function(){ head.set(plr.position.x + (m ? .38 : 0), m ? .7 : 1.42, plr.position.z); return head; }, dy:m ? 0 : -6, dx:m ? 8 : 0});
+  /* an items bay opens the game in its big frame (the case may have swapped them round) */
+  function bigK(s){ return secs[s] && secs[s].order ? secs[s].order.indexOf(0) : 0; }
   function say(s, announce){
-    bub.innerHTML = bubHTML(s - 1, m);
-    var ob = bub.querySelector('.openb'); if (ob) ob.addEventListener('click', function(e){ e.preventDefault(); open(s, 0); });
-    bub.querySelectorAll('.itb').forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(s, +b.getAttribute('data-k')); }); });
-    bub.hidden = false; if (!RM) restart(bub);
+    bub.innerHTML = bubHTML(s - 1, m); bub.classList.toggle('sm', s > 0);
+    /* desktop About: the (narrower) bay puts the guide near the sign, so its bubble opens to the right, over the next bay's empty wall */
+    bub.classList.toggle('abr', !m && !s); bubPin.ax = !m && !s ? .1 : m ? 0 : .5;
+    var ob = bub.querySelector('.openb'), p = P[s - 1];
+    if (ob){ if (p.items) ob.href = p.items[bigK(s)].href; ob.addEventListener('click', function(e){ e.preventDefault(); open(s, bigK(s)); }); }
+    bub.hidden = false; fitSum(); if (!RM) restart(bub);
     if (announce) live.textContent = s ? P[s - 1].t : 'About';
   }
+  /* the summary scrolls inside when the bubble would not fit above the guide (desktop), or past ~60% of the stage (phone: the screen
+     stays in view): Learn more always shows */
+  function fitSum(){
+    var sm = bub.querySelector('.sum'); if (!sm) return;
+    sm.style.maxHeight = ''; sm.scrollTop = 0;
+    var room = m ? Math.round(c.h*.62) : (st.proj(head.set(plr.position.x, 1.42, plr.position.z))[1] - 16)/c.k, over = bub.offsetHeight - room;
+    if (over > 0) sm.style.maxHeight = Math.max(54, sm.offsetHeight - over) + 'px';
+  }
+
+  /* the wall label (a museum caption; desktop only, user 2026-11-23): in the gallery it hangs on the wall left of the
+     selected screen, above the stand, with the section's facts and stack. In a case (js/case.js) it hangs right of the
+     frames and carries the current part's stat chips (no slide between the two: user, 2026-11-23).
+     W.t: 0 = gallery side (left), 1 = case side (right) */
+  var wl = null, W = {s:-1, t:0, tok:0, html:''}, wv = new T.Vector3(), WLW = c.w < 820 ? 160 : 190;
+  if (!m){
+    wl = el('aside', 'pin wl', '<div class="wl-in"></div>'); wl.id = 'wall-label'; wl.setAttribute('aria-label', 'Notes'); wl.hidden = true;
+    wl.style.width = WLW + 'px'; host.appendChild(wl);
+    st.pin(wl, null, 0, 0, {rect:function(proj){
+      var o = secs[W.s]; if (!o || !o.scr) return;
+      var k = c.k, lw = wl.offsetWidth*k, top = o.sy + o.sw/(16/9)/2;
+      var right = Math.max.apply(null, o.scr.map(function(q){ return q.scx + q.sw/2; }));
+      var L = proj(wv.set(o.scx - o.sw/2 - .4, top, .05)), R = proj(wv.set(right + .4, top, .05));
+      var x = W.t ? R[0] : L[0] - lw, y = W.t ? R[1] : L[1];
+      wl.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)' + (k < 1 ? ' scale(' + k.toFixed(3) + ')' : '');
+    }});
+  }
+  /* new content cross-fades ('' fades it out) */
+  function wlSet(html){
+    if (!wl || (html === W.html && wl.hidden === !html)) return;
+    W.html = html; var tok = ++W.tok;
+    function put(){ if (tok !== W.tok) return; wl.firstChild.innerHTML = html; wl.hidden = !html; if (html){ st.render(); void wl.offsetWidth; wl.classList.remove('fade'); } }
+    if (RM || wl.hidden){ wl.classList.add('fade'); put(); return; }
+    wl.classList.add('fade'); setTimeout(put, 160);
+  }
+  function wlHide(){ if (!wl) return; W.tok++; W.html = ''; wl.hidden = true; }
+  function wlAt(s, t){ if (!wl) return; W.s = s; W.t = t; st.render(); }
+  /* the gallery: the selected section's label, on its left */
+  function wlShow(s){ if (!wl) return; wlAt(s, 0); wlSet(s > 0 ? wlHTML(s - 1) : ''); }
   /* camera stops: section centres, except the first shot on desktop, which frames the About sign and the whole lead screen */
   var sx = secs.map(function(o){ return o.cx; }), N = sx.length;
   if (!m) sx[0] = ((secs[0].l + .2) + (secs[1].scx + secs[1].sw/2 + .3))/2;
@@ -287,17 +367,17 @@ function buildDolly(start){
         body.position.y = y0*(1 - e); body.rotation.x = x0*(1 - e); st.render();
       });
     } else { body.position.y = 0; body.rotation.x = 0; face(); }
-    at = s; say(s, announce); showOv(s); st.render();
+    at = s; say(s, announce); wlShow(s); showOv(s); st.render();
   }
   function select(s, anim, announce, soft){
     G.sel = s; setRove(keyEls, s);
-    keyEls.forEach(function(kk, j){ if (j === s) kk.setAttribute('aria-describedby', bub.id); else kk.removeAttribute('aria-describedby'); });
+    keyEls.forEach(function(kk, j){ if (j === s) kk.setAttribute('aria-describedby', bub.id + (wl && s ? ' ' + wl.id : '')); else kk.removeAttribute('aria-describedby'); });
     secs.forEach(function(o, j){ if (o.tp){ o.tp.classList.toggle('on', j === s); o.sc.userData.sel.visible = j === s; } });
     clock.kill(tw); clock.kill(walk);
     var from = camX, to = sx[s], a = {x:plr.position.x, z:plr.position.z}, b = secs[s].zone;
     if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce, soft); return; }
     var dur = clamp(Math.abs(to - from)/9, .4, .9);
-    bub.hidden = true; hideOv();
+    bub.hidden = true; wlHide(); hideOv();
     tw = clock.add(dur, function(p){ put(lerp(from, to, eio(p))); st.render(); });
     var rt = route(a, b);
     if (rt.tot < .01){ plr.position.set(b.x, .02, b.z); walk = clock.add(dur, function(){}, function(){ arrive(s, announce); }); return; }
@@ -311,7 +391,7 @@ function buildDolly(start){
       st.render();
     }, function(){ arrive(s, announce, true); });
   }
-  function act(s){ if (busy) return; if (G.sel === s && at === s && Math.abs(camX - sx[s]) < .05){ if (s > 0) open(s, 0); } else select(s, true, true); }
+  function act(s){ if (busy) return; if (G.sel === s && at === s && Math.abs(camX - sx[s]) < .05){ if (s > 0) open(s, bigK(s)); } else select(s, true, true); }
   function pushTarget(s, k){
     var tg = secs[s].scr[k || 0], half = Math.tan(c.fov*Math.PI/360), asp = c.w/c.h, sh = tg.sw/(16/9);
     var d = Math.max((sh/2 + .12)/half, (tg.sw/2 + .12)/(half*asp));
@@ -353,7 +433,7 @@ function buildDolly(start){
   function pullBack(s){
     var pp = pushed || pushTarget(s, 0), pd = secs[s].pad; pushed = null;
     if (RM){ busy = false; select(s, false); return; }
-    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv();
+    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; wlHide(); hideOv();
     var to = sx[s], p2 = new T.Vector3(to + c.off, c.y, c.z), l2 = new T.Vector3(to, c.ly, 0), tpv = new T.Vector3(), tl = new T.Vector3();
     var zw = m ? pd.z : ZOUT, a = {x:to - (m ? 3.2 : 6.5), z:zw}, rt = {segs:[], tot:0};
     [a, {x:pd.x, z:zw}, pd].reduce(function(u, v){ var d = Math.hypot(v.x - u.x, v.z - u.z); if (d > 1e-4){ rt.segs.push({a:u, b:v, d:d, s:rt.tot}); rt.tot += d; } return v; });
@@ -374,7 +454,7 @@ function buildDolly(start){
   /* with a case open the stage doesn't scrub, but clicks still reach it (a small University screen becomes the big one) */
   var inCase = function(){ return !!(G.cs && G.cs.on()); }, drag = false;
   dragX(host, function(){ return busy; },
-    function(){ drag = !inCase(); if (!drag) return; clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); dx0 = camX; },
+    function(){ drag = !inCase(); if (!drag) return; clock.kill(tw); clock.kill(walk); bub.hidden = true; wlHide(); hideOv(); dx0 = camX; },
     function(dx){ if (!drag) return; put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); },
     function(){ if (drag) snap(); },
     /* clicking a capture opens its page, the same way as Learn more */
@@ -383,14 +463,15 @@ function buildDolly(start){
   var wt = 0;
   host.addEventListener('wheel', function(e){
     var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy || (G.cs && G.cs.on())) return;
-    e.preventDefault(); clock.kill(tw); clock.kill(walk); bub.hidden = true; hideOv(); put(clamp(camX + dd/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); clearTimeout(wt); wt = setTimeout(snap, 180);
+    e.preventDefault(); clock.kill(tw); clock.kill(walk); bub.hidden = true; wlHide(); hideOv(); put(clamp(camX + dd/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); clearTimeout(wt); wt = setTimeout(snap, 180);
   }, {passive:false});
   keyEls.forEach(function(kk, s){ kk.addEventListener('click', function(){ act(s); }); });
   rove(keyEls, function(j){ select(j, true, true); });
 
   G.cs = window.CaseMode ? window.CaseMode({st:st, T:T, M:M, clock:clock, host:host, home:home, m:m, c:c, P:P, secs:secs, sx:sx, plr:plr, body:body,
     live:live, gbub:bub, keys:home.querySelector('.keys:not(.ckeys)'), ckeys:home.querySelector('.ckeys'), cmb:home.querySelector('.cmb'), keyEls:keyEls,
-    ZOUT:ZOUT, RM:RM, hideOv:hideOv, pushTarget:pushTarget, standToSpot:standToSpot,
+    ZOUT:ZOUT, RM:RM, hideOv:hideOv,
+    wl:{on:!!wl, set:wlSet, at:wlAt, gallery:function(s){ return wlHTML(s - 1); }, w:WLW*c.k}, pushTarget:pushTarget, standToSpot:standToSpot,
     setBusy:function(v){ busy = v; }, busy:function(){ return busy; },
     galleryShot:function(s){ return {p:new T.Vector3(sx[s] + c.off, c.y, c.z), l:new T.Vector3(sx[s], c.ly, 0)}; },
     atGallery:function(s){ camX = sx[s]; put(sx[s]); },
@@ -407,7 +488,7 @@ function buildDolly(start){
   }
 
   G.api = {
-    dispose:function(){ if (G.cs) G.cs.dispose(); clock.killAll(); hideOv(); ov.innerHTML = ''; st.dispose(); },
+    dispose:function(){ if (G.cs) G.cs.dispose(); clock.killAll(); hideOv(); GB.clipPut(ov, null); st.dispose(); },
     caseState:function(){ return G.cs && G.cs.on() ? G.cs.state() : null; },
     /* bfcache: coming back with the camera still pushed into a screen */
     pageshow:function(){ if (pushed){ var s = pushed.s; busy = false; pullBack(s); keyEls[s].focus({preventScroll:true}); } }

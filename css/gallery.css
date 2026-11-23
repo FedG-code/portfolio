@@ -2,7 +2,7 @@
    Engine-debug greybox: green only for colliders and triggers, orange only for selection. */
 :root{
   --p:#ECEEE8; --p2:#F8F9F6; --ink:#15181B; --mut:#59605A; --ln:#C2C7BF; --link:#0B7A2E;
-  --sig:#0E7F31;            /* signal green on paper: selection bars, outlines, underlines, playhead (4.4:1) */
+  --sig:#2BD957;            /* signal green on paper: selection bars, list markers, playhead; the same bright green as the debug marks (user, 2026-11-23; was #0E7F31). Text stays --link */
   --sig-hi:#2BD957;         /* signal green on ink / the dark chip */
   --col:#2BD957;            /* debug marks (collider / trigger outlines + mono chips) */
   --chip:#101315;
@@ -94,11 +94,11 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .st.over{cursor:pointer}
 .pv-view.go{cursor:pointer}
 .pin{position:absolute !important; left:0; top:0; z-index:2; transform-origin:0 0}
-.tp{display:grid; gap:1px; padding:5px 9px 6px; background:rgba(248,249,246,.93); border-left:3px solid transparent; box-shadow:0 1px 0 rgba(21,24,27,.3)}
+.tp{display:grid; gap:1px; padding:5px 9px 6px; background:rgba(248,249,246,.93); box-shadow:0 1px 0 rgba(21,24,27,.3)}
 .tp .rt{font-size:19px}
 .tp.lead .rt{font-size:27px}
 .tp .rs{grid-column:auto; margin-top:0; font-size:12px; white-space:nowrap}
-.tp.on{border-left-color:var(--sig); background:var(--p2)}
+.tp.on{background:var(--p2)}
 .sign{width:330px; background:var(--p2); border:1.5px solid var(--ink); padding:14px 16px 15px; display:grid; gap:7px; box-shadow:0 2px 0 rgba(21,24,27,.22)}
 .sign .ab-lead{font-size:19px; line-height:1.28}
 .sign .ab-txt{font-size:13px; line-height:1.5}
@@ -108,6 +108,7 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 /* the guide's speech bubble */
 .bub{width:215px; background:var(--p2); border:1.5px solid var(--ink); display:grid; box-shadow:0 2px 0 rgba(21,24,27,.22)}
 .bub::after{content:""; position:absolute; left:calc(50% - 8px); bottom:-9px; width:14px; height:14px; background:var(--p2); border-right:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); transform:rotate(45deg)}
+.bub.abr::after{left:calc(10% - 7px)}
 .bub.side::after{left:-9px; bottom:auto; top:calc(12% - 8px); border:0; border-left:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink)}
 .bub ul{margin:0; padding:9px 12px 4px 26px; display:grid; gap:4px; font-size:12.5px; line-height:1.35}
 .bub li::marker{color:var(--sig)}
@@ -115,20 +116,34 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .bub .bs{padding:2px 12px 8px; font-size:11.5px; color:var(--mut)}
 .bub .bs span{font:500 10.5px/1 var(--fm)}
 .bub .bt.ab-say{font-weight:400; font-size:12.5px; line-height:1.45; padding-bottom:6px}
-.bub ul.its{list-style:none; padding:0; gap:0}
-.its .itb{display:flex; width:100%; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 12px; font-size:12.5px; font-weight:600; text-decoration:none}
-.its li + li .itb{border-top:1px solid var(--ln)}
-.its .itb:hover{background:var(--p)}
-.its .it-o{font:500 10.5px/1 var(--fm); white-space:nowrap}
-.its .it-o span{color:var(--sig)}
+/* a section's summary (the project page's intro): it scrolls inside when the bubble would not fit, Learn more always shows */
+.bub.sm{width:240px}
+.bub .sum{padding:10px 12px 11px; font-size:12.5px; line-height:1.45; overflow:auto; overscroll-behavior:contain}
+.bub .sum a{color:var(--link); font-weight:600}
 .openb{position:relative; z-index:1; font-size:13px; font-weight:700; padding:7px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--ink); color:var(--p2); white-space:nowrap; text-decoration:none}
 .openb span{color:var(--sig-hi)}
 .openb:hover{background:#2A2F33}
+/* the wall label beside the screen (desktop): a museum caption, paper on the wall. Gallery: facts + stack; case: the part's stat chips */
+.wl{background:var(--p2); padding:10px 12px 10px; font-size:12px; line-height:1.38; box-shadow:0 1px 0 rgba(21,24,27,.3); transition:opacity .16s ease}
+.wl.fade{opacity:0}
+.wl ul{margin:0; padding:0 0 0 14px; display:grid; gap:5px; list-style:square}
+.wl li::marker{color:var(--sig)}
+.wl-st{margin-top:9px; padding-top:7px; border-top:1px solid var(--ln); font-size:11.5px; color:var(--mut)}
+.wl-st:first-child{margin-top:0; padding-top:0; border-top:0}
+.wl-st span{display:block; margin-bottom:2px; font:500 10px/1.2 var(--fm); color:var(--ink)}
+.wl-k{margin-bottom:7px; font:600 10.5px/1.25 var(--fm); color:var(--link)}
+.wl-ch{margin:0; display:grid; gap:6px}
+.wl-ch div + div{padding-top:6px; border-top:1px solid var(--ln)}
+.wl-ch dt{font-weight:800; font-stretch:115%; font-size:22px; line-height:1.05}
+.wl-ch dd{margin:2px 0 0; font:500 10.5px/1.2 var(--fm); color:var(--mut)}
 .bub.anim{animation:bubIn .22s cubic-bezier(.3,1.5,.6,1) both}
 @keyframes bubIn{from{opacity:0; scale:.85} to{opacity:1; scale:1}}
 
 /* motion overlay pinned over the selected screen */
 .vov{overflow:hidden; pointer-events:none; background:#000; z-index:1 !important}
+/* a new clip stays invisible until its video has a frame (js: GB.clipGate), then fades in; hiding is instant */
+.vov{transition:opacity .15s}
+.vov.wait{opacity:0; transition:none}
 .vov img, .vov video{display:block; width:100%; height:100%; object-fit:fill}
 
 /* ---- shot list (keyboard route) ---- */
@@ -208,6 +223,8 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
   .tb > :nth-child(n+3){border-top:1px solid var(--ink)}
   .tb > :nth-child(3){border-left:0}
   .tb > :nth-child(4){border-left:1px solid var(--ink)}
+  /* narrow desktop stages: pinned HTML stops shrinking at k 0.72, so the sign narrows to leave the guide room beside it */
+  .sign{width:285px}
 }
 
 /* ---- phone (the gallery switches to its phone shot below 640px) ---- */
@@ -238,9 +255,9 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
   .tp .rs{font-size:10.5px}
   .sign{width:300px; padding:10px 12px 11px; gap:5px}
   .sign .ab-lead{font-size:15px}
-  .bub{width:205px}
+  .bub, .bub.sm{width:205px}
   .bub ul{font-size:11.5px; padding:7px 10px 3px 22px}
-  .its .itb{font-size:11.5px; padding:7px 10px}
+  .bub .sum{font-size:12px; padding:8px 10px 9px}
   .tl{font-size:8.5px; padding:2px 4px 3px}
   .keys{grid-template-columns:1fr 1fr}
   .ckeys{grid-template-columns:none; grid-auto-columns:minmax(124px, 46%)}
@@ -257,5 +274,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 
 @media (prefers-reduced-motion: reduce){
   .bub.anim, .pv-mk.anim > *{animation:none}
+  .wl{transition:none}
   .row{transition:none}
 }

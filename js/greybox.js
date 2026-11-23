@@ -20,6 +20,9 @@ function phURL(label){
 
 /* ------------------------------ clock: on-demand tweens ------------------------------ */
 function Clock(){ this.tw = []; this.raf = 0; this.last = 0; }
+/* while a Clock tick runs its tweens, Stage.render() places the pins at once but leaves the WebGL draw to the end of the
+   tick: several tweens at once (camera, guide, wall label) used to draw the whole scene once each, every frame */
+var ticking = 0, pendDraw = [];
 Clock.prototype.add = function(dur, fn, done){
   if (RM || dur <= 0){ fn(1); if (done) done(); return null; }
   var t = {e:0, dur:dur, fn:fn, done:done, dead:false}; this.tw.push(t); this.run(); return t;
@@ -30,10 +33,13 @@ Clock.prototype.run = function(){
   var self = this; if (self.raf) return; self.last = performance.now();
   function loop(now){
     var dt = Math.min(0.05, (now - self.last) / 1000); self.last = now; self.raf = 0;
-    var list = self.tw.slice();
-    for (var i = 0; i < list.length; i++){ var t = list[i]; if (t.dead) continue; t.e += dt; var p = Math.min(1, t.e / t.dur); t.fn(p); if (p >= 1){ t.dead = true; if (t.done) t.done(); } }
+    var list = self.tw.slice(); ticking++;
+    try { for (var i = 0; i < list.length; i++){ var t = list[i]; if (t.dead) continue; t.e += dt; var p = Math.min(1, t.e / t.dur); t.fn(p); if (p >= 1){ t.dead = true; if (t.done) t.done(); } } }
+    finally { ticking--; if (!ticking){ var pd = pendDraw; pendDraw = []; pd.forEach(function(f){ f(); }); } }
     self.tw = self.tw.filter(function(t){ return !t.dead; });
-    if (self.tw.length) self.raf = requestAnimationFrame(loop);
+    /* one chain only: a tween added during the tick (a done() starting the next move) has already asked for a frame
+       via run(); scheduling another here used to start a second loop, and every extra loop drew the scene again */
+    if (self.tw.length && !self.raf) self.raf = requestAnimationFrame(loop);
   }
   self.raf = requestAnimationFrame(loop);
 };
@@ -80,9 +86,16 @@ function Stage(host, w, h, o){
   var S = new T.Scene(), cam = new T.PerspectiveCamera(o.fov, w/h, .1, 400);
   S.add(new T.HemisphereLight(0xffffff, 0x7d837f, .75));
   var sun = new T.DirectionalLight(0xffffff, .62); sun.position.set(o.sun[0], o.sun[1], o.sun[2]);
-  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
-  var sc = sun.shadow.camera, b = o.sb; sc.left = -b; sc.right = b; sc.top = b; sc.bottom = -b; sc.near = .5; sc.far = 60; sun.shadow.bias = -.0008;
-  S.add(sun);
+  sun.castShadow = true; sun.shadow.mapSize.set(o.sm || 1024, o.sm || 1024);
+  var sc = sun.shadow.camera; sc.near = .5; sc.far = 60; sun.shadow.bias = -.0008;
+  S.add(sun); S.add(sun.target);
+  /* the sun's shadow box covers the wall from a to b (with 3 to spare), so the far bays get shadows too */
+  function sunSpan(a, b){
+    var cx = (a + b)/2, r = (b - a)/2 + 3;
+    sun.position.set(cx + o.sun[0], o.sun[1], o.sun[2]); sun.target.position.set(cx, 0, 0); sun.target.updateMatrixWorld();
+    sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.updateProjectionMatrix(); shK = NaN;
+  }
+  sunSpan(-o.sb + 3, o.sb - 3);   /* until the caller knows its wall: ±sb round x = 0 */
   var fs = o.fs, ft = gridTex(T, '#9AA09B', 'rgba(40,46,42,.18)', 'rgba(40,46,42,.32)'); ft.repeat.set(fs, fs);
   var floor = new T.Mesh(new T.PlaneGeometry(fs, fs), new T.MeshLambertMaterial({map:ft}));
   floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; S.add(floor);
@@ -105,8 +118,24 @@ function Stage(host, w, h, o){
   }
   /* a new stage size on the same renderer (phone case view: a shorter stage) */
   function resize(nw, nh){ w = nw; h = nh; R.setSize(nw, nh); cam.aspect = nw/nh; cam.updateProjectionMatrix(); render(); }
-  function render(){ if (dead) return; if (q){ cancelAnimationFrame(q); q = 0; } R.render(S, cam); placePins(); }
-  function later(){ if (q || dead) return; q = requestAnimationFrame(function(){ q = 0; if (!dead){ R.render(S, cam); placePins(); } }); }
+  /* the shadow map is drawn only when a caster has moved (the guide walking, frames rotating), not for camera moves or
+     clips: a key over the casters' world matrices decides. It keeps the 2048 map cheap where rendering is slow */
+  R.shadowMap.autoUpdate = false;
+  var shK = NaN;
+  function draw(){
+    S.updateMatrixWorld(); var k = 0, n = 0;
+    S.traverseVisible(function(o){ if (!o.castShadow) return; var e = o.matrixWorld.elements; n++; k += n*(e[0] + 2*e[1] + 3*e[2] + 5*e[5] + 7*e[10]) + e[12]*1.31 + e[13]*1.73 + e[14]*2.07; });
+    if (k !== shK){ shK = k; R.shadowMap.needsUpdate = true; }
+    R.render(S, cam);
+  }
+  var pend = false;
+  function flush(){ pend = false; if (!dead){ draw(); placePins(); } }
+  function render(){
+    if (dead) return; if (q){ cancelAnimationFrame(q); q = 0; }
+    if (ticking){ placePins(); if (!pend){ pend = true; pendDraw.push(flush); } return; }
+    draw(); placePins();
+  }
+  function later(){ if (q || dead) return; q = requestAnimationFrame(function(){ q = 0; if (!dead){ draw(); placePins(); } }); }
   function box(sx, sy, sz, mat, x, y, z, parent){ var mm = new T.Mesh(new T.BoxGeometry(sx, sy, sz), mat); mm.position.set(x, y, z); mm.castShadow = true; mm.receiveShadow = true; (parent || S).add(mm); return mm; }
   function tex(src, px){
     var key = src + (px ? '#px' : '');
@@ -143,9 +172,9 @@ function Stage(host, w, h, o){
   function dispose(){
     dead = true; if (q) cancelAnimationFrame(q);
     S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
-    ft.dispose();
+    ft.dispose(); if (sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; }
   }
-  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, pin:pin, pick:pick, dispose:dispose};
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, pin:pin, pick:pick, sunSpan:sunSpan, dispose:dispose};
 }
 function capsule(T, mat, s){
   var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;
@@ -182,6 +211,66 @@ function stand(T, S, x, z){
   return g;
 }
 
+/* ---- clips on the wall (gallery overlay, case overlays): the <video>s are kept alive by src and moved between overlays
+   instead of rebuilt, so a clip coming back resumes at once and a pre-warmed one has its frame ready. Up to CMAX;
+   a spare one waits, paused, in a 1px holder (still in the document, so it keeps its frame and keeps loading).
+   Eviction (least recently used, never one showing) drops the src and load()s, which frees the decoder.
+   START[src]: a clip that starts at its poster's moment (University: the poster is a frame from the middle). ---- */
+var CMAX = 5, clipC = [], START = {}, holder = null, tick = 0, gateN = 0;
+function hold(){
+  if (!holder || !holder.isConnected){
+    holder = el('div', 'vhold', ''); holder.setAttribute('aria-hidden', 'true');
+    holder.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+    document.body.appendChild(holder);
+  }
+  return holder;
+}
+function showing(v){ var o = v.parentNode; return !!o && o !== holder && !o.hidden; }
+/* the cached <video> for src (made paused in the holder if new: preload=auto, or with controls and preload=none for reduced motion) */
+function clip(src, poster, rm){
+  var e = null; clipC.forEach(function(q){ if (q.src === src) e = q; });
+  if (!e){
+    var v = document.createElement('video'), s = START[src] || 0;
+    ['muted', 'loop', 'playsinline', 'disablepictureinpicture'].forEach(function(a){ v.setAttribute(a, ''); });
+    v.muted = true; v.preload = rm ? 'none' : 'auto'; if (rm) v.controls = true;
+    v.setAttribute('poster', poster); v.setAttribute('src', src);
+    if (s){ v.currentTime = s; v.addEventListener('loadedmetadata', function(){ if (!v.__at && v.currentTime < s - .05) v.currentTime = s; }, {once:true}); }
+    e = {src:src, v:v}; clipC.push(e); hold().appendChild(v);
+  }
+  e.t = ++tick;
+  while (clipC.length > CMAX){
+    var old = null; clipC.forEach(function(q){ if (q !== e && !showing(q.v) && (!old || q.t < old.t)) old = q; });
+    if (!old) break;
+    clipC.splice(clipC.indexOf(old), 1); old.v.pause(); old.v.removeAttribute('src'); old.v.load(); old.v.remove();
+  }
+  return e.v;
+}
+/* overlay o shows v (or nothing): its other cached videos go back to the holder, paused; anything else is removed */
+function clipPut(o, v){
+  [].slice.call(o.childNodes).forEach(function(n){
+    if (n === v) return;
+    if (n.tagName === 'VIDEO' && clipC.some(function(q){ return q.v === n; })){ n.pause(); hold().appendChild(n); } else o.removeChild(n);
+  });
+  if (v && v.parentNode !== o) o.appendChild(v);
+}
+/* o stays invisible (.wait: opacity 0, so no black box) until v has a frame to show (readyState >= 2, not seeking), and
+   on the first play one at its START; a video that already has one shows at once. Checked on the video's events and on
+   requestVideoFrameCallback, whichever comes first (rVFC alone waits on the compositor, which may skip an invisible layer) */
+function clipGate(o, v){
+  var n = o.__g = ++gateN, s = START[v.getAttribute('src')] || 0, evs = ['loadeddata', 'seeked', 'playing', 'timeupdate'];
+  function ready(){ return v.readyState >= 2 && !v.seeking && (v.__at || !s || v.currentTime >= s - .25); }
+  function off(){ evs.forEach(function(e){ v.removeEventListener(e, ok); }); }
+  function ok(){
+    if (o.__g !== n || v.parentNode !== o){ off(); return; }
+    if (!ready()) return;
+    off(); v.__at = true; o.classList.remove('wait');
+  }
+  if (ready()){ v.__at = true; o.classList.remove('wait'); return; }
+  o.classList.add('wait'); evs.forEach(function(e){ v.addEventListener(e, ok); });
+  if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(ok);
+}
+
 window.Greybox = {RM:RM, Clock:Clock, eio:eio, lerp:lerp, clamp:clamp, lerpA:lerpA, steer:steer, el:el, restart:restart, phURL:phURL,
-  renderer:renderer, glOK:function(){ return glOK; }, gridTex:gridTex, Stage:Stage, capsule:capsule, stand:stand, STAND_H:STAND_H, dragX:dragX};
+  renderer:renderer, glOK:function(){ return glOK; }, gridTex:gridTex, Stage:Stage, capsule:capsule, stand:stand, STAND_H:STAND_H, dragX:dragX,
+  START:START, clip:clip, clipPut:clipPut, clipGate:clipGate};
 })();

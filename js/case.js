@@ -31,12 +31,9 @@ function parse(doc, p){
   var secs = [].slice.call(doc.querySelectorAll('.project-section'));
   var mode = secs.filter(function(s){ return s.querySelector('.section-heading'); }).length > 1 ? 'h2' : 'h4';
   var itemOf = function(id){ var k = null; (p.items || []).forEach(function(it, j){ if (it.href.split('#')[1] === id) k = j; }); return k; };
-  var desc = doc.querySelector('.project-hero-desc');
-  /* the overview shows what the gallery screen showed, so the push in and the pull out are one shot; no intro on the page (University), no Overview part */
-  if (desc && desc.textContent.trim()){
-    groups.push({t:'Overview', start:0, item:null});
-    beats.push({g:0, h:'Overview', html:'<p>' + desc.innerHTML.trim() + '</p>', caps:[{img:p.img, clip:p.clip, px:p.px}], stats:null, links:[], yt:null, item:null});
-  }
+  /* no Overview part (user, 2026-11-23): the page's intro (.project-hero-desc) is the guide's summary in the gallery bubble
+     (P[].blurb) and stays on the plain page; the case starts at the first real section */
+  var ytPending = null;
   secs.forEach(function(sec){
     var h2 = sec.querySelector('.section-heading'), t2 = h2 ? h2.textContent.trim() : '', mine = [], links = [], caps = null, h4 = '', item = itemOf(sec.id);
     sec.querySelectorAll('.project-link').forEach(function(a){ links.push({href:a.getAttribute('href'), t:a.textContent.replace(/[→↗]/g, '').trim(), ext:a.target === '_blank'}); });
@@ -52,7 +49,7 @@ function parse(doc, p){
       function part(html){
         var gk = mode === 'h2' ? t2 : (h4 || t2);
         if (!groups.length || groups[groups.length - 1].t !== gk) groups.push({t:gk, start:beats.length, item:item});
-        last = {g:groups.length - 1, h:mode === 'h2' ? (h4 || t2) : gk, html:html, caps:caps, stats:null, links:links, yt:null, item:item};
+        last = {g:groups.length - 1, h:mode === 'h2' ? (h4 || t2) : gk, html:html, caps:caps, own:!!caps, stats:null, links:links, yt:null, item:item};
         beats.push(last); mine.push(last);
       }
       var prev = null;
@@ -71,10 +68,13 @@ function parse(doc, p){
         }
       });
     });
-    if (!mine.length){ pageLinks = pageLinks.concat(links); if (yt) beats[beats.length - 1].yt = yt; }
+    /* a section with no text (Eve's trailer) hands its links to every part and its trailer to the part before it, or the next one */
+    if (!mine.length){ pageLinks = pageLinks.concat(links); if (yt){ if (beats.length) beats[beats.length - 1].yt = yt; else ytPending = yt; } }
     else if (yt) mine[0].yt = yt;
+    if (ytPending && beats.length && !beats[0].yt){ beats[0].yt = ytPending; ytPending = null; }
   });
-  beats.forEach(function(b, i){ if (!b.caps) b.caps = beats[i - 1].caps; if (pageLinks.length) b.links = b.links.concat(pageLinks); });
+  /* a part with no capture of its own carries the one before it; the first falls back to the gallery capture */
+  beats.forEach(function(b, i){ if (!b.caps) b.caps = i ? beats[i - 1].caps : [{img:p.img, clip:p.clip, px:p.px}]; if (pageLinks.length) b.links = b.links.concat(pageLinks); });
   groups.forEach(function(g, i){ g.end = (i + 1 < groups.length ? groups[i + 1].start : beats.length) - 1; });
   return {beats:beats, groups:groups};
 }
@@ -82,8 +82,9 @@ function parse(doc, p){
 /* ------------------------------ the case mode ------------------------------ */
 window.CaseMode = function(X){
   var st = X.st, T = X.T, clock = X.clock, host = X.host, m = X.m, plr = X.plr, bd = X.body, RM = X.RM, H = GB.STAND_H;
-  var on = false, S = -1, p = null, sec = null, D = null, cur = 0, busy = false, dead = false, pushedState = false, trailerOn = false, tw = null;
+  var on = false, S = -1, p = null, sec = null, D = null, cur = 0, busy = false, dead = false, pushedState = false, trailerOn = false, tw = null, inT = [];
   var order = null, slots = null, split = false, mainScr = null, look = new T.Vector3();
+  var WL = X.wl || {on:false, set:function(){}, at:function(){}, gallery:function(){ return ''; }, w:0}, wlR = false;   /* wlR: the label is on the case side */
 
   /* UI: bubble, link tags, trailer button + player + close, two clip overlays */
   var bub = el('div', 'bub cbub', '<p class="h"><span class="bh"></span><span class="bp"></span></p><div class="t"></div><dl class="cstats" hidden></dl>' +
@@ -130,8 +131,14 @@ window.CaseMode = function(X){
   st.pin(play, null, 0, 0, {rect:function(proj){ if (!mainScr) return; var r = rectOf(mainScr, proj); play.style.transform = 'translate(' + (r.x + r.w/2 - play.offsetWidth/2).toFixed(1) + 'px,' + (r.y + r.h/2 - play.offsetHeight/2).toFixed(1) + 'px)'; }});
   st.pin(close, null, 0, 0, {rect:function(){ close.style.transform = 'translate(' + (X.c.w - close.offsetWidth - 10) + 'px,10px)'; }});
   st.pin(tags, null, 0, 0, {rect:function(proj){
-    if (!mainScr) return; var r = rectOf(mainScr, proj, split), tx = m ? Math.min(X.c.w - tags.offsetWidth - 8, r.x + r.w - tags.offsetWidth) : r.x;
-    tags.style.transform = 'translate(' + Math.max(8, tx).toFixed(1) + 'px,' + Math.min(X.c.h - tags.offsetHeight - 6, r.y + r.h + 10).toFixed(1) + 'px)';
+    if (!mainScr) return; var r = rectOf(mainScr, proj, split), tgw = tags.offsetWidth, tx = m ? Math.min(X.c.w - tgw - 8, r.x + r.w - tgw) : r.x, ty = r.y + r.h + 10;
+    /* frames: the big frame's name label sits at its bottom left; the tags go beside it, or a row lower when they don't fit (phone: still right-aligned) */
+    var lab = order && sec.scr[order.indexOf(0)].lab;
+    if (lab && !lab.hidden){
+      var hr = host.getBoundingClientRect(), lr = lab.getBoundingClientRect(), lx = lr.right - hr.left + 8;
+      if (tx < lx){ if (lx + tgw <= r.x + r.w + 4) tx = lx; else { if (!m) tx = r.x; ty = lr.bottom - hr.top + 6; } }
+    }
+    tags.style.transform = 'translate(' + Math.max(8, tx).toFixed(1) + 'px,' + Math.min(X.c.h - tags.offsetHeight - 6, ty).toFixed(1) + 'px)';
   }});
   /* desktop bubble: left of the screen, above the guide's head, its tail pointing down at it */
   var head = new T.Vector3();
@@ -193,10 +200,13 @@ window.CaseMode = function(X){
     mainScr = sec.scr[k].sc; sec.sc = mainScr; sec.scx = slots[0].x; sec.sw = slots[0].w;
   }
 
-  /* camera: the low shot frames the bay from just left of its left divider (room for the bubble) to its right end */
+  /* camera: the low shot frames the bay from 3 units left of the stand (room for the bubble) to its right end */
   function lowShot(){
     /* phone: from the stand to the right edge of the bay's screens (University: all three frames) */
-    var left = m ? sec.pad.x - 1.1 : sec.l - 2.2, right = m ? Math.max.apply(null, sec.scr.map(function(o){ return o.scx + o.sw/2; })) + .3 : sec.l + sec.bw - .2;
+    var edge = Math.max.apply(null, sec.scr.map(function(o){ return o.scx + o.sw/2; }));
+    var left = m ? sec.pad.x - 1.1 : sec.pad.x - 3.0, right = m ? edge + .3 : sec.l + sec.bw - .2;
+    /* desktop: the wall label hangs right of the frames (its screen width is fixed, WL.w px): widen the shot if it would not fit */
+    if (WL.on){ var need = (edge + .4 + .2 - left)/(1 - WL.w/X.c.w); if (left + need > right) right = left + need; }
     var fov = X.c.fov, asp = X.c.w/X.c.h, half = (right - left)/2, d = half/(Math.tan(fov*Math.PI/360)*asp);
     var cx = (left + right)/2;
     /* phone: the guide stands well in front of the wall, so the camera frames it at its own depth */
@@ -254,8 +264,9 @@ window.CaseMode = function(X){
     bub.querySelector('.bh').textContent = b.h;
     bub.querySelector('.bp').textContent = n > 1 ? (i - g.start + 1) + ' / ' + n : '';
     var t = bub.querySelector('.t'); t.innerHTML = b.html; t.scrollTop = 0;
-    var sd = bub.querySelector('.cstats'); sd.hidden = !b.stats;
-    sd.innerHTML = b.stats ? b.stats.map(function(s){ return '<div><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('') : '';
+    /* stat chips: on the wall label on desktop (see show), at the end of the bubble on phone (no label there) */
+    var sd = bub.querySelector('.cstats'), cs = WL.on ? null : b.stats; sd.hidden = !cs;
+    sd.innerHTML = cs ? cs.map(function(s){ return '<div><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('') : '';
     bub.querySelector('.dots').innerHTML = n > 1 ? Array.apply(null, Array(n)).map(function(_, k){ return '<i' + (g.start + k === i ? ' class="on"' : '') + '></i>'; }).join('') : '';
     bub.querySelector('[data-step="-1"]').disabled = i === 0;
     bub.querySelector('[data-step="1"]').disabled = i === D.beats.length - 1;
@@ -271,12 +282,15 @@ window.CaseMode = function(X){
   function show(i, talk){
     var b = D.beats[i];
     if (order && b.item != null) rotateTo(b.item, RM ? 0 : .45);
+    /* frames: the big one shows the part's own capture (Stealth Game: one clip per part), else its game's; the others their own */
+    if (order){ var pc = partCap(b); sec.scr.forEach(function(o, n){ var u = o.sc.userData, c = order[n] === 0 && pc; setImg(o.sc, c ? c.img : u.src, c ? c.px : u.px); }); }
     if (!order){
       var c0 = b.caps[0];
       setSplit(talk && b.caps.length > 1);
       if (c0) setImg(mainScr, c0.img, c0.px);
     }
     tags.hidden = !talk || !b.links.length;
+    if (wlR) WL.set(talk ? chipsHTML(b) : '');
     var sv = !b.yt && snd(b);
     play.hidden = !talk || !(b.yt || sv);
     if (!play.hidden){ play.lastChild.textContent = b.yt ? ' Play trailer' : ' Play with sound'; close.firstChild.textContent = b.yt ? 'Close trailer ' : 'Close video '; }
@@ -288,23 +302,28 @@ window.CaseMode = function(X){
     split = !!on2; if (mainScr) mainScr.userData.pl.visible = !split;
     ovs.forEach(function(o){ o.classList.toggle('half', split); });
   }
+  /* frames: the part's own capture (from its own section, not carried over from another game's) */
+  function partCap(b){ var c = b && b.own && b.item != null && b.caps[0]; return c && c.clip ? c : null; }
   /* the part's clip with sound (Rally): Play shows it zoomed in, with sound */
   function snd(b){ var c = null; (b.caps || []).forEach(function(q){ if (q.sound && !c) c = q; }); return c; }
+  /* the overlays' <video>s come from the gallery's clip cache (GB.clip): the clip the gallery was playing carries straight
+     on, and a new one stays invisible (GB.clipGate) until it has a frame. Reduced motion: paused with controls, no gate
+     (preload=none never delivers a frame) */
   function clips(b){
     ovs.forEach(function(o, k){
-      var c = !b ? null : !order ? b.caps[k] : k ? null : p.items[order.indexOf(0)];
-      if (c && !c.clip && split){ if (o.getAttribute('data-src') !== c.img){ o.setAttribute('data-src', c.img); o.innerHTML = '<img src="' + c.img + '" alt="">'; } o.hidden = false; return; }
+      var c = !b ? null : !order ? b.caps[k] : k ? null : partCap(b) || p.items[order.indexOf(0)];
+      if (c && !c.clip && split){ if (o.getAttribute('data-src') !== c.img){ o.setAttribute('data-src', c.img); GB.clipPut(o, null); o.insertAdjacentHTML('beforeend', '<img src="' + c.img + '" alt="">'); } o.classList.remove('wait'); o.hidden = false; return; }
       if (!c || !c.clip){ o.hidden = true; var v0 = o.querySelector('video'); if (v0) v0.pause(); return; }
-      if (o.getAttribute('data-src') !== c.clip){
-        o.setAttribute('data-src', c.clip); o.classList.toggle('px', !!c.px);
-        o.innerHTML = '<video src="' + c.clip + '" poster="' + c.img + '" muted loop playsinline preload="' + (RM ? 'none' : 'auto') + '"' + (RM ? ' controls' : ' autoplay') + ' disablepictureinpicture></video>';
-      }
+      var v = o.querySelector('video'), fresh = o.hidden || !v || v.getAttribute('src') !== c.clip;
+      if (!v || v.getAttribute('src') !== c.clip){ o.setAttribute('data-src', c.clip); o.classList.toggle('px', !!c.px); v = GB.clip(c.clip, c.img, RM); GB.clipPut(o, v); }
       o.hidden = false; o.classList.toggle('ctl', RM);
-      var v = o.querySelector('video'); if (v && !RM){ v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
+      if (!RM){ if (fresh) GB.clipGate(o, v); v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
     });
   }
+  /* the wall label in a case: the part's heading and its stat chips; a part without chips hides it */
+  function chipsHTML(b){ return b && b.stats ? '<p class="wl-k">' + b.h + '</p><dl class="wl-ch">' + b.stats.map(function(s){ return '<div><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('') + '</dl>' : ''; }
   function talk(){ var was = !bub.hidden; bub.hidden = false; if (!RM && !was) GB.restart(bub); show(cur, true); phoneTail(); }
-  function quiet(){ if (!m) bub.hidden = true; tags.hidden = true; play.hidden = true; clips(null); setSplit(false); }
+  function quiet(){ if (wlR) WL.set(''); if (!m) bub.hidden = true; tags.hidden = true; play.hidden = true; clips(null); setSplit(false); }
 
   function go(i, user){
     if (!on || busy || trailerOn || i < 0 || i >= D.beats.length) return;
@@ -323,6 +342,9 @@ window.CaseMode = function(X){
     if (on || dead) return;
     on = true; busy = true; X.setBusy(true); S = s; p = X.P[s - 1]; sec = X.secs[s];
     X.hideOv(); X.gbub.hidden = true;
+    /* the wall label: hidden while the case opens, then on the right of the frames with the part's chips once the guide talks
+       (no slide across: user, 2026-11-23) */
+    wlR = false; WL.set(''); WL.at(s, 1);
     var ae = document.activeElement, focusIn = o.focus || o.user || X.home.contains(ae) || ae === document.body;
     load(p).then(function(d){
       if (dead || !on) return;
@@ -340,12 +362,14 @@ window.CaseMode = function(X){
       if (focusIn){ var fk = keys[D.beats[cur].g]; if (fk) fk.focus({preventScroll:true}); }
       X.live.textContent = p.t + ': ' + D.groups[D.beats[cur].g].t;
       show(cur, false);
+      wlR = true;
       var low = lowShot();
       if (RM || o.cut){ st.setCam(low.p, low.l); onStand(); busy = false; X.setBusy(false); talk(); return; }
-      var done = function(){ busy = false; X.setBusy(false); talk(); };
-      if (o.push){ tweenCam(inside(), .6, function(){ tweenCam(low, 1.1); walkIn(.45, done); }); return; }
+      /* closed before the walk-in ended (browser Back): its tweens are killed in exit(), and it doesn't talk */
+      var done = function(){ if (!on) return; busy = false; X.setBusy(false); talk(); };
+      if (o.push){ inT = [tweenCam(inside(), .6, function(){ if (on) inT = [tweenCam(low, 1.1), walkIn(.45, done)]; })]; return; }
       var ins = inside(); st.setCam(ins.p, ins.l); st.render();
-      tweenCam(low, 1.1); walkIn(.45, done);
+      inT = [tweenCam(low, 1.1), walkIn(.45, done)];
     }, function(){
       /* the project file didn't load: open it as a plain page */
       on = false; busy = false; X.setBusy(false); location.href = p.href.replace(/(#|$)/, '?flat$1');
@@ -361,9 +385,13 @@ window.CaseMode = function(X){
     if (!on) return;
     if (trailerOn) stopTrailer();
     busy = true; X.setBusy(true); quiet(); bub.hidden = true;
+    /* the label hides, and comes back on the left with the section's facts once the camera is back at the gallery shot */
+    wlR = false; WL.set('');
+    inT.forEach(function(t){ clock.kill(t); }); inT = [];
     var s = S, ae = document.activeElement, refocus = X.home.contains(ae) || !ae || ae === document.body;
     function back(){
       if (!order) setImg(mainScr, sec.scr[0].sc.userData.src, sec.scr[0].sc.userData.px);
+      else sec.scr.forEach(function(o){ setImg(o.sc, o.sc.userData.src, o.sc.userData.px); });   /* each frame its game's capture again */
       var y0 = window.scrollY;
       X.keys.hidden = false; X.ckeys.hidden = true; X.cmb.hidden = true; X.home.classList.remove('incase');
       if (m){ X.setStageH(X.galleryH); bub.style.height = ''; }
@@ -371,10 +399,11 @@ window.CaseMode = function(X){
       on = false; busy = false;
       if (refocus) X.keyEls[s].focus({preventScroll:true});
     }
-    if (RM){ back(); X.atGallery(s); X.standToSpot(s, 0, done); return; }
+    function facts(){ WL.at(s, 0); WL.set(WL.gallery(s)); }
+    if (RM){ back(); X.atGallery(s); facts(); X.standToSpot(s, 0, done); return; }
     /* straight back out to the gallery shot: no push into the screen first (user, 2026-11-09) */
     back(); X.setBusy(true);
-    tweenCam(X.galleryShot(s), .9, function(){ X.atGallery(s); X.standToSpot(s, .15, done); });
+    tweenCam(X.galleryShot(s), .9, function(){ X.atGallery(s); facts(); X.standToSpot(s, .15, done); });
   }
 
   /* ------------------------------ trailer: zoom into the frame ------------------------------ */
@@ -386,7 +415,8 @@ window.CaseMode = function(X){
       if (b.yt) yt.innerHTML = '<iframe src="' + b.yt.src + (b.yt.src.indexOf('?') < 0 ? '?' : '&') + 'autoplay=1" title="' + b.yt.t + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
       else {
         yt.innerHTML = '<video src="' + sv.clip + '" poster="' + sv.img + '" playsinline controls disablepictureinpicture></video>';
-        var v = yt.firstChild; v.setAttribute('aria-label', sv.t);
+        /* it starts where the muted loop does (Rally: the poster's moment), so the still under the zoom doesn't jump */
+        var v = yt.firstChild; v.setAttribute('aria-label', sv.t); if (GB.START[sv.clip]) v.currentTime = GB.START[sv.clip];
         /* the click on Play allows sound; if a browser still refuses, play muted (the controls can unmute) */
         var pr = v.play(); if (pr && pr.catch) pr.catch(function(){ v.muted = true; var p2 = v.play(); if (p2 && p2.catch) p2.catch(function(){}); });
       }
@@ -426,7 +456,7 @@ window.CaseMode = function(X){
       if (!order || order[k] === 0) return 0;
       rotateTo(k, RM ? 0 : dur); return RM ? 0 : dur + .05;
     },
-    dispose:function(){ dead = true; stopTrailer(); clips(null); document.removeEventListener('keydown', onKey); [bub, tags, play, yt, close].concat(ovs).forEach(function(e){ e.remove(); }); }
+    dispose:function(){ dead = true; stopTrailer(); clips(null); ovs.forEach(function(o){ GB.clipPut(o, null); }); document.removeEventListener('keydown', onKey); [bub, tags, play, yt, close].concat(ovs).forEach(function(e){ e.remove(); }); }
   };
   window.__caseMode = api;
   return api;
