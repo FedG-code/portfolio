@@ -2,7 +2,7 @@
 
 | File | Used by | Notes |
 |------|---------|-------|
-| `gallery.css` (~275 lines) | `index.html` only | The Dolly Gallery. Self-contained: does not load shared.css. |
+| `gallery.css` (~300 lines) | `index.html` only | The Dolly Gallery. Self-contained: does not load shared.css. |
 | `shared.css` (~228 lines) | project pages | Base reset, `:root` tokens (bold palette, Archivo Black / Archivo / IBM Plex Mono), container, tidbits, section headings, buttons, `.reveal`. |
 | `project.css` (~286 lines) | project pages | Back link, project hero, sections, captures, stats, video embed, responsive rules. |
 
@@ -10,7 +10,7 @@ Pruned on 2026-11-09: the other themes (brutalist, retro, cinematic, neon), tool
 
 ## gallery.css
 
-One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light paper, `--ink`, `--mut`, `--ln` rule, `--link` (`#0B7A2E`, green text + focus ring), `--sig` (`#2BD957` since 2026-11-23, same as the debug green; was `#0E7F31`; green on paper: selection bars, playhead, bullets, underlines), `--sig-hi` (`#2BD957`, green on ink: name-strip links, Learn more arrows), `--col` (`#2BD957`, debug marks), `--chip`, `--stage`. Green replaced orange on 2026-11-09 (see the rule in the root CLAUDE.md). Fonts: Archivo (variable, `font-stretch` up to 125%) + IBM Plex Mono.
+One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light paper, `--ink`, `--mut`, `--ln` rule, `--link` (`#0B7A2E`, green text + focus ring), `--sig` (`#2BD957` since 2026-11-23, same as the debug green; was `#0E7F31`; green on paper: selection bars, playhead, bullets, underlines), `--sig-hi` (`#2BD957`, green on ink: name-strip links, Learn more arrows), `--col` (`#2BD957`, debug marks), `--chip`, `--stage`, and the wall monitor's face tokens `--scr`, `--scr-hi`, `--scr-mut`, `--scr-ln`, `--scr-now` (text on `--chip`, from the review mock's Original palette). Green replaced orange on 2026-11-09 (see the rule in the root CLAUDE.md). Fonts: Archivo (variable, `font-stretch` up to 125%) + IBM Plex Mono.
 
 | Block | Selectors |
 |-------|-----------|
@@ -19,9 +19,9 @@ One identity, engine-debug greybox. Tokens on `:root`: `--p` paper, `--p2` light
 | About | `.ab`, `.ab-lead`, `.ab-txt`; phone: the About body is in the guide's bubble (`.bub .bt.ab-say`) |
 | Plain list | `.mn`, `.menu`, `.row` (`.lead`, `.on`), `.rt`, `.rs`, `.pv*` preview + spec (`.pv-view.go` = clickable), `.pv-open` |
 | Gizmo marks | `.pv-mk`, `.mk`, `.mk-chip` |
-| Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.st.over` (pointer over a capture), `.pin` (transform-origin 0 0; JS adds scale), `.tp` placards, `.sign` (285px under 900px: k stops at .72), `.tl`, `.bub` (+ `.side` on phone, `.sm` + `.sum` the summary that scrolls inside, `.abr` About opening right), `.openb`, `.wl` wall label (museum caption: paper, square green markers, `.wl-st` Stack line, `.wl-k` part heading + `.wl-ch` stat rows in a case; `.fade` cross-fade), `.vov` motion overlay (`.wait`: opacity 0 until its video has a frame, then a .15s fade in; hiding is instant) |
+| Stage | `.st` (`.no3d` = plain list), `.st-cv`, `.st.over` (pointer over a capture), `.pin` (transform-origin 0 0; JS adds scale), `.sign` (the About sign; the section titles are 3D signs drawn on a canvas since 2026-11-23, no CSS) (285px under 900px: k stops at .72), `.tl`, `.bub` (12px corners, soft shadow; `::after` = the curved tail, an SVG mask in `--ink`, placed by `--tail` (its centre), rotated for `.side` (phone, left) and `.cmb .cbub` (up); `.anim` = fade up 6px with `translate:` (not `transform:`, which carries the pin's placement); + `.side` on phone, `.sm` + `.sum` the summary that scrolls inside, `.abr` About opening right), `.openb` (bottom corners 10px), `.wl` the wall monitor's face (dark screen with scanlines; `.wl-in` scaled by JS; `.wl-hd` green header strip with the section id, `ul` facts, `.wl-st` Stack; in a case `.wl-sh` sheet rows, `.wl-hf` headline figures, `.wl-now` Now row: `.wl-k` + `.wl-ch` chips; `.fade` cross-fade, `.dark` in flight (text hidden), `.boot` switching on: a CRT line opening), `.vov` motion overlay (`.wait`: opacity 0 until its video has a frame, then a .15s fade in; hiding is instant) |
 | Shot list | `.keys`, `.key` (`.on`, `.lead`, `.abk`), `.track` playhead |
-| Case (js/case.js) | `.home.incase`, `.cbub` (+ `.cstats`: phone only, desktop chips are on `.wl`), `.ctags`, `.cplay`, `.cclose`, `.cyt`, `.vov.ctl`, `.ckeys` (`.cback`), `.cmb` (phone bubble slot) |
+| Case (js/case.js) | `.home.incase`, `.cbub` (+ `.cstats`: phone only, desktop chips are on `.wl`; `.t.anim` = the text cross-fade between parts; `.nav` bottom corners 10px), `.ctags`, `.cplay`, `.cclose`, `.cyt`, `.vov.ctl`, `.ckeys` (`.cback`), `.cmb` (phone bubble slot) |
 | Breakpoints | 1100px (smaller key text), 900px (name strip 2x2), 639px (phone: matches `PHONE` in gallery.js), reduced motion |
 
 
