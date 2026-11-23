@@ -317,11 +317,33 @@ function buildDolly(start){
   }
   function hideOv(){ ov.hidden = true; ovS = -1; var v = ov.querySelector('video'); if (v) v.pause(); }
   var head = new T.Vector3();
-  var bubPin = st.pin(bub, null, m ? 0 : .5, m ? .05 : 1, {get:function(){ head.set(plr.position.x + (m ? .38 : 0), m ? .7 : 1.42, plr.position.z); return head; }, dy:m ? 0 : -6, dx:m ? 8 : 0});
+  /* the bubble (2026-11-23). Desktop, a section: in the zone right of the screen, its left edge .35 right of the bezel, as wide
+     as the zone allows (280 px at most), its tail over the guide (--tail), its bottom just above the guide's head. Desktop About:
+     centred over the guide, or opening right (.abr). Phone: beside the guide, never over the picture */
+  var bubS = 0, bv = new T.Vector3();
+  function zoneL(s){ var o = secs[s]; return o.l + SL + span(P[s - 1]) + .08 + .35; }
+  function picBottom(proj, s){ var o = secs[s], g = o.sc; return proj(bv.set(g.position.x, g.position.y - g.userData.h*g.scale.x/2 - .08, .05))[1]; }
+  var bubPin = st.pin(bub, null, m ? 0 : .5, m ? .05 : 1, {rect:function(proj){
+    var k = c.k, hd = proj(head.set(plr.position.x + (m ? .38 : 0), m ? .7 : 1.42, plr.position.z)), ew, eh = bub.offsetHeight*k, x, y;
+    if (!m && bubS > 0){
+      var o = secs[bubS], zl = proj(bv.set(zoneL(bubS), 1.42, .05))[0], zr = proj(bv.set(o.l + o.bw - .2, 1.42, .05))[0];
+      ew = Math.max(120*k, Math.min(280*k, zr - zl)); var wc = (ew/k).toFixed(1) + 'px';
+      if (bub.style.width !== wc){ bub.style.width = wc; eh = bub.offsetHeight*k; }
+      x = zl; y = hd[1] - eh - 6;
+      bub.style.setProperty('--tail', (clamp(hd[0] - x, 16*k, ew - 16*k)/k).toFixed(1) + 'px');
+    } else {
+      if (bub.style.width) bub.style.width = '';
+      ew = bub.offsetWidth*k; x = hd[0] - bubPin.ax*ew + (m ? 8 : 0); y = hd[1] - bubPin.ay*eh + (m ? 0 : -6);
+      bub.style.removeProperty('--tail');
+      if (m && bubS > 0) y = Math.max(y, picBottom(proj, bubS) + 10);
+    }
+    x = clamp(x, 6, c.w - ew - 6); y = clamp(y, 6, c.h - eh - 6);
+    bub.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)' + (k < 1 ? ' scale(' + k.toFixed(3) + ')' : '');
+  }});
   /* an items bay opens the game in its big frame (the case may have swapped them round) */
   function bigK(s){ return secs[s] && secs[s].order ? secs[s].order.indexOf(0) : 0; }
   function say(s, announce){
-    bub.innerHTML = bubHTML(s - 1, m); bub.classList.toggle('sm', s > 0);
+    bub.innerHTML = bubHTML(s - 1, m); bub.classList.toggle('sm', s > 0); bubS = s;
     /* desktop About: the (narrower) bay puts the guide near the sign, so its bubble opens to the right, over the next bay's empty wall */
     bub.classList.toggle('abr', !m && !s); bubPin.ax = !m && !s ? .1 : m ? 0 : .5;
     var ob = bub.querySelector('.openb'), p = P[s - 1];
@@ -334,7 +356,15 @@ function buildDolly(start){
   function fitSum(){
     var sm = bub.querySelector('.sum'); if (!sm) return;
     sm.style.maxHeight = ''; sm.scrollTop = 0;
-    var room = m ? Math.round(c.h*.62) : (st.proj(head.set(plr.position.x, 1.42, plr.position.z))[1] - 16)/c.k, over = bub.offsetHeight - room;
+    /* desktop: from the guide's head up to the sign's top; phone: from under the picture to the stage's bottom */
+    bubPin.rect(st.proj);
+    var o = secs[bubS], room;
+    if (m) room = bubS > 0 ? c.h - picBottom(st.proj, bubS) - 10 - 6 : Math.round(c.h*.62);
+    else {
+      var hy = st.proj(head.set(plr.position.x, 1.42, plr.position.z))[1] - 6, top = bubS > 0 && o.sign ? objRect(o.sign).y : 10;
+      room = (hy - top)/c.k;
+    }
+    var over = bub.offsetHeight - room;
     if (over > 0) sm.style.maxHeight = Math.max(54, sm.offsetHeight - over) + 'px';
   }
 

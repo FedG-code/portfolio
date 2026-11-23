@@ -144,13 +144,22 @@ window.CaseMode = function(X){
   var head = new T.Vector3();
   if (!m) st.pin(bub, null, 0, 0, {rect:function(proj){
     if (!mainScr) return;
-    var hd = proj(head.set(plr.position.x, plr.position.y + 1.15, plr.position.z)), r = rectOf(mainScr, proj, split);
-    var right = Math.max(r.x - 14, hd[0] + 60), w = clamp(right - 12, 300, 500), x = clamp(right - w, 10, X.c.w - w - 10);
+    var hd = proj(head.set(plr.position.x, plr.position.y + 1.15, plr.position.z)), r = rectOf(mainScr, proj, split), sg = signRect(proj);
+    /* right edge: left of the screen and of the sign (2026-11-23); if the guide stands so close that it can't be, the top stays below the sign */
+    var right = Math.max(Math.min(r.x - 14, sg ? sg.x - 16 : 1e9), hd[0] + 60), w = clamp(right - 12, 220, 500), x = clamp(right - w, 10, X.c.w - w - 10);
+    var top0 = sg && x + w > sg.x - 16 ? sg.y + sg.h + 10 : 10;
     bub.style.width = w + 'px';
-    var t = bub.querySelector('.t'); t.style.maxHeight = Math.max(120, hd[1] - 30 - (bub.offsetHeight - t.offsetHeight)) + 'px';
-    bub.style.transform = 'translate(' + x.toFixed(1) + 'px,' + Math.max(10, hd[1] - bub.offsetHeight - 18).toFixed(1) + 'px)';
+    var t = bub.querySelector('.t'); t.style.maxHeight = Math.max(120, hd[1] - 18 - top0 - (bub.offsetHeight - t.offsetHeight)) + 'px';
+    bub.style.transform = 'translate(' + x.toFixed(1) + 'px,' + Math.max(top0, hd[1] - bub.offsetHeight - 18).toFixed(1) + 'px)';
     bub.style.setProperty('--tail', clamp(hd[0] - x - 7, 14, w - 30) + 'px');
   }});
+  /* the bay's 3D sign, projected */
+  var sgv = new T.Vector3();
+  function signRect(proj){
+    var g = sec && sec.sign; if (!g) return null; var u = g.userData, xs = [], ys = [];
+    [-1, 1].forEach(function(a){ [-1, 1].forEach(function(b){ var q = proj(sgv.set(g.position.x + a*u.w/2, g.position.y + b*u.h/2, g.position.z + .03)); xs.push(q[0]); ys.push(q[1]); }); });
+    var x = Math.min.apply(null, xs), y = Math.min.apply(null, ys); return {x:x, y:y, w:Math.max.apply(null, xs) - x, h:Math.max.apply(null, ys) - y};
+  }
   function phoneTail(){ if (!m) return; var hd = st.proj(head.set(plr.position.x + .1, plr.position.y + 1.15, plr.position.z)); bub.style.setProperty('--tail', clamp(hd[0] - 12, 16, X.c.w - 40) + 'px'); }
 
   /* phone case view: the stage, the bubble (its text scrolls, Back / Next always show) and the parts bar fit one screen,
@@ -208,6 +217,8 @@ window.CaseMode = function(X){
     var left = m ? sec.pad.x - 1.1 : sec.pad.x - 3.0, right = m ? edge + .3 : sec.l + sec.bw - .2;
     /* desktop: the wall monitor hangs in the zone right of the frames: the shot takes in its right edge + a margin */
     if (WL.on && !m) right = Math.max(right, WL.right(S) + .3);
+    /* desktop: room left of the screen for the bubble (at least 220 px + margins): the smallest stages widen the shot to the left */
+    if (!m){ var sl = Math.min.apply(null, sec.scr.map(function(o){ return o.scx - o.sw/2 - .08; })), a = 252/X.c.w; left = Math.min(left, (sl - a*right)/(1 - a)); }
     var fov = X.c.fov, asp = X.c.w/X.c.h, half = (right - left)/2, d = half/(Math.tan(fov*Math.PI/360)*asp);
     var cx = (left + right)/2;
     /* phone: the guide stands well in front of the wall, so the camera frames it at its own depth */
@@ -337,7 +348,8 @@ window.CaseMode = function(X){
     if (user && !same){
       var b = D.beats[i], g = D.groups[gi];
       X.live.textContent = 'Part ' + (i + 1) + ' of ' + D.beats.length + ': ' + b.h + (b.h !== g.t ? ', ' + g.t : '');
-      if (!RM){ GB.restart(bub); clock.add(.32, function(q){ bd.position.y = Math.sin(q*Math.PI)*.12; st.render(); }); }
+      /* between parts only the text cross-fades (the bubble doesn't re-enter) */
+      if (!RM){ GB.restart(bub.querySelector('.t')); clock.add(.32, function(q){ bd.position.y = Math.sin(q*Math.PI)*.12; st.render(); }); }
       if (p.items){ var it = D.groups[gi].item; try { history.replaceState(history.state, '', '#' + p.id + '/case' + (it != null ? '/' + p.items[it].href.split('#')[1] : '')); } catch(e){} }
     }
   }

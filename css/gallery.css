@@ -102,10 +102,11 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .tl{font:500 10.5px/1 var(--fm); background:rgba(248,249,246,.93); padding:3px 6px 4px; white-space:nowrap; color:var(--ink)}
 
 /* the guide's speech bubble */
-.bub{width:215px; background:var(--p2); border:1.5px solid var(--ink); display:grid; box-shadow:0 2px 0 rgba(21,24,27,.22)}
-.bub::after{content:""; position:absolute; left:calc(50% - 8px); bottom:-9px; width:14px; height:14px; background:var(--p2); border-right:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); transform:rotate(45deg)}
-.bub.abr::after{left:calc(10% - 7px)}
-.bub.side::after{left:-9px; bottom:auto; top:calc(12% - 8px); border:0; border-left:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink)}
+.bub{width:215px; background:var(--p2); border:1.5px solid var(--ink); border-radius:12px; display:grid; box-shadow:0 1px 0 rgba(21,24,27,.08), 0 10px 20px -10px rgba(21,24,27,.45)}
+/* the tail: a small curved shape in the bar's dark colour (2026-11-23), pointing down at the guide; --tail = its centre from the left */
+.bub::after{content:""; position:absolute; left:calc(var(--tail, 50%) - 9px); bottom:-11px; width:18px; height:10px; background:var(--ink); -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 10'%3E%3Cpath d='M0 0H18C12.5 1 10.2 4.6 9 10C7.8 4.6 5.5 1 0 0Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 10'%3E%3Cpath d='M0 0H18C12.5 1 10.2 4.6 9 10C7.8 4.6 5.5 1 0 0Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat}
+.bub.abr::after{left:calc(10% - 9px)}
+.bub.side::after{left:-14px; bottom:auto; top:calc(12% - 5px); transform:rotate(90deg)}
 .bub ul{margin:0; padding:9px 12px 4px 26px; display:grid; gap:4px; font-size:12.5px; line-height:1.35}
 .bub li::marker{color:var(--sig)}
 .bub .bt{padding:10px 12px 11px; font-size:13px; line-height:1.4; font-weight:600}
@@ -116,7 +117,7 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .bub.sm{width:240px}
 .bub .sum{padding:10px 12px 11px; font-size:12.5px; line-height:1.45; overflow:auto; overscroll-behavior:contain}
 .bub .sum a{color:var(--link); font-weight:600}
-.openb{position:relative; z-index:1; font-size:13px; font-weight:700; padding:7px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--ink); color:var(--p2); white-space:nowrap; text-decoration:none}
+.openb{position:relative; z-index:1; border-radius:0 0 10px 10px; font-size:13px; font-weight:700; padding:7px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--ink); color:var(--p2); white-space:nowrap; text-decoration:none}
 .openb span{color:var(--sig-hi)}
 .openb:hover{background:#2A2F33}
 /* the wall label beside the screen (desktop): a museum caption, paper on the wall. Gallery: facts + stack; case: the part's stat chips */
@@ -145,8 +146,11 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .wl-ch{margin:5px 0 0; display:flex; flex-wrap:wrap; gap:4px 14px}
 .wl-ch dt{font-weight:800; font-stretch:115%; font-size:18px; line-height:1.05; color:var(--scr-hi)}
 .wl-ch dd{margin:1px 0 0; font:500 9.5px/1.2 var(--fm); color:var(--scr-mut)}
-.bub.anim{animation:bubIn .22s cubic-bezier(.3,1.5,.6,1) both}
-@keyframes bubIn{from{opacity:0; scale:.85} to{opacity:1; scale:1}}
+/* entrance: fade up 6 px (translate:, not transform:, which carries the pin's placement) */
+.bub.anim{animation:bubIn .2s cubic-bezier(.2,.7,.2,1) both}
+@keyframes bubIn{from{opacity:0; translate:0 6px} to{opacity:1; translate:0 0}}
+.cbub .t.anim{animation:txIn .18s ease-out both}   /* between case parts only the text cross-fades */
+@keyframes txIn{from{opacity:0}}
 
 /* motion overlay pinned over the selected screen */
 .vov{overflow:hidden; pointer-events:none; background:#000; z-index:1 !important}
@@ -172,7 +176,7 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 /* ---- tablet ---- */
 /* ---- a case open in the scene (js/case.js): bubble, link tags, trailer, the case bar ---- */
 .cbub{width:400px}
-.cbub::after{left:var(--tail, 30px)}
+.cbub::after{left:calc(var(--tail, 30px) - 2px)}
 .cbub .h{display:flex; justify-content:space-between; gap:10px; padding:9px 14px 0; font:600 11.5px/1.25 var(--fm); color:var(--link)}
 .cbub .h span + span{color:var(--mut); font-weight:500; white-space:nowrap}
 .cbub .t{padding:6px 14px 12px; font-size:14.5px; line-height:1.55; overflow:auto; overscroll-behavior:contain}
@@ -184,11 +188,13 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .cstats div{display:flex; gap:6px; align-items:baseline; background:var(--chip); color:var(--p2); padding:4px 8px}
 .cstats dt{font-weight:800; font-stretch:115%; font-size:15px; color:var(--sig-hi)}
 .cstats dd{margin:0; font:500 11px/1.2 var(--fm)}
-.cbub .nav{display:grid; grid-template-columns:auto 1fr auto; background:var(--ink); color:var(--p2); position:relative; z-index:1}
+.cbub .nav{display:grid; grid-template-columns:auto 1fr auto; border-radius:0 0 10px 10px; background:var(--ink); color:var(--p2); position:relative; z-index:1}
 .cbub .nav button{padding:8px 14px; font-size:13px; font-weight:700; color:var(--p2)}
 .cbub .nav button span{color:var(--sig-hi)}
 .cbub .nav button:disabled{opacity:.35; cursor:default}
 .cbub .nav button:not(:disabled):hover{background:#2A2F33}
+.cbub .nav button:first-child{border-radius:0 0 0 10px}
+.cbub .nav button:last-child{border-radius:0 0 10px 0}
 .cbub .dots{display:flex; gap:4px; align-items:center; justify-content:center}
 .cbub .dots i{width:6px; height:6px; background:#4A5054}
 .cbub .dots i.on{background:var(--sig-hi)}
@@ -217,7 +223,7 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .cmb{position:relative; margin-top:-2px}
 .cmb .cbub{width:100%; position:relative; margin-top:12px; display:flex; flex-direction:column}
 .cmb .cbub .t{flex:1 1 auto; min-height:0}
-.cmb .cbub::after{left:var(--tail, 60px); top:-9px; bottom:auto; border:0; border-left:1.5px solid var(--ink); border-top:1.5px solid var(--ink)}
+.cmb .cbub::after{left:calc(var(--tail, 60px) - 2px); top:-11px; bottom:auto; transform:rotate(180deg)}
 
 @media (max-width: 1100px){
   .keys .key{padding:9px 10px 10px}
@@ -279,7 +285,7 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 }
 
 @media (prefers-reduced-motion: reduce){
-  .bub.anim, .pv-mk.anim > *{animation:none}
+  .bub.anim, .cbub .t.anim, .pv-mk.anim > *{animation:none}
   .wl{transition:none}
   .wl.boot .wl-in{animation:none}
   .row{transition:none}

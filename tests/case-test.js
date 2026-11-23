@@ -70,6 +70,13 @@ const st = p => p.evaluate(() => ({
       const s = await st(p);
       const ok = s.bar && !s.sections && s.canvases === 1 && s.parts === parts && s.bubble && !s.overflow && !errs.length;
       check(`${w}x${h} ${id}: case in the scene`, ok, ok ? undefined : { ...s, errs });
+      if (w >= 640) {
+        // desktop: the case bubble stays clear of the screen and the 3D sign
+        const bc = await p.evaluate(i => { const d = window.__dolly.rects().bays[i], sr = document.querySelector('.st').getBoundingClientRect(), r = document.querySelector('#case-bubble').getBoundingClientRect();
+          const b = { x: r.left - sr.left, y: r.top - sr.top, w: r.width, h: r.height }, hit = q => !!q && b.x < q.x + q.w - 1 && b.x + b.w > q.x + 1 && b.y < q.y + q.h - 1 && b.y + b.h > q.y + 1;
+          return { screen: hit(d.main), sign: hit(d.sign) }; }, CASES.findIndex(c => c[0] === id) + 1);
+        check(`${w}x${h} ${id}: the case bubble is clear of the screen and the sign`, !bc.screen && !bc.sign, bc);
+      }
       // a part with stat chips: on desktop they are on the wall label, right of the picture, clear of everything; on phone in the bubble
       const chipPart = id === 'casino-games' ? 1 : id === 'other-games' ? 'tetrarcana' : null;
       if (chipPart !== null) {

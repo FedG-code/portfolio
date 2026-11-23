@@ -60,6 +60,11 @@ const state = p => p.evaluate(() => ({
     await pick(p, 3);
     const cb = await bubble(p), cl = await wallLabel(p), phone = await p.evaluate(() => document.querySelector('#gallery').clientWidth < 640);
     check(`${w}x${h} Casino: the bubble is the summary + Learn more, Learn more inside the stage`, /^At Logifuture I worked on 8\+ game releases/.test(cb.sum) && cb.opens === 1 && cb.openIn && !cb.items, cb);
+    // the bubble stays clear of the screen and the 3D sign (phone: of the picture)
+    const bc = await p.evaluate(phone => { const d = window.__dolly.rects().bays[3], sr = document.querySelector('.st').getBoundingClientRect(), r = document.querySelector('#guide-bubble').getBoundingClientRect();
+      const b = { x: r.left - sr.left, y: r.top - sr.top, w: r.width, h: r.height }, hit = q => !!q && b.x < q.x + q.w - 1 && b.x + b.w > q.x + 1 && b.y < q.y + q.h - 1 && b.y + b.h > q.y + 1;
+      return { screen: hit(d.main), sign: phone ? false : hit(d.sign), b, main: d.main, sign0: d.sign }; }, phone);
+    check(`${w}x${h} Casino: the bubble is clear of the screen${phone ? '' : ' and the sign'}`, !bc.screen && !bc.sign, bc);
     if (phone) check(`${w}x${h} phone: no wall label in the gallery`, !cl.exists, cl);
     else check(`${w}x${h} Casino: the wall monitor hangs left of the screen (facts incl. 700k+, stack; no repeated stack bullet)`, cl.shown && cl.at === '3:gallery' && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games' && /Stack/.test(cl.text), cl);
     if (w === 1920) {
