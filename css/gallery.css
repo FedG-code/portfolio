@@ -128,6 +128,9 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .wl{overflow:hidden; background:var(--chip); color:var(--scr); transition:opacity .16s ease}
 .wl::after{content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.14) 2px 3px)}
 .wl.fade{opacity:0}
+.wl.dark .wl-in{visibility:hidden}   /* in flight: the screen is off */
+.wl.boot .wl-in{animation:wlOn .4s ease-out both}   /* switching on: a CRT line opening */
+@keyframes wlOn{0%{clip-path:inset(49.5% 0 49.5% 0); filter:brightness(2.2)} 45%{clip-path:inset(49.5% 0 49.5% 0); filter:brightness(2.2)} 100%{clip-path:inset(0 0 0 0); filter:none}}
 .wl-in{width:200px; transform-origin:0 0; font-size:12px; line-height:1.36}
 .wl-hd{padding:4px 10px 3px; background:var(--sig); color:var(--chip); font:600 10px/1.3 var(--fm)}
 .wl ul{margin:0; padding:8px 10px 0 24px; display:grid; gap:4px; list-style:square}
@@ -286,5 +289,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 @media (prefers-reduced-motion: reduce){
   .bub.anim, .pv-mk.anim > *{animation:none}
   .wl{transition:none}
+  .wl.boot .wl-in{animation:none}
   .row{transition:none}
 }

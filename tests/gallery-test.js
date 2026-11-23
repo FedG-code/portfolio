@@ -29,8 +29,9 @@ const pick = async (p, i) => { await p.waitForFunction(() => !document.querySele
 const bubble = p => p.evaluate(() => { const b = document.querySelector('#guide-bubble'), o = b.querySelector('.openb'), sm = b.querySelector('.sum'), sr = document.querySelector('.st').getBoundingClientRect(), r = o && o.getBoundingClientRect();
   return { sum: sm ? sm.textContent : '', opens: b.querySelectorAll('.openb').length, href: o ? o.getAttribute('href') : null, items: b.querySelectorAll('.itb, ul').length,
     openIn: !!r && r.top >= sr.top && r.bottom <= sr.bottom + 1 && r.left >= sr.left && r.right <= sr.right + 1 }; });
-const wallLabel = p => p.evaluate(() => { const w = document.querySelector('#wall-label'); if (!w) return { exists: false }; const r = w.getBoundingClientRect(), v = document.querySelector('#gallery .vov:not([hidden])'), vr = v && v.getBoundingClientRect();
-  return { exists: true, shown: !w.hidden && w.offsetWidth > 0, text: w.textContent, items: [...w.querySelectorAll('li')].map(l => l.textContent), leftOfScreen: !!vr && r.right <= vr.left + 1 }; });
+// the wall monitor: waits until it has landed and switched on (wl.dataset.at), its flight takes ~2 s
+const wallLabel = async p => { await p.waitForFunction(() => { const w = document.querySelector('#wall-label'); return !w || w.dataset.at; }, null, { timeout: 8000 }).catch(() => {}); return p.evaluate(() => { const w = document.querySelector('#wall-label'); if (!w) return { exists: false }; const r = w.getBoundingClientRect(), v = document.querySelector('#gallery .vov:not([hidden])'), vr = v && v.getBoundingClientRect();
+  return { exists: true, at: w.dataset.at, shown: !w.hidden && w.offsetWidth > 0, text: w.textContent, items: [...w.querySelectorAll('li')].map(l => l.textContent), leftOfScreen: !!vr && r.right <= vr.left + 1 }; }); };
 const state = p => p.evaluate(() => ({
   g3d: document.querySelector('#gallery').classList.contains('g3d'),
   canvases: document.querySelectorAll('canvas').length,
@@ -60,7 +61,7 @@ const state = p => p.evaluate(() => ({
     const cb = await bubble(p), cl = await wallLabel(p), phone = await p.evaluate(() => document.querySelector('#gallery').clientWidth < 640);
     check(`${w}x${h} Casino: the bubble is the summary + Learn more, Learn more inside the stage`, /^At Logifuture I worked on 8\+ game releases/.test(cb.sum) && cb.opens === 1 && cb.openIn && !cb.items, cb);
     if (phone) check(`${w}x${h} phone: no wall label in the gallery`, !cl.exists, cl);
-    else check(`${w}x${h} Casino: the wall monitor hangs left of the screen (facts incl. 700k+, stack; no repeated stack bullet)`, cl.shown && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games' && /Stack/.test(cl.text), cl);
+    else check(`${w}x${h} Casino: the wall monitor hangs left of the screen (facts incl. 700k+, stack; no repeated stack bullet)`, cl.shown && cl.at === '3:gallery' && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games' && /Stack/.test(cl.text), cl);
     if (w === 1920) {
       // one picture height: each bay measured at its own gallery shot (__dolly.rects, projected px)
       const hs = [];
@@ -231,6 +232,8 @@ const state = p => p.evaluate(() => ({
   await p.click('.key[data-i="3"]'); await p.waitForTimeout(30);
   s = await state(p);
   check('reduced motion: instant cut, no clip', s.key === 'Casino Games' && s.bubble && !s.clip, s);
+  const rmw = await p.evaluate(() => { const w = document.querySelector('#wall-label'); return { at: w.dataset.at, shown: !w.hidden, boot: w.classList.contains('boot') || w.classList.contains('dark') }; });
+  check('reduced motion: the wall monitor is placed at once (no flight)', rmw.at === '3:gallery' && rmw.shown && !rmw.boot, rmw);
   await p.click('.bub .openb'); await p.waitForTimeout(800);
   const rc = await p.evaluate(() => { const v = document.querySelector('.vov:not([hidden]) video'); return { hash: location.hash, bubble: !document.querySelector('#case-bubble').hidden, v: v ? { controls: v.controls, paused: v.paused } : null }; });
   check('reduced motion: the case cuts in, its clip paused with controls', rc.hash === '#casino-games/case' && rc.bubble && rc.v && rc.v.controls && rc.v.paused, rc);

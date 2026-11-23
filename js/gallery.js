@@ -353,19 +353,83 @@ function buildDolly(start){
       }
     }});
   }
-  /* new content cross-fades ('' fades it out, and the monitor goes) */
+  /* the monitor's moves (option A, "fly in", 2026-11-23): any change of place flies it up out of shot (.7 s, ease-in),
+     it travels unseen and swaps its content there, drops in at the new place (.8 s, ease-out, a small settle) and switches
+     on (a CRT line opening: .wl.boot). Its own tween handle (F.tw), which only this code cancels: select() and the drag kill
+     the dolly's tweens, not this one; a new move while flying retargets the drop. Reduced motion, rebuilds, direct
+     #id/case links: placed at once. wl.dataset.at = '<s>:<gallery|case>' only once it has landed and switched on */
+  var F = {tw:null, g:null, tok:0}, built = false, tcam = new T.PerspectiveCamera(c.fov, c.w/c.h, .1, 400), tv = new T.Vector3();
+  function landKey(g){ return g.s + ':' + (g.t ? 'case' : 'gallery'); }
+  /* the centre y at which the whole monitor is above the top of cam's view at x (+ a margin): from the camera, not a fixed number */
+  function clearY(x, cam){
+    var u = mon.userData, lo = 0, hi = 80;
+    for (var n = 0; n < 22; n++){
+      var mid = (lo + hi)/2, ok = [-1, 1].every(function(sd){ tv.set(x + sd*u.W/2, mid - u.H/2 - .15, .2).project(cam); return tv.y > 1.02 || tv.z > 1; });
+      if (ok) hi = mid; else lo = mid;
+    }
+    return hi + .3;
+  }
+  function outY(x, sh){
+    var y = clearY(x, st.cam);
+    if (sh){ tcam.aspect = c.w/c.h; tcam.updateProjectionMatrix(); tcam.position.copy(sh.p); tcam.lookAt(sh.l); tcam.updateMatrixWorld(); y = Math.max(y, clearY(x, tcam)); }
+    return y;
+  }
+  function setFace(html){ W.tok++; W.html = html; wl.firstChild.innerHTML = html; W.v++; wl.classList.remove('fade'); }
+  function kill(){ if (F.tw){ clock.kill(F.tw); F.tw = null; } F.tok++; }
+  /* to section s, side t (0 gallery, 1 case) with html; o.cut: no flight; o.sh: the shot the camera is heading for */
+  function monTo(s, t, html, o){
+    if (!wl) return; o = o || {};
+    var q = s > 0 && html ? monAt(s, t) : null;
+    if (!q){ monOut(o); return; }
+    var same = F.g && F.g.s === s && F.g.t === t;
+    F.g = {s:s, t:t, html:html, sh:o.sh}; W.s = s; W.t = t;
+    if (same && !o.cut && (F.tw || wl.dataset.at || wl.classList.contains('boot'))){ wlSet(html); return; }   /* there, or on its way: only the content */
+    if (RM || o.cut){
+      kill(); mon.position.set(q.x, q.y, q.z); setFace(html); mon.visible = true; wl.hidden = false;
+      wl.classList.remove('dark', 'boot'); wl.dataset.at = landKey(F.g); st.render(); return;
+    }
+    fly();
+  }
+  /* out of shot, and stay there (About, a drag, leaving a case until the camera is back) */
+  function monOut(o){
+    if (!wl) return; o = o || {}; F.g = null;
+    if (RM || o.cut || !mon.visible){ kill(); mon.visible = false; wl.hidden = true; wl.classList.remove('boot'); delete wl.dataset.at; st.render(); return; }
+    if (!F.tw || F.down) fly();
+  }
+  function fly(){
+    kill(); delete wl.dataset.at; wl.classList.remove('boot'); wl.classList.add('dark');
+    if (!mon.visible){ drop(); return; }
+    var y0 = mon.position.y, top = outY(mon.position.x, F.g && F.g.sh), dur = .7*clamp((top - y0)/3, .3, 1);
+    F.down = false;
+    F.tw = clock.add(dur, function(q){ mon.position.y = lerp(y0, top, q*q); st.render(); }, function(){ F.tw = null; mon.visible = false; wl.hidden = true; st.render(); drop(); });
+  }
+  function drop(){
+    var g = F.g; if (!g) return;
+    var q = monAt(g.s, g.t), top = outY(q.x, g.sh), tok = F.tok;
+    setFace(g.html); wl.classList.add('dark'); mon.position.set(q.x, top, q.z); mon.visible = true; wl.hidden = false;
+    F.down = true;
+    F.tw = clock.add(.8, function(p){
+      var e = 1 - Math.pow(1 - p, 3);
+      mon.position.y = q.y + (top - q.y)*(1 - e) - .05*Math.sin(Math.PI*clamp((p - .7)/.3, 0, 1)); st.render();
+    }, function(){
+      F.tw = null; F.down = false; mon.position.y = q.y; wl.classList.remove('dark'); void wl.offsetWidth; wl.classList.add('boot'); st.render();
+      setTimeout(function(){ if (tok === F.tok && F.g === g){ wl.classList.remove('boot'); wl.dataset.at = landKey(g); } }, 420);
+    });
+  }
+  /* new content: cross-fades once it has landed; while it flies, the drop takes it */
   function wlSet(html){
-    if (!wl || (html === W.html && wl.hidden === !html)) return;
+    if (!wl) return;
+    if (F.g) F.g.html = html;
+    if (F.tw || !mon.visible){ if (F.down) setFace(html); return; }
+    if (html === W.html) return;
     W.html = html; var tok = ++W.tok;
-    function put(){ if (tok !== W.tok) return; wl.firstChild.innerHTML = html; W.v++; wl.hidden = !html; mon.visible = !!html; if (html){ monPlace(); st.render(); void wl.offsetWidth; wl.classList.remove('fade'); } else st.render(); }
-    if (RM || wl.hidden){ wl.classList.add('fade'); put(); return; }
+    function put(){ if (tok !== W.tok) return; wl.firstChild.innerHTML = html; W.v++; st.render(); void wl.offsetWidth; wl.classList.remove('fade'); }
+    if (RM){ put(); return; }
     wl.classList.add('fade'); setTimeout(put, 160);
   }
-  function monPlace(){ var q = monAt(W.s, W.t); if (q) mon.position.set(q.x, q.y, q.z); }
-  function wlHide(){ if (!wl) return; W.tok++; W.html = ''; wl.hidden = true; mon.visible = false; st.render(); }
-  function wlAt(s, t){ if (!wl) return; W.s = s; W.t = t; monPlace(); st.render(); }
-  /* the gallery: the selected section's facts, on its left */
-  function wlShow(s){ if (!wl) return; wlAt(s, 0); wlSet(s > 0 ? wlHTML(s - 1) : ''); }
+  function galShot(s){ return {p:new T.Vector3(sx[s] + c.off, c.y, c.z), l:new T.Vector3(sx[s], c.ly, 0)}; }
+  /* the gallery: the selected section's facts, on its left (About: none) */
+  function wlShow(s){ if (wl) monTo(s, 0, s > 0 ? wlHTML(s - 1) : '', {cut:!built, sh:galShot(s)}); }
   /* projected rects of the monitor's bezel and face (tests) */
   G.mon = function(){ return mon && mon.visible ? {bezel:objRect(mon.children[0]), face:objRect(mon.userData.face)} : null; };
   /* camera stops: section centres, except the first shot on desktop, which frames the About sign and the whole lead screen */
@@ -418,7 +482,7 @@ function buildDolly(start){
     var from = camX, to = sx[s], a = {x:plr.position.x, z:plr.position.z}, b = secs[s].zone;
     if (!anim || RM){ put(to); plr.position.set(b.x, .02, b.z); arrive(s, announce, soft); return; }
     var dur = clamp(Math.abs(to - from)/9, .4, .9);
-    bub.hidden = true; wlHide(); hideOv();
+    bub.hidden = true; monOut(); hideOv();
     tw = clock.add(dur, function(p){ put(lerp(from, to, eio(p))); st.render(); });
     var rt = route(a, b);
     if (rt.tot < .01){ plr.position.set(b.x, .02, b.z); walk = clock.add(dur, function(){}, function(){ arrive(s, announce); }); return; }
@@ -474,7 +538,7 @@ function buildDolly(start){
   function pullBack(s){
     var pp = pushed || pushTarget(s, 0), pd = secs[s].pad; pushed = null;
     if (RM){ busy = false; select(s, false); return; }
-    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; wlHide(); hideOv();
+    busy = true; clock.kill(tw); clock.kill(walk); bub.hidden = true; monOut({cut:true}); hideOv();
     var to = sx[s], p2 = new T.Vector3(to + c.off, c.y, c.z), l2 = new T.Vector3(to, c.ly, 0), tpv = new T.Vector3(), tl = new T.Vector3();
     var zw = m ? pd.z : ZOUT, a = {x:to - (m ? 3.2 : 6.5), z:zw}, rt = {segs:[], tot:0};
     [a, {x:pd.x, z:zw}, pd].reduce(function(u, v){ var d = Math.hypot(v.x - u.x, v.z - u.z); if (d > 1e-4){ rt.segs.push({a:u, b:v, d:d, s:rt.tot}); rt.tot += d; } return v; });
@@ -495,7 +559,7 @@ function buildDolly(start){
   /* with a case open the stage doesn't scrub, but clicks still reach it (a small University screen becomes the big one) */
   var inCase = function(){ return !!(G.cs && G.cs.on()); }, drag = false;
   dragX(host, function(){ return busy; },
-    function(){ drag = !inCase(); if (!drag) return; clock.kill(tw); clock.kill(walk); bub.hidden = true; wlHide(); hideOv(); dx0 = camX; },
+    function(){ drag = !inCase(); if (!drag) return; clock.kill(tw); clock.kill(walk); bub.hidden = true; monOut(); hideOv(); dx0 = camX; },
     function(dx){ if (!drag) return; put(clamp(dx0 - dx/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); },
     function(){ if (drag) snap(); },
     /* clicking a capture opens its page, the same way as Learn more */
@@ -504,7 +568,7 @@ function buildDolly(start){
   var wt = 0;
   host.addEventListener('wheel', function(e){
     var dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0); if (!dd || busy || (G.cs && G.cs.on())) return;
-    e.preventDefault(); clock.kill(tw); clock.kill(walk); bub.hidden = true; wlHide(); hideOv(); put(clamp(camX + dd/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); clearTimeout(wt); wt = setTimeout(snap, 180);
+    e.preventDefault(); clock.kill(tw); clock.kill(walk); bub.hidden = true; monOut(); hideOv(); put(clamp(camX + dd/ppu, sx[0] - 1, sx[N - 1] + 1)); st.render(); clearTimeout(wt); wt = setTimeout(snap, 180);
   }, {passive:false});
   keyEls.forEach(function(kk, s){ kk.addEventListener('click', function(){ act(s); }); });
   rove(keyEls, function(j){ select(j, true, true); });
@@ -512,7 +576,7 @@ function buildDolly(start){
   G.cs = window.CaseMode ? window.CaseMode({st:st, T:T, M:M, clock:clock, host:host, home:home, m:m, c:c, P:P, secs:secs, sx:sx, plr:plr, body:body,
     live:live, gbub:bub, keys:home.querySelector('.keys:not(.ckeys)'), ckeys:home.querySelector('.ckeys'), cmb:home.querySelector('.cmb'), keyEls:keyEls,
     ZOUT:ZOUT, RM:RM, hideOv:hideOv,
-    wl:{on:!!wl, set:wlSet, at:wlAt, gallery:function(s){ return wlHTML(s - 1); }, sheet:function(s){ return sheetHTML(s - 1); }, face:function(v){ if (wl) wl.style.visibility = v ? '' : 'hidden'; }, right:function(s){ var q = monAt(s, 1); return q ? q.x + mon.userData.W/2 : 0; }}, pushTarget:pushTarget, standToSpot:standToSpot,
+    wl:{on:!!wl, set:wlSet, fly:monTo, out:monOut, gallery:function(s){ return wlHTML(s - 1); }, sheet:function(s){ return sheetHTML(s - 1); }, face:function(v){ if (wl) wl.style.visibility = v ? '' : 'hidden'; }, right:function(s){ var q = monAt(s, 1); return q ? q.x + mon.userData.W/2 : 0; }}, pushTarget:pushTarget, standToSpot:standToSpot,
     setBusy:function(v){ busy = v; }, busy:function(){ return busy; },
     galleryShot:function(s){ return {p:new T.Vector3(sx[s] + c.off, c.y, c.z), l:new T.Vector3(sx[s], c.ly, 0)}; },
     atGallery:function(s){ camX = sx[s]; put(sx[s]); },
@@ -521,12 +585,13 @@ function buildDolly(start){
   /* where to start: a returning visitor pulls back out of the screen they opened; a #section link starts on that section;
      #<id>/case opens that case (from a project file, or a shared link): inside its screen, pulling out low */
   var s0 = start && start.sel >= 0 ? start.sel : 0;
-  if (start && start.cs && G.cs){ G.sel = s0; setRove(keyEls, s0); put(sx[s0]); G.cs.enter(s0, start.cs.k, {inside:!start.cs.cut, cut:!!start.cs.cut, part:start.cs.part, focus:start.focus || hadFocus}); }
+  if (start && start.cs && G.cs){ G.sel = s0; setRove(keyEls, s0); put(sx[s0]); G.cs.enter(s0, start.cs.k, {inside:!start.cs.cut, cut:!!start.cs.cut, direct:true, part:start.cs.part, focus:start.focus || hadFocus}); }
   else {
     if (start && start.pull) pullBack(s0); else select(s0, false);
     if (start && start.focus) keyEls[s0].focus({preventScroll:true});
     else if (hadFocus) keyEls[s0].focus({preventScroll:true});
   }
+  built = true;   /* from here on the wall monitor flies between places */
 
   /* test hook: projected stage-px rects of the meshes the tests can't measure from the DOM (no side effects) */
   var rv = new T.Vector3();

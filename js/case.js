@@ -84,7 +84,7 @@ window.CaseMode = function(X){
   var st = X.st, T = X.T, clock = X.clock, host = X.host, m = X.m, plr = X.plr, bd = X.body, RM = X.RM, H = GB.STAND_H;
   var on = false, S = -1, p = null, sec = null, D = null, cur = 0, busy = false, dead = false, pushedState = false, trailerOn = false, tw = null, inT = [];
   var order = null, split = false, mainScr = null, look = new T.Vector3();
-  var WL = X.wl || {on:false, set:function(){}, at:function(){}, gallery:function(){ return ''; }, sheet:function(){ return ''; }, face:function(){}, right:function(){ return 0; }}, wlR = false;   /* wlR: the monitor is on the case side */
+  var WL = X.wl || {on:false, set:function(){}, fly:function(){}, out:function(){}, gallery:function(){ return ''; }, sheet:function(){ return ''; }, face:function(){}, right:function(){ return 0; }}, wlR = false;   /* wlR: the monitor is on the case side */
 
   /* UI: bubble, link tags, trailer button + player + close, two clip overlays */
   var bub = el('div', 'bub cbub', '<p class="h"><span class="bh"></span><span class="bp"></span></p><div class="t"></div><dl class="cstats" hidden></dl>' +
@@ -349,7 +349,7 @@ window.CaseMode = function(X){
     on = true; busy = true; X.setBusy(true); S = s; p = X.P[s - 1]; sec = X.secs[s];
     X.hideOv(); X.gbub.hidden = true;
     /* the wall monitor: on the right of the frames with the section sheet (+ the part's Now row once the file is in) */
-    wlR = true; WL.at(s, 1); WL.set(caseHTML(-1));
+    wlR = true; WL.fly(s, 1, caseHTML(-1), {cut:RM || o.cut || o.direct, sh:lowShot()});   /* flies out of the gallery place, drops in right of the frames */
     var ae = document.activeElement, focusIn = o.focus || o.user || X.home.contains(ae) || ae === document.body;
     load(p).then(function(d){
       if (dead || !on) return;
@@ -389,8 +389,8 @@ window.CaseMode = function(X){
     if (!on) return;
     if (trailerOn) stopTrailer();
     busy = true; X.setBusy(true); quiet(); bub.hidden = true;
-    /* the monitor goes, and comes back on the left with the section's facts once the camera is back at the gallery shot */
-    wlR = false; WL.set(''); WL.face(true);
+    /* the monitor flies out, and drops back in on the left with the section's facts once the camera is back at the gallery shot */
+    wlR = false; WL.out({cut:RM}); WL.face(true);
     inT.forEach(function(t){ clock.kill(t); }); inT = [];
     var s = S, ae = document.activeElement, refocus = X.home.contains(ae) || !ae || ae === document.body;
     function back(){
@@ -403,7 +403,7 @@ window.CaseMode = function(X){
       on = false; busy = false;
       if (refocus) X.keyEls[s].focus({preventScroll:true});
     }
-    function facts(){ WL.at(s, 0); WL.set(WL.gallery(s)); }
+    function facts(){ WL.fly(s, 0, WL.gallery(s), {cut:RM}); }
     if (RM){ back(); X.atGallery(s); facts(); X.standToSpot(s, 0, done); return; }
     /* straight back out to the gallery shot: no push into the screen first (user, 2026-11-09) */
     back(); X.setBusy(true);

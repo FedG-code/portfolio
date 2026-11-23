@@ -18,21 +18,22 @@ const BASE = (process.env.BASE || 'http://localhost:8080').replace(/\/$/, '') + 
 const GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 const CASES = [['over-the-hill', 3], ['eve-of-destruction', 3], ['casino-games', 5], ['university-projects', 3], ['other-games', 3]];
 // the wall label (desktop): visible, inside the stage, clear of the bubble, link tags, Play button, title plates, frame labels and screens
-const label = p => p.evaluate(() => {
+// waits until the monitor has landed and switched on (wl.dataset.at; a flight takes ~2 s)
+const label = async p => { await p.waitForFunction(() => { const w = document.querySelector('#wall-label'); return !w || w.dataset.at; }, null, { timeout: 8000 }).catch(() => {}); return p.evaluate(() => {
   const w = document.querySelector('#wall-label'); if (!w) return { exists: false };
   const r = w.getBoundingClientRect(), sr = document.querySelector('.st').getBoundingClientRect();
   const hit = q => r.left < q.right - 1 && r.right > q.left + 1 && r.top < q.bottom - 1 && r.bottom > q.top + 1;
   const vis = e => !e.hidden && e.offsetWidth > 0 && getComputedStyle(e).opacity !== '0';
   const others = [...document.querySelectorAll('#case-bubble, #guide-bubble, .ctags, .cplay, .tp, .pin.tl, .vov')].filter(vis);
   const screens = [...document.querySelectorAll('.vov:not([hidden])')].map(e => e.getBoundingClientRect());
-  return { exists: true, shown: vis(w), left: r.left, right: r.right, top: r.top, bottom: r.bottom, inStage: r.left >= sr.left && r.right <= sr.right && r.top >= sr.top && r.bottom <= sr.bottom,
+  return { exists: true, at: w.dataset.at, shown: vis(w), left: r.left, right: r.right, top: r.top, bottom: r.bottom, inStage: r.left >= sr.left && r.right <= sr.right && r.top >= sr.top && r.bottom <= sr.bottom,
     hits: others.filter(e => hit(e.getBoundingClientRect())).map(e => e.id || e.className),
     screenL: Math.min(...screens.map(q => q.left)), screenR: Math.max(...screens.map(q => q.right)), screenT: Math.min(...screens.map(q => q.top)),
     chips: [...w.querySelectorAll('.wl-ch dt')].map(d => d.textContent), text: w.textContent, now: (w.querySelector('.wl-now .wl-k') || {}).textContent || '',
     // the HTML face sits inside the monitor's projected bezel (±2 px)
     inBezel: (() => { const m = window.__dolly && window.__dolly.rects().mon; if (!m) return false; const b = m.bezel, x = r.left - sr.left, y = r.top - sr.top;
       return x >= b.x - 2 && y >= b.y - 2 && x + r.width <= b.x + b.w + 2 && y + r.height <= b.y + b.h + 2; })() };
-});
+}); };
 
 let failed = 0;
 function check(name, ok, detail) {
@@ -127,6 +128,8 @@ const st = p => p.evaluate(() => ({
   await p.waitForFunction(() => document.querySelector('.ckeys .key.on .rt') && document.querySelector('.ckeys .key[data-g="0"] .rs').textContent === 'Casino Games', null, { timeout: 9000 }).catch(() => {});
   await ready(p);
   check('another case link while one is open switches cases', (await st(p)).hash === '#casino-games/case' && await p.evaluate(() => document.querySelector('.ckeys .key[data-g="0"] .rs').textContent) === 'Casino Games');
+  const LS = await label(p);
+  check('switching cases: the monitor flies to the new case side with its sheet', LS.at === '3:case' && /Logifuture/.test(LS.text) && LS.inBezel, { at: LS.at, inBezel: LS.inBezel });
   await p.click('.ckeys .key[data-g="1"]'); await p.waitForTimeout(700); s = await st(p);
   check('Casino: a two-clip part plays both clips', s.clips.length === 2 && /hitfor6/.test(s.clips[0]) && /hopit/.test(s.clips[1]), s.clips);
   // both clips share the one screen, side by side (no second screen), and the bubble doesn't cover them
@@ -237,20 +240,20 @@ const st = p => p.evaluate(() => ({
   const og1 = await p.evaluate(() => { const v = document.querySelector('#gallery .vov:not([hidden]) video'); return v ? v.getAttribute('src') : null; });
   check('homepage: the Other Games bay plays the big frame\'s clip (Stealth Game)', og1 === 'assets/visionsystem.mp4', og1);
   const G0 = await label(p);
-  check('gallery: the wall label hangs left of the big frame with the facts and the stack', G0.shown && G0.right <= G0.screenL + 1 && /Guard vision cone/.test(G0.text) && /Stack/.test(G0.text) && G0.inStage && !G0.hits.length, G0);
+  check('gallery: the wall label hangs left of the big frame with the facts and the stack', G0.shown && G0.at === '5:gallery' && G0.right <= G0.screenL + 1 && /Guard vision cone/.test(G0.text) && /Stack/.test(G0.text) && G0.inStage && !G0.hits.length, G0);
   await clickFrame(p, 'Tetrarcana'); await p.waitForTimeout(250);
   const ogMid = await p.evaluate(() => location.hash);
   await ready(p); s = await st(p); await p.waitForTimeout(400);
   check('homepage: the small Tetrarcana frame rotates first, then its case opens', ogMid === '' && s.key === 'Tetrarcana' && s.hash === '#other-games/case/tetrarcana', { ogMid, key: s.key, hash: s.hash });
   const G1 = await label(p);
   check('case: the wall label hangs right of the frames, with Tetrarcana\'s chips',
-    G1.shown && G1.left >= G1.screenR - 1 && G1.chips.join() === '2 Week,1v1' && !G1.hits.length, G1);
+    G1.shown && G1.at === '5:case' && G1.left >= G1.screenR - 1 && G1.chips.join() === '2 Week,1v1' && !G1.hits.length, G1);
   await p.click('.ckeys .key[data-g="0"]'); await p.waitForTimeout(900);
   for (let n = 0; n < 4 && (await st(p)).head !== 'Readable Danger'; n++) { await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(600); }
   const ogp = (await st(p)).clips.join();
   await p.click('.cback'); await p.waitForTimeout(3500);
   const G2 = await label(p);
-  check('All projects: the wall label is back on the left with the facts', G2.shown && G2.right <= G2.screenL + 1 && /Guard vision cone/.test(G2.text) && !G2.chips.length, G2);
+  check('All projects: the wall label is back on the left with the facts', G2.shown && G2.at === '5:gallery' && G2.right <= G2.screenL + 1 && /Guard vision cone/.test(G2.text) && !G2.chips.length, G2);
   const og2 = await p.evaluate(() => { const v = document.querySelector('#gallery .vov:not([hidden]) video'); return v ? v.getAttribute('src') : null; });
   check('leaving on Readable Danger: the gallery\'s big frame plays the Stealth Game clip again', ogp === 'assets/soundring.mp4' && og2 === 'assets/visionsystem.mp4', { ogp, og2 });
   check('no page errors', !errs.length, errs);
