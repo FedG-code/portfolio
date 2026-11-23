@@ -61,6 +61,14 @@ const state = p => p.evaluate(() => ({
     check(`${w}x${h} Casino: the bubble is the summary + Learn more, Learn more inside the stage`, /^At Logifuture I worked on 8\+ game releases/.test(cb.sum) && cb.opens === 1 && cb.openIn && !cb.items, cb);
     if (phone) check(`${w}x${h} phone: no wall label in the gallery`, !cl.exists, cl);
     else check(`${w}x${h} Casino: the wall label hangs left of the screen (facts incl. 700k+, stack)`, cl.shown && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games|PixiJS and Unity WebGL' && /Stack/.test(cl.text), cl);
+    if (w === 1920) {
+      // one picture height: each bay measured at its own gallery shot (__dolly.rects, projected px)
+      const hs = [];
+      for (const i of [1, 2, 3, 4, 5]) { await pick(p, i); hs[i] = await p.evaluate(i => window.__dolly.rects().bays[i].main.h, i); }
+      const one = [1, 2, 3].map(i => hs[i]), mx = Math.max(...one), mn = Math.min(...one), ref = (hs[1] + hs[2] + hs[3]) / 3;
+      check('1920x1080 the three single-screen bays show one picture height (within 2%)', (mx - mn) / mx <= .02, hs.map(Math.round));
+      check('1920x1080 each frame bay\'s big frame is 2.2/2.55 of that (±2%)', [4, 5].every(i => Math.abs(hs[i] / ref - 2.2 / 2.55) <= .02), [hs[4] / ref, hs[5] / ref, 2.2 / 2.55]);
+    }
     await ctx.close();
   }
 

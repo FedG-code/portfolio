@@ -83,7 +83,7 @@ function parse(doc, p){
 window.CaseMode = function(X){
   var st = X.st, T = X.T, clock = X.clock, host = X.host, m = X.m, plr = X.plr, bd = X.body, RM = X.RM, H = GB.STAND_H;
   var on = false, S = -1, p = null, sec = null, D = null, cur = 0, busy = false, dead = false, pushedState = false, trailerOn = false, tw = null, inT = [];
-  var order = null, slots = null, split = false, mainScr = null, look = new T.Vector3();
+  var order = null, split = false, mainScr = null, look = new T.Vector3();
   var WL = X.wl || {on:false, set:function(){}, at:function(){}, gallery:function(){ return ''; }, w:0}, wlR = false;   /* wlR: the label is on the case side */
 
   /* UI: bubble, link tags, trailer button + player + close, two clip overlays */
@@ -109,7 +109,7 @@ window.CaseMode = function(X){
     var t = st.tex(src, px);
     function ready(){
       if (u.cur !== key || !t.image) return;
-      var ar = t.image.width/t.image.height, iw = ar >= 16/9 ? u.w : u.h*ar, ih = ar >= 16/9 ? u.w/ar : u.h;
+      var ar = t.image.width/t.image.height, ba = u.w/u.h, iw = ar >= ba ? u.w : u.h*ar, ih = ar >= ba ? u.w/ar : u.h;
       u.pl.scale.set(iw/u.iw0, ih/u.ih0, 1); u.iw = iw; u.ih = ih; u.pl.material.map = t; u.pl.material.needsUpdate = true; st.render();
     }
     if (t.image && t.image.width) ready(); else t.__wait.push(ready);
@@ -173,31 +173,32 @@ window.CaseMode = function(X){
     }, {passive:true});
   });
 
-  /* University: three screens; the current game's is big. Clicking a small one swaps it with the big one */
+  /* University / Other Games: three frames; the current game's is big. Clicking a small one swaps it with the big one.
+     Each frame keeps its clip's shape: a frame in a slot gets a uniform scale (its slot size / its own size), and the bay's
+     place(k, slot, big) gives its centre and width (the small column follows the big frame's width) */
   function setupSlots(){
-    if (!p.items){ order = null; slots = null; mainScr = sec.scr[0].sc; return; }
-    slots = sec.scr.map(function(o){ return {x:o.scx, y:o.sy, w:o.sw}; });
-    if (!sec.base) sec.base = sec.scr.map(function(o){ return o.sw; });
+    if (!p.items){ order = null; mainScr = sec.scr[0].sc; return; }
+    if (!sec.base) sec.base = sec.scr.map(function(o){ return o.sc.userData.w; });
     if (!sec.order) sec.order = sec.scr.map(function(o, k){ return k; });   /* item k sits in slot order[k] (slot 0 = big) */
     order = sec.order;
-    slots = [0, 1, 2].map(function(j){ var k = order.indexOf(j), o = sec.scr[k]; return {x:o.scx, y:o.sy, w:o.sw}; });
     mainScr = sec.scr[order.indexOf(0)].sc;
   }
   function rotateTo(k, dur){
     if (!order || order[k] === 0) return;
     var j = order.indexOf(0), a = order[k]; order[k] = 0; order[j] = a;
-    [k, j].forEach(function(n){
-      var o = sec.scr[n], g = o.sc, to = slots[order[n]], fx = g.position.x, fy = g.position.y, fs = g.scale.x, ts = to.w/sec.base[n];
+    sec.scr.forEach(function(o, n){
+      var g = o.sc, to = sec.place(n, order[n], k), fx = g.position.x, fy = g.position.y, fs = g.scale.x, ts = to.w/sec.base[n];
       o.scx = to.x; o.sy = to.y; o.sw = to.w;
+      if (Math.abs(fx - to.x) < 1e-4 && Math.abs(fy - to.y) < 1e-4 && Math.abs(fs - ts) < 1e-4) return;
       clock.add(dur, function(q){
         var e = eio(q); g.position.x = lerp(fx, to.x, e); g.position.y = lerp(fy, to.y, e); var sc = lerp(fs, ts, e); g.scale.set(sc, sc, 1);
         /* the selection outline keeps its world-size margin round a grown screen */
-        var bw = sec.base[n], bh = bw/(16/9); g.userData.sel.scale.set((bw*sc + .34)/((bw + .34)*sc), (bh*sc + .34)/((bh + .34)*sc), 1);
+        var bw = g.userData.w, bh = g.userData.h; g.userData.sel.scale.set((bw*sc + .34)/((bw + .34)*sc), (bh*sc + .34)/((bh + .34)*sc), 1);
         st.render();
       });
     });
     sec.scr.forEach(function(o, n){ o.sc.userData.sel.visible = order[n] === 0; });
-    mainScr = sec.scr[k].sc; sec.sc = mainScr; sec.scx = slots[0].x; sec.sw = slots[0].w;
+    mainScr = sec.scr[k].sc; sec.sc = mainScr; sec.scx = sec.scr[k].scx; sec.sw = sec.scr[k].sw; sec.sy = sec.scr[k].sy;
   }
 
   /* camera: the low shot frames the bay from 3 units left of the stand (room for the bubble) to its right end */

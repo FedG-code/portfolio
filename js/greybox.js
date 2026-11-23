@@ -144,11 +144,11 @@ function Stage(host, w, h, o){
     t.__wait = [later]; t.minFilter = T.LinearFilter; t.generateMipmaps = false; if (px) t.magFilter = T.NearestFilter;
     texC[key] = t; return t;
   }
-  /* capture on a dark frame, kept at its own ratio inside a 16:9 box */
-  function screen(p, sw, parent){
-    var sh = sw / (16/9), g = new T.Group(); (parent || S).add(g);
+  /* capture on a dark frame: shaped like the clip when fit (desktop, 2026-11-23), else a 16:9 box it sits inside at its own ratio */
+  function screen(p, sw, parent, fit){
+    var sh = sw / (fit ? p.ar : 16/9), ba = sw/sh, g = new T.Group(); (parent || S).add(g);
     box(sw + .16, sh + .16, .1, M.dark, 0, 0, -.06, g);
-    var iw = p.ar >= 16/9 ? sw : sh * p.ar, ih = p.ar >= 16/9 ? sw / p.ar : sh;
+    var iw = p.ar >= ba ? sw : sh * p.ar, ih = p.ar >= ba ? sw / p.ar : sh;
     var pl = new T.Mesh(new T.PlaneGeometry(iw, ih), new T.MeshBasicMaterial({map:tex(p.img, p.px)})); pl.position.z = .002; g.add(pl);
     /* selection: a bright green line with a dark line just outside it, so it holds on the grey stage */
     var sel = new T.Group(); sel.position.z = -.06; sel.visible = false; g.add(sel);

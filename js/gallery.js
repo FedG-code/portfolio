@@ -186,12 +186,18 @@ function buildDolly(start){
   G.mode = m ? 'm' : 'd'; G.w = home.clientWidth; G.h = window.innerHeight;
   var keyEls = [].slice.call(home.querySelectorAll('.key')), live = home.querySelector('.live'), busy = false, pushed = null, clock = new Clock();
   var T = st.T, M = st.M;
-  /* section widths: About, then the projects (the lead bay and the three-frame bays are widest). Desktop bays carry WX more
-     on the left for the wall label (2026-11-23), and the frame bays a little more on the right, where the label goes in a case;
-     the About bay is WX narrower, so the first shot still frames the About sign and the whole lead screen */
-  var WX = m ? 0 : 1.15;
-  var BW = [6.4 - WX].concat(P.map(function(p, i){ return m ? (i === 0 || p.items ? 8.0 : 6.6) : (i === 0 || p.items ? 9.0 : 7.6) + WX + (p.items ? .5 : 0); })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
-  var SL = m ? .5 : 1.6 + WX;   /* screen's left edge from the bay's left divider (desktop: the wall label hangs in that gap, the stand in front of it) */
+  /* desktop sizes (2026-11-23): one picture height for every single bay (PH, the bezel takes the clip's shape), frame bays a
+     2.2 tall big frame (FH, width from its clip, capped at FW) + two 1.0 tall small ones stacked to its right (FS, gap FG).
+     A desktop bay = SL (the monitor's gap, the stand in front of it) + the picture(s) + ZONE (the guide and its bubble in
+     the gallery, the monitor in a case). Frame bays are sized for the widest big + small pair (any game can be big).
+     The About bay stays 5.25, so the first shot still frames the About sign and the whole lead screen. Phone keeps its sizes */
+  var PH = 2.55, FH = 2.2, FW = 4.5, FS = 1.0, FG = .4, ZONE = 2.9, SL = m ? .5 : 2.75;
+  function bigW(ar){ return Math.min(FH*ar, FW); }
+  function span(p){
+    if (!p.items) return PH*p.ar;
+    return Math.max.apply(null, p.items.map(function(it){ return bigW(it.ar); })) + FG + Math.max.apply(null, p.items.map(function(it){ return FS*it.ar; }));
+  }
+  var BW = [m ? 6.4 : 5.25].concat(P.map(function(p, i){ return m ? (i === 0 || p.items ? 8.0 : 6.6) : SL + span(p) + ZONE; })), x0 = -BW[0]/2, x1 = x0 + BW.reduce(function(a, b){ return a + b; }, 0);
   st.box(x1 - x0 + .3, 6.4, .3, M.wall, (x0 + x1)/2, 3.2, -.15); st.sunSpan(x0, x1);
   /* bay dividers: the visible wall only receives shadows. r128 draws back faces into the shadow map, so the divider's own
      shadow-side face sat within a texel of the back wall and floor and a lit band leaked along the joins; an invisible
@@ -208,7 +214,7 @@ function buildDolly(start){
   function standAt(z, l, s){ var q = m ? {x:z.x + .45, z:z.z - .8} : {x:s ? l + SL - 1.0 : l + .8, z:z.z}; GB.stand(T, st.S, q.x, q.z); return q; }
   var secs = BW.map(function(bw, s){
     var l = x, cx = x + bw/2; x += bw; divider(x);
-    var zone = {x:l + bw - (s ? 1.35 : .5), z:1.6};             /* where the guide stands on desktop (About: clear of the sign) */
+    var zone = {x:s ? l + bw - ZONE/2 + .3 : l + bw - .5, z:1.6};   /* where the guide stands on desktop: the zone's centre + .3 (About: clear of the sign) */
     if (m) zone = {x:s ? cx - 1.35 : cx - .95, z:s ? 3.6 : 4.9}; /* phone: front left, in from the edge */
     if (s === 0){
       var sign = el('div', 'pin sign', '<span class="k">About</span><p class="ab-lead">' + H.lead + '</p>' + (m ? '' : '<p class="ab-txt">' + H.about + '</p>')); host.appendChild(sign);
@@ -217,24 +223,29 @@ function buildDolly(start){
     }
     var i = s - 1, p = P[i], scr3 = [], sc, sw, sy, scx;
     if (p.items){
-      /* one main screen + two small, stacked to its right */
-      var mw = m ? 2.7 : 3.3, smw = m ? 1.2 : 1.55, gap = m ? .3 : .4;
-      sy = m ? 2.4 : 2.05; sw = mw;
-      var gl = m ? cx - (mw + gap + smw)/2 : l + SL;
-      scx = gl + mw/2;
-      var sx2 = gl + mw + gap + smw/2, sh2 = smw/(16/9), dy2 = sh2/2 + .1;
+      /* one main screen + two small, stacked to its right. Slots = {left edge, centre y, height}: each frame keeps its clip's
+         shape, so a frame in a slot has a uniform scale (slot height / its own height) and its centre x follows its width */
+      sy = m ? 2.4 : 2.05;
+      var place = (function(items, sy){
+        /* phone: 16:9 frames, as before. Desktop: the stacked small pair (1.0 + .2 + 1.0) matches the big frame */
+        var mw = 2.7, smw = 1.2, gap = .3, dy = m ? smw/(16/9)/2 + .1 : FS/2 + .1, gl = m ? cx - (mw + gap + smw)/2 : l + SL;
+        return function(k, j, big){
+          var w = m ? (j ? smw : mw) : (j ? FS*items[k].ar : bigW(items[k].ar)), le = !j ? gl : gl + (m ? mw + gap : bigW(items[big].ar) + FG);
+          return {x:le + w/2, y:j ? sy + (j === 1 ? dy : -dy) : sy, w:w};
+        };
+      })(p.items, sy);
       p.items.forEach(function(it, k){
-        var w = k ? smw : mw, px = k ? sx2 : scx, py = k ? sy + (k === 1 ? dy2 : -dy2) : sy;
-        var g = st.screen({img:it.img, ar:it.ar}, w); g.position.set(px, py, .03);
+        var q = place(k, k, 0), w = q.w, px = q.x, py = q.y;
+        var g = st.screen({img:it.img, ar:it.ar}, w, null, !m); g.position.set(px, py, .03);
         var lab = el('span', 'pin tl', it.t), lv = new T.Vector3(); lab.setAttribute('aria-hidden', 'true'); host.appendChild(lab);
         /* follows its screen (the case view swaps the University screens round) */
         st.pin(lab, null, 0, 0, {clamp:false, get:function(){ var sc = g.scale.x; return lv.set(g.position.x - (w*sc)/2 - .08, g.position.y - (g.userData.h*sc)/2 - .1, .05); }});
         scr3.push({sc:g, scx:px, sy:py, sw:w, lab:lab});
       });
-      sc = scr3[0].sc;
+      sc = scr3[0].sc; scx = scr3[0].scx; sw = scr3[0].sw;
     } else {
-      sw = i ? 3.7 : 4.7; sy = m ? 2.35 : i ? 1.95 : 2.05;
-      scx = m ? cx : l + SL + sw/2; sc = st.screen(p, sw); sc.position.set(scx, sy, .03);
+      sw = m ? (i ? 3.7 : 4.7) : PH*p.ar; sy = m ? 2.35 : 2.05;
+      scx = m ? cx : l + SL + sw/2; sc = st.screen(p, sw, null, !m); sc.position.set(scx, sy, .03);
       scr3.push({sc:sc, scx:scx, sy:sy, sw:sw});
     }
     st.box(sw*.6, .3, .5, i ? M.prop : M.lead, scx, .15, 1.0);
@@ -243,7 +254,7 @@ function buildDolly(start){
     var tpv = new T.Vector3(scx - sw/2 - .08, sy + sc.userData.h/2 + .2, .05); st.pin(tp, tpv, 0, 1, {clamp:false});
     tp.addEventListener('click', function(){ act(s); });
     scr3.forEach(function(o, k){ o.sc.userData.hit = {s:s, k:k}; hits.push(o.sc); });
-    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, s), sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, tpv:tpv, i:i, scr:scr3};
+    return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, s), sc:sc, sw:sw, sy:sy, scx:scx, tp:tp, tpv:tpv, i:i, scr:scr3, place:place};
   });
   /* the guide: capsule + speech bubble */
   var plr = capsule(T, M.white, 1.1), body = plr.userData.body; plr.position.set(secs[0].zone.x, .02, secs[0].zone.z); st.S.add(plr);
@@ -308,7 +319,7 @@ function buildDolly(start){
     wl.style.width = WLW + 'px'; host.appendChild(wl);
     st.pin(wl, null, 0, 0, {rect:function(proj){
       var o = secs[W.s]; if (!o || !o.scr) return;
-      var k = c.k, lw = wl.offsetWidth*k, top = o.sy + o.sw/(16/9)/2;
+      var k = c.k, lw = wl.offsetWidth*k, top = o.sy + o.sc.userData.h*o.sc.scale.x/2;
       var right = Math.max.apply(null, o.scr.map(function(q){ return q.scx + q.sw/2; }));
       var L = proj(wv.set(o.scx - o.sw/2 - .4, top, .05)), R = proj(wv.set(right + .4, top, .05));
       var x = W.t ? R[0] : L[0] - lw, y = W.t ? R[1] : L[1];
@@ -393,7 +404,7 @@ function buildDolly(start){
   }
   function act(s){ if (busy) return; if (G.sel === s && at === s && Math.abs(camX - sx[s]) < .05){ if (s > 0) open(s, bigK(s)); } else select(s, true, true); }
   function pushTarget(s, k){
-    var tg = secs[s].scr[k || 0], half = Math.tan(c.fov*Math.PI/360), asp = c.w/c.h, sh = tg.sw/(16/9);
+    var tg = secs[s].scr[k || 0], half = Math.tan(c.fov*Math.PI/360), asp = c.w/c.h, sh = tg.sc.userData.h*tg.sc.scale.x;
     var d = Math.max((sh/2 + .12)/half, (tg.sw/2 + .12)/(half*asp));
     return {s:s, p:new T.Vector3(tg.scx, tg.sy, d + .03), l:new T.Vector3(tg.scx, tg.sy, 0)};
   }
