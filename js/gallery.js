@@ -26,14 +26,16 @@ var H = {
 };
 /* blurb: the guide's summary in the gallery bubble. Over the Hill, Eve and Casino: the project page's .project-hero-desc,
    verbatim (tests/case-test.js fails if they drift: edit both). cap: the plain list's preview caption.
-   logs + spec[2] (Stack): the wall label beside the screen (desktop gallery) */
+   logs + spec[2] (Stack): the wall monitor beside the screen (desktop gallery). In a case the monitor shows the section sheet:
+   spec rows (all but Result; sheet: only these) + head (two headline figures, no bet figures) + a Now row for the part */
 var P = [
   { id:'over-the-hill', t:'Over the Hill', sub:'Tool programmer & designer at Funselektor Labs, 2026', subM:'Tool designer & programmer at Funselektor Labs, 2026',
     img:'assets/oth.jpg', ar:16/9, alt:'Over the Hill', marks:[{chip:'Funselektor'}], href:'over_the_hill.html',
     blurb:"A week before Over the Hill's launch, Funselektor Labs asked me for a tool to turn over the upcoming thousands of Discord messages into grouped bugs and feedback the team could triage. I built Feedbot and had a testable version within two days.",
     cap:"I built Feedbot, which sorts the game's player feedback from six feedback streams into bugs and requests. The first version went live two days after the brief.",
     spec:[['Studio','Funselektor Labs'],['Role','Tool Designer'],['Stack','Python, Claude API, Streamlit'],['Year','2026'],['Result','45k player messages handled in launch week']],
-    logs:['45k player messages handled in launch week','First version live two days after the brief','60+ bug reports and sentiment write-ups'] },
+    logs:['45k player messages handled in launch week','First version live two days after the brief','60+ bug reports and sentiment write-ups'],
+    head:[['45k','messages in launch week'],['2 days','to the first version']] },
   { id:'eve-of-destruction', t:'Eve of Destruction', sub:'Technical designer at Lost Satellite Studios, 2024', subM:'Technical designer at Lost Satellite, 2024',
     img:'assets/ult+bossfightgif-poster.jpg', clip:'assets/ult+bossfightgif.mp4', px:true, ar:16/9, alt:'Eve of Destruction: ultimate ability and boss fight gameplay', marks:[{chip:'Combat'}],   /* the Combat part's clip (user, 2026-11-23: punchier); knightboss.mp4 stays in assets for a later content pass */
     href:'eve_of_destruction.html', cap:'Combat: the ultimate ability in a boss fight.',
@@ -45,7 +47,8 @@ var P = [
     href:'casino_games.html', cap:'Three years at Logifuture shipping live casino games in PixiJS and Unity WebGL.',
     blurb:'At Logifuture I worked on 8+ game releases from start to finish, working on both the individual games, engine code and tools. I also maintained a back catalogue of 40+ games, making patches based on business needs. I also redesigned, pitched and implemented a mini version of their flagship game to drive cross product user engagement. After a strong initial performance I rebuilt 2 more games for the initiative, reaching a peak of 700k+ users across all 3 games.',
     spec:[['Studio','Logifuture'],['Role','Game Developer'],['Stack','PixiJS, Unity WebGL'],['Year','2023 to 2026']],
-    logs:['8+ game releases, start to finish','700k+ peak users across 3 games','PixiJS and Unity WebGL'] },
+    logs:['8+ game releases, start to finish','700k+ peak users across 3 games'],
+    head:[['8+','releases'],['700k+','peak users']] },
   /* Climbing Game is the main item (big screen). Each item: poster (img) + muted loop (clip); Rally's clip has sound (the case plays it behind a Play button) */
   { id:'university-projects', t:'University Projects', sub:'Climbing, rally and fishing prototypes in Unity', subM:'Three prototypes in Unity',
     rs:'Three Unity prototypes', href:'university_projects.html',
@@ -55,7 +58,7 @@ var P = [
     items:[{t:'Climbing Game', href:'university_projects.html#climbing', img:'assets/climbing-poster.jpg', clip:'assets/climbing.mp4', start:15, ar:960/464},
            {t:'Rally Game', href:'university_projects.html#rally', img:'assets/rally-poster.jpg', clip:'assets/rally.mp4', start:18, ar:960/542},
            {t:'Fishing Game', href:'university_projects.html#fishing', img:'assets/fishing-poster.jpg', clip:'assets/fishing.mp4', start:1, ar:960/474}],
-    logs:[] },
+    logs:[], sheet:['Stack'] },   /* module / year / solo not confirmed yet: the case sheet shows only the stack */
   /* same three frames as University: Stealth Game is the main item (its case plays each part's own clip in the big frame) */
   { id:'other-games', t:'Other Games', sub:'A stealth game in Unity, plus jam games, since 2025', subM:'Stealth game in Unity, plus jam games',
     img:null, ar:640/364, alt:'Top-down stealth game with the guard vision cone drawn on the floor', marks:[{x:43.5,y:9,w:10.5,h:43,l:'Vision cone: HLSL shader'}],
@@ -148,10 +151,18 @@ function bubHTML(i, m){
   /* the section's summary (its text scrolls inside when the stage is short) + Learn more (an items bay: the game in the big frame) */
   return '<p class="sum">' + p.blurb + '</p>' + (p.href ? openLink(p, 'openb') : '');
 }
-/* the wall label beside the screen: the section's facts + its stack (University has no facts: just the stack) */
+/* the wall monitor beside the screen. Gallery: the section's facts + its stack (University has no facts: just the stack).
+   Case (sheetHTML): the section sheet, the same for the whole case, + a Now row for the part (case.js) */
+function wlHd(p){ return '<p class="wl-hd"><span aria-hidden="true">&#9679;</span> ' + p.id + '</p>'; }
 function wlHTML(i){
   var p = P[i]; if (!p) return '';
-  return (p.logs.length ? '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul>' : '') + '<p class="wl-st"><span>Stack</span>' + p.spec[2][1] + '</p>';
+  return wlHd(p) + (p.logs.length ? '<ul>' + p.logs.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul>' : '') + '<p class="wl-st"><span>Stack</span>' + p.spec[2][1] + '</p>';
+}
+function sheetHTML(i){
+  var p = P[i]; if (!p) return '';
+  var rows = p.spec.filter(function(r){ return r[0] !== 'Result' && r[0] !== 'Stack' && (!p.sheet || p.sheet.indexOf(r[0]) >= 0); }).concat(!p.sheet || p.sheet.indexOf('Stack') >= 0 ? [p.spec[2]] : []);
+  return wlHd(p) + '<dl class="wl-sh">' + rows.map(function(r){ return '<div><dt>' + (r[0] === 'Year' && / to |onwards/.test(r[1]) ? 'Years' : r[0]) + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') + '</dl>' +
+    (p.head ? '<div class="wl-hf">' + p.head.map(function(h){ return '<p><b>' + h[0] + '</b><span>' + h[1] + '</span></p>'; }).join('') + '</div>' : '');
 }
 /* camera set-up per shot, tuned for the prototype's stage sizes; the camera distance is scaled so other widths see the same stretch of wall */
 function shot(m, w, avail){
@@ -309,35 +320,54 @@ function buildDolly(start){
     if (over > 0) sm.style.maxHeight = Math.max(54, sm.offsetHeight - over) + 'px';
   }
 
-  /* the wall label (a museum caption; desktop only, user 2026-11-23): in the gallery it hangs on the wall left of the
-     selected screen, above the stand, with the section's facts and stack. In a case (js/case.js) it hangs right of the
-     frames and carries the current part's stat chips (no slide between the two: user, 2026-11-23).
-     W.t: 0 = gallery side (left), 1 = case side (right) */
-  var wl = null, W = {s:-1, t:0, tok:0, html:''}, wv = new T.Vector3(), WLW = c.w < 820 ? 160 : 190;
+  /* the wall monitor (desktop only, 2026-11-23; was a paper label): a small monitor hung on two lines, its HTML face
+     (#wall-label) fitted to the projected face. In the gallery it hangs left of the selected screen (right edge .4 from the
+     picture, top level with it) with the section's facts and stack; in a case (js/case.js) .3 right of the rightmost frame,
+     with the section sheet + the part's Now row. W.t: 0 = gallery side (left), 1 = case side (right) */
+  var wl = null, mon = null, W = {s:-1, t:0, tok:0, html:'', v:0}, wv = new T.Vector3(), mcn = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()];
+  /* where the monitor hangs for section s on side t (its centre) */
+  function monAt(s, t){
+    var o = secs[s]; if (!o || !o.scr) return null;
+    /* fixed per bay, so it stays put while a case swaps its frames round: the top of the big picture, the frames' widest extent */
+    var p = P[s - 1], u = mon.userData, top = o.sy + (p.items ? FH : PH)/2 + .08, right = o.l + SL + span(p);
+    return {x:t ? right + .08 + .3 + u.W/2 : o.l + SL - .4 - u.W/2, y:top - u.H/2, z:.09};
+  }
   if (!m){
+    mon = st.monitor(2.0, 1.6); mon.visible = false;
     wl = el('aside', 'pin wl', '<div class="wl-in"></div>'); wl.id = 'wall-label'; wl.setAttribute('aria-label', 'Notes'); wl.hidden = true;
-    wl.style.width = WLW + 'px'; host.appendChild(wl);
+    host.appendChild(wl);
+    var wfit = {key:'', s:1};
     st.pin(wl, null, 0, 0, {rect:function(proj){
-      var o = secs[W.s]; if (!o || !o.scr) return;
-      var k = c.k, lw = wl.offsetWidth*k, top = o.sy + o.sc.userData.h*o.sc.scale.x/2;
-      var right = Math.max.apply(null, o.scr.map(function(q){ return q.scx + q.sw/2; }));
-      var L = proj(wv.set(o.scx - o.sw/2 - .4, top, .05)), R = proj(wv.set(right + .4, top, .05));
-      var x = W.t ? R[0] : L[0] - lw, y = W.t ? R[1] : L[1];
-      wl.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)' + (k < 1 ? ' scale(' + k.toFixed(3) + ')' : '');
+      if (!mon.visible) return;
+      var u = mon.userData, x = mon.position.x, y = mon.position.y, z = mon.position.z + .072, hw = u.w/2, hh = u.h/2;
+      mcn[0].set(x - hw, y - hh, z); mcn[1].set(x + hw, y - hh, z); mcn[2].set(x - hw, y + hh, z); mcn[3].set(x + hw, y + hh, z);
+      var ps = mcn.map(function(v){ return proj(v); }), xs = ps.map(function(q){ return q[0]; }), ys = ps.map(function(q){ return q[1]; });
+      var lx = Math.min.apply(null, xs), ty = Math.min.apply(null, ys), fw = Math.max.apply(null, xs) - lx, fh = Math.max.apply(null, ys) - ty;
+      wl.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'; wl.style.width = fw.toFixed(1) + 'px'; wl.style.height = fh.toFixed(1) + 'px';
+      /* the text scales by k (as the other pins), and further down only if it would not fit the face */
+      var inn = wl.firstChild, key = W.v + '|' + Math.round(fw) + '|' + Math.round(fh);
+      if (wfit.key !== key){
+        var sc = c.k;
+        for (var n = 0; n < 5; n++){ inn.style.width = (fw/sc) + 'px'; inn.style.transform = 'scale(' + sc.toFixed(3) + ')'; var hh2 = inn.offsetHeight*sc; if (hh2 <= fh + .5) break; sc *= Math.max(.7, Math.sqrt(fh/hh2)); }
+        wfit.key = key; wfit.s = sc;
+      }
     }});
   }
-  /* new content cross-fades ('' fades it out) */
+  /* new content cross-fades ('' fades it out, and the monitor goes) */
   function wlSet(html){
     if (!wl || (html === W.html && wl.hidden === !html)) return;
     W.html = html; var tok = ++W.tok;
-    function put(){ if (tok !== W.tok) return; wl.firstChild.innerHTML = html; wl.hidden = !html; if (html){ st.render(); void wl.offsetWidth; wl.classList.remove('fade'); } }
+    function put(){ if (tok !== W.tok) return; wl.firstChild.innerHTML = html; W.v++; wl.hidden = !html; mon.visible = !!html; if (html){ monPlace(); st.render(); void wl.offsetWidth; wl.classList.remove('fade'); } else st.render(); }
     if (RM || wl.hidden){ wl.classList.add('fade'); put(); return; }
     wl.classList.add('fade'); setTimeout(put, 160);
   }
-  function wlHide(){ if (!wl) return; W.tok++; W.html = ''; wl.hidden = true; }
-  function wlAt(s, t){ if (!wl) return; W.s = s; W.t = t; st.render(); }
-  /* the gallery: the selected section's label, on its left */
+  function monPlace(){ var q = monAt(W.s, W.t); if (q) mon.position.set(q.x, q.y, q.z); }
+  function wlHide(){ if (!wl) return; W.tok++; W.html = ''; wl.hidden = true; mon.visible = false; st.render(); }
+  function wlAt(s, t){ if (!wl) return; W.s = s; W.t = t; monPlace(); st.render(); }
+  /* the gallery: the selected section's facts, on its left */
   function wlShow(s){ if (!wl) return; wlAt(s, 0); wlSet(s > 0 ? wlHTML(s - 1) : ''); }
+  /* projected rects of the monitor's bezel and face (tests) */
+  G.mon = function(){ return mon && mon.visible ? {bezel:objRect(mon.children[0]), face:objRect(mon.userData.face)} : null; };
   /* camera stops: section centres, except the first shot on desktop, which frames the About sign and the whole lead screen */
   var sx = secs.map(function(o){ return o.cx; }), N = sx.length;
   if (!m) sx[0] = ((secs[0].l + .2) + (secs[1].scx + secs[1].sw/2 + .3))/2;
@@ -482,7 +512,7 @@ function buildDolly(start){
   G.cs = window.CaseMode ? window.CaseMode({st:st, T:T, M:M, clock:clock, host:host, home:home, m:m, c:c, P:P, secs:secs, sx:sx, plr:plr, body:body,
     live:live, gbub:bub, keys:home.querySelector('.keys:not(.ckeys)'), ckeys:home.querySelector('.ckeys'), cmb:home.querySelector('.cmb'), keyEls:keyEls,
     ZOUT:ZOUT, RM:RM, hideOv:hideOv,
-    wl:{on:!!wl, set:wlSet, at:wlAt, gallery:function(s){ return wlHTML(s - 1); }, w:WLW*c.k}, pushTarget:pushTarget, standToSpot:standToSpot,
+    wl:{on:!!wl, set:wlSet, at:wlAt, gallery:function(s){ return wlHTML(s - 1); }, sheet:function(s){ return sheetHTML(s - 1); }, face:function(v){ if (wl) wl.style.visibility = v ? '' : 'hidden'; }, right:function(s){ var q = monAt(s, 1); return q ? q.x + mon.userData.W/2 : 0; }}, pushTarget:pushTarget, standToSpot:standToSpot,
     setBusy:function(v){ busy = v; }, busy:function(){ return busy; },
     galleryShot:function(s){ return {p:new T.Vector3(sx[s] + c.off, c.y, c.z), l:new T.Vector3(sx[s], c.ly, 0)}; },
     atGallery:function(s){ camX = sx[s]; put(sx[s]); },

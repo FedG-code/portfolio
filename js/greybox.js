@@ -156,6 +156,17 @@ function Stage(host, w, h, o){
     sel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .40, sh + .40, .16)), new T.LineBasicMaterial({color:0x15181B})));
     g.userData = {w:sw, h:sh, iw:iw, ih:ih, iw0:iw, ih0:ih, pl:pl, src:p.img, px:!!p.px, sel:sel}; return g;
   }
+  /* a small monitor (the wall label, 2026-11-23): dark bezel (shadows like the screens), a face plane the HTML sits on, a chin
+     with a green LED, and two thin lines up out of shot (fixed children, 12 m, no shadow: thinner than a shadow texel) */
+  function monitor(w, h){
+    var g = new T.Group(); S.add(g);
+    box(w + .14, h + .14, .14, M.dark, 0, 0, 0, g);
+    var face = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({color:0x101315})); face.position.z = .071; g.add(face);
+    box(.34, .06, .03, M.dark, 0, -h/2 - .1, .02, g).castShadow = false;
+    var led = new T.Mesh(new T.BoxGeometry(.05, .03, .01), new T.MeshBasicMaterial({color:0x2BD957})); led.position.set(.1, -h/2 - .1, .04); g.add(led);
+    [-1, 1].forEach(function(sd){ var ln = box(.012, 12, .012, M.dark, sd*(w/2 - .25), h/2 + .07 + 6, 0, g); ln.castShadow = false; ln.receiveShadow = false; });
+    g.userData = {w:w, h:h, W:w + .14, H:h + .14, face:face}; return g;
+  }
   function pin(elm, v, ax, ay, extra){ var p = {el:elm, v:v, ax:ax || 0, ay:ay || 0}; if (extra) for (var k in extra) p[k] = extra[k]; pins.push(p); return p; }
   /* which tagged object (userData.hit) is under a client point */
   var ray = new T.Raycaster(), nd = new T.Vector2();
@@ -174,7 +185,7 @@ function Stage(host, w, h, o){
     S.traverse(function(o){ if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.map) o.material.dispose(); });
     ft.dispose(); if (sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; }
   }
-  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, pin:pin, pick:pick, sunSpan:sunSpan, dispose:dispose};
+  return {T:T, S:S, cam:cam, M:M, look:look, setCam:setCam, proj:proj, resize:resize, render:render, later:later, box:box, tex:tex, screen:screen, monitor:monitor, pin:pin, pick:pick, sunSpan:sunSpan, dispose:dispose};
 }
 function capsule(T, mat, s){
   var g = new T.Group(), b = new T.Group(); g.add(b); var r = .24*s;

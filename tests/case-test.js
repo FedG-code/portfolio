@@ -28,7 +28,10 @@ const label = p => p.evaluate(() => {
   return { exists: true, shown: vis(w), left: r.left, right: r.right, top: r.top, bottom: r.bottom, inStage: r.left >= sr.left && r.right <= sr.right && r.top >= sr.top && r.bottom <= sr.bottom,
     hits: others.filter(e => hit(e.getBoundingClientRect())).map(e => e.id || e.className),
     screenL: Math.min(...screens.map(q => q.left)), screenR: Math.max(...screens.map(q => q.right)), screenT: Math.min(...screens.map(q => q.top)),
-    chips: [...w.querySelectorAll('.wl-ch dt')].map(d => d.textContent), text: w.textContent };
+    chips: [...w.querySelectorAll('.wl-ch dt')].map(d => d.textContent), text: w.textContent, now: (w.querySelector('.wl-now .wl-k') || {}).textContent || '',
+    // the HTML face sits inside the monitor's projected bezel (±2 px)
+    inBezel: (() => { const m = window.__dolly && window.__dolly.rects().mon; if (!m) return false; const b = m.bezel, x = r.left - sr.left, y = r.top - sr.top;
+      return x >= b.x - 2 && y >= b.y - 2 && x + r.width <= b.x + b.w + 2 && y + r.height <= b.y + b.h + 2; })() };
 });
 
 let failed = 0;
@@ -84,6 +87,22 @@ const st = p => p.evaluate(() => ({
     await ctx.close();
   }
 
+  // the wall monitor is on in every part of every case (desktop), face inside its bezel, the sheet + a Now row
+  {
+    const q = await b.newPage({ viewport: { width: 1440, height: 900 } }); const bad = [];
+    for (const [id] of CASES) {
+      await q.goto('about:blank'); await q.goto(BASE + 'index.html#' + id + '/case'); await ready(q); await q.waitForTimeout(600);
+      for (let k = 0; k < 12; k++) {
+        const L = await label(q);
+        if (!(L.shown && L.inBezel && /^Now \d+\/\d+/.test(L.now) && !/case/i.test(L.text.replace(id, '')))) bad.push({ id, k, shown: L.shown, inBezel: L.inBezel, now: L.now });
+        const next = await q.evaluate(() => { const b = document.querySelector('#case-bubble [data-step="1"]'); if (b.disabled) return false; b.click(); return true; });
+        if (!next) break; await q.waitForTimeout(450);
+      }
+    }
+    check('the wall monitor shows on every part of every case, face inside its bezel, sheet + Now row', !bad.length, bad.slice(0, 4));
+    await q.close();
+  }
+
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
 
@@ -116,7 +135,8 @@ const st = p => p.evaluate(() => ({
   check('Casino: the two clips split one screen, side by side, clear of the bubble', sp.n === 2 && sp.sameRow && sp.touching && sp.bubbleClear, sp);
   await p.click('.ckeys .key[data-g="0"]'); await p.waitForTimeout(500); const L0 = await label(p);
   await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(700); const L1 = await label(p);
-  check('Casino: a part without chips hides the wall label; the next part shows its chips on it (300k, #1)', !L0.shown && L1.shown && L1.chips.join() === '300k,#1', { L0: L0.shown, L1: L1.chips });
+  check('Casino: a part without chips keeps the monitor (sheet + Now row, no chips); the next part shows its chips on it (300k, #1)',
+    L0.shown && !L0.chips.length && /^Now 1\/5/.test(L0.now) && /Logifuture/.test(L0.text) && L1.shown && L1.chips.join() === '300k,#1', { L0: [L0.shown, L0.now], L1: L1.chips });
   await p.goto('about:blank'); await p.goto(BASE + 'index.html#eve-of-destruction/case'); await ready(p);
   s = await st(p);
   check('Eve: no Overview, the case opens on Combat with its own clip and the trailer button', s.key === 'Combat' && s.clips[0] === 'assets/ult+bossfightgif.mp4' && await p.evaluate(() => !document.querySelector('.cplay').hidden), s);

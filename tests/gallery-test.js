@@ -60,7 +60,7 @@ const state = p => p.evaluate(() => ({
     const cb = await bubble(p), cl = await wallLabel(p), phone = await p.evaluate(() => document.querySelector('#gallery').clientWidth < 640);
     check(`${w}x${h} Casino: the bubble is the summary + Learn more, Learn more inside the stage`, /^At Logifuture I worked on 8\+ game releases/.test(cb.sum) && cb.opens === 1 && cb.openIn && !cb.items, cb);
     if (phone) check(`${w}x${h} phone: no wall label in the gallery`, !cl.exists, cl);
-    else check(`${w}x${h} Casino: the wall label hangs left of the screen (facts incl. 700k+, stack)`, cl.shown && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games|PixiJS and Unity WebGL' && /Stack/.test(cl.text), cl);
+    else check(`${w}x${h} Casino: the wall monitor hangs left of the screen (facts incl. 700k+, stack; no repeated stack bullet)`, cl.shown && cl.leftOfScreen && cl.items.join('|') === '8+ game releases, start to finish|700k+ peak users across 3 games' && /Stack/.test(cl.text), cl);
     if (w === 1920) {
       // one picture height: each bay measured at its own gallery shot (__dolly.rects, projected px)
       const hs = [];

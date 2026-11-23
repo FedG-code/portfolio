@@ -84,7 +84,7 @@ window.CaseMode = function(X){
   var st = X.st, T = X.T, clock = X.clock, host = X.host, m = X.m, plr = X.plr, bd = X.body, RM = X.RM, H = GB.STAND_H;
   var on = false, S = -1, p = null, sec = null, D = null, cur = 0, busy = false, dead = false, pushedState = false, trailerOn = false, tw = null, inT = [];
   var order = null, split = false, mainScr = null, look = new T.Vector3();
-  var WL = X.wl || {on:false, set:function(){}, at:function(){}, gallery:function(){ return ''; }, w:0}, wlR = false;   /* wlR: the label is on the case side */
+  var WL = X.wl || {on:false, set:function(){}, at:function(){}, gallery:function(){ return ''; }, sheet:function(){ return ''; }, face:function(){}, right:function(){ return 0; }}, wlR = false;   /* wlR: the monitor is on the case side */
 
   /* UI: bubble, link tags, trailer button + player + close, two clip overlays */
   var bub = el('div', 'bub cbub', '<p class="h"><span class="bh"></span><span class="bp"></span></p><div class="t"></div><dl class="cstats" hidden></dl>' +
@@ -206,8 +206,8 @@ window.CaseMode = function(X){
     /* phone: from the stand to the right edge of the bay's screens (University: all three frames) */
     var edge = Math.max.apply(null, sec.scr.map(function(o){ return o.scx + o.sw/2; }));
     var left = m ? sec.pad.x - 1.1 : sec.pad.x - 3.0, right = m ? edge + .3 : sec.l + sec.bw - .2;
-    /* desktop: the wall label hangs right of the frames (its screen width is fixed, WL.w px): widen the shot if it would not fit */
-    if (WL.on){ var need = (edge + .4 + .2 - left)/(1 - WL.w/X.c.w); if (left + need > right) right = left + need; }
+    /* desktop: the wall monitor hangs in the zone right of the frames: the shot takes in its right edge + a margin */
+    if (WL.on && !m) right = Math.max(right, WL.right(S) + .3);
     var fov = X.c.fov, asp = X.c.w/X.c.h, half = (right - left)/2, d = half/(Math.tan(fov*Math.PI/360)*asp);
     var cx = (left + right)/2;
     /* phone: the guide stands well in front of the wall, so the camera frames it at its own depth */
@@ -291,7 +291,7 @@ window.CaseMode = function(X){
       if (c0) setImg(mainScr, c0.img, c0.px);
     }
     tags.hidden = !talk || !b.links.length;
-    if (wlR) WL.set(talk ? chipsHTML(b) : '');
+    if (wlR) WL.set(caseHTML(i));
     var sv = !b.yt && snd(b);
     play.hidden = !talk || !(b.yt || sv);
     if (!play.hidden){ play.lastChild.textContent = b.yt ? ' Play trailer' : ' Play with sound'; close.firstChild.textContent = b.yt ? 'Close trailer ' : 'Close video '; }
@@ -321,10 +321,15 @@ window.CaseMode = function(X){
       if (!RM){ if (fresh) GB.clipGate(o, v); v.muted = true; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
     });
   }
-  /* the wall label in a case: the part's heading and its stat chips; a part without chips hides it */
-  function chipsHTML(b){ return b && b.stats ? '<p class="wl-k">' + b.h + '</p><dl class="wl-ch">' + b.stats.map(function(s){ return '<div><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('') + '</dl>' : ''; }
+  /* the wall monitor in a case: the section sheet (the same for the whole case) + a Now row: the part and its stat chips, if any.
+     Never blank while a case is open */
+  function caseHTML(i){
+    var b = D && D.beats[i], now = !b ? '' : '<div class="wl-now"><p class="wl-k">Now ' + (b.g + 1) + '/' + D.groups.length + ' &middot; ' + D.groups[b.g].t + '</p>' +
+      (b.stats ? '<dl class="wl-ch">' + b.stats.map(function(s){ return '<div><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('') + '</dl>' : '') + '</div>';
+    return WL.sheet(S) + now;
+  }
   function talk(){ var was = !bub.hidden; bub.hidden = false; if (!RM && !was) GB.restart(bub); show(cur, true); phoneTail(); }
-  function quiet(){ if (wlR) WL.set(''); if (!m) bub.hidden = true; tags.hidden = true; play.hidden = true; clips(null); setSplit(false); }
+  function quiet(){ if (!m) bub.hidden = true; tags.hidden = true; play.hidden = true; clips(null); setSplit(false); }
 
   function go(i, user){
     if (!on || busy || trailerOn || i < 0 || i >= D.beats.length) return;
@@ -343,9 +348,8 @@ window.CaseMode = function(X){
     if (on || dead) return;
     on = true; busy = true; X.setBusy(true); S = s; p = X.P[s - 1]; sec = X.secs[s];
     X.hideOv(); X.gbub.hidden = true;
-    /* the wall label: hidden while the case opens, then on the right of the frames with the part's chips once the guide talks
-       (no slide across: user, 2026-11-23) */
-    wlR = false; WL.set(''); WL.at(s, 1);
+    /* the wall monitor: on the right of the frames with the section sheet (+ the part's Now row once the file is in) */
+    wlR = true; WL.at(s, 1); WL.set(caseHTML(-1));
     var ae = document.activeElement, focusIn = o.focus || o.user || X.home.contains(ae) || ae === document.body;
     load(p).then(function(d){
       if (dead || !on) return;
@@ -363,7 +367,6 @@ window.CaseMode = function(X){
       if (focusIn){ var fk = keys[D.beats[cur].g]; if (fk) fk.focus({preventScroll:true}); }
       X.live.textContent = p.t + ': ' + D.groups[D.beats[cur].g].t;
       show(cur, false);
-      wlR = true;
       var low = lowShot();
       if (RM || o.cut){ st.setCam(low.p, low.l); onStand(); busy = false; X.setBusy(false); talk(); return; }
       /* closed before the walk-in ended (browser Back): its tweens are killed in exit(), and it doesn't talk */
@@ -386,8 +389,8 @@ window.CaseMode = function(X){
     if (!on) return;
     if (trailerOn) stopTrailer();
     busy = true; X.setBusy(true); quiet(); bub.hidden = true;
-    /* the label hides, and comes back on the left with the section's facts once the camera is back at the gallery shot */
-    wlR = false; WL.set('');
+    /* the monitor goes, and comes back on the left with the section's facts once the camera is back at the gallery shot */
+    wlR = false; WL.set(''); WL.face(true);
     inT.forEach(function(t){ clock.kill(t); }); inT = [];
     var s = S, ae = document.activeElement, refocus = X.home.contains(ae) || !ae || ae === document.body;
     function back(){
@@ -410,7 +413,7 @@ window.CaseMode = function(X){
   /* ------------------------------ trailer: zoom into the frame ------------------------------ */
   function trailer(){
     var b = D && D.beats[cur], sv = b && !b.yt && snd(b); if (!on || busy || !b || !(b.yt || sv)) return;
-    trailerOn = true; busy = true; quiet(); bub.hidden = true;
+    trailerOn = true; busy = true; quiet(); bub.hidden = true; WL.face(false);   /* zoomed in, the face would sit at the stage edge: the mesh stays */
     tweenCam(inside(), RM ? 0 : .6, function(){
       busy = false;
       if (b.yt) yt.innerHTML = '<iframe src="' + b.yt.src + (b.yt.src.indexOf('?') < 0 ? '?' : '&') + 'autoplay=1" title="' + b.yt.t + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
@@ -429,7 +432,7 @@ window.CaseMode = function(X){
   function closeTrailer(){
     if (!trailerOn) return;
     stopTrailer(); busy = true;
-    tweenCam(lowShot(), RM ? 0 : .6, function(){ busy = false; talk(); play.focus({preventScroll:true}); });
+    tweenCam(lowShot(), RM ? 0 : .6, function(){ busy = false; WL.face(true); talk(); play.focus({preventScroll:true}); });
   }
 
   /* clicking a screen while a case is open: a small University screen becomes the big one */
