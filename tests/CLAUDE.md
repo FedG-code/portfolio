@@ -9,7 +9,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | Check | What |
 |-------|------|
 | Viewports | 1920x1080, 1024x768, 390x844, 812x375: gallery built, exactly one canvas, About selected, bubble shown, no horizontal overflow, no page errors; Casino: the bubble is the summary + one Learn more, inside the stage; desktop: the wall label left of the screen with the facts (incl. 700k+) and Stack; phone: no wall label |
-| Keyboard | focus About key, ArrowRight x2 -> Eve; live region = "Eve of Destruction" only; `aria-describedby="guide-bubble wall-label"` on the active key; knightboss.mp4 overlay |
+| Keyboard | focus About key, ArrowRight x2 -> Eve; live region = "Eve of Destruction" only; `aria-describedby="guide-bubble wall-label"` on the active key; ult+bossfightgif.mp4 overlay (the Combat clip) |
 | Open | Enter on the selected key: bubble hides during the push; `#eve-of-destruction/case` in the same page, one canvas, case bar shown, focus on its first part (Combat: no Overview) |
 | All projects | bubble hidden during the push / pull-out / walk, then shown; section bar back, focus on the Eve key, no `/case` in the URL |
 | University | bubble = the user's summary + one Learn more (#climbing, the big frame); wall label = just the stack; Learn more opens Climbing; with Rally made big in the case, browser Back closes it (focus on the University button) and Learn more then opens Rally |

@@ -74,7 +74,7 @@ const state = p => p.evaluate(() => ({
   check('arrow keys select Eve of Destruction', s.key === 'Eve of Destruction' && s.active.indexOf('Eve of Destruction') === 0, s);
   check('live region says only the section name', s.live === 'Eve of Destruction', s.live);
   check('bubble and wall label describe the active button', s.describedBy === 'guide-bubble wall-label', s.describedBy);
-  check('clip plays over the selected screen', /knightboss\.mp4$/.test(s.clip || ''), s.clip);
+  check('clip plays over the selected screen', /ult\+bossfightgif\.mp4$/.test(s.clip || ''), s.clip);
   await p.keyboard.press('Enter'); await p.waitForTimeout(250);
   check('bubble hides during the push', (await state(p)).bubble === false);
   // the case opens in the same scene: no page load, the bar swaps to the case's parts

@@ -35,8 +35,8 @@ var P = [
     spec:[['Studio','Funselektor Labs'],['Role','Tool Designer'],['Stack','Python, Claude API, Streamlit'],['Year','2026'],['Result','45k player messages handled in launch week']],
     logs:['45k player messages handled in launch week','First version live two days after the brief','60+ bug reports and sentiment write-ups'] },
   { id:'eve-of-destruction', t:'Eve of Destruction', sub:'Technical designer at Lost Satellite Studios, 2024', subM:'Technical designer at Lost Satellite, 2024',
-    img:'assets/knightboss-poster.jpg', clip:'assets/knightboss.mp4', px:true, ar:800/494, alt:'Eve of Destruction knight boss attacking, with hitboxes visible', marks:[{chip:'Hitbox debug view on'}],
-    href:'eve_of_destruction.html', cap:'The knight boss with my hitbox debug view on.',
+    img:'assets/ult+bossfightgif-poster.jpg', clip:'assets/ult+bossfightgif.mp4', px:true, ar:16/9, alt:'Eve of Destruction: ultimate ability and boss fight gameplay', marks:[{chip:'Combat'}],   /* the Combat part's clip (user, 2026-11-23: punchier); knightboss.mp4 stays in assets for a later content pass */
+    href:'eve_of_destruction.html', cap:'Combat: the ultimate ability in a boss fight.',
     blurb:'A 2D action-platformer built around combo combat, unlockable abilities, and branching progression. As Technical Designer on a small team, I designed and implemented the player\'s combat and movement systems along with mob and boss enemy logic, all in GDScript. <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener">Steam demo available</a>.',
     spec:[['Studio','Lost Satellite Studios'],['Role','Technical Designer'],['Stack','Godot, GDScript'],['Year','2024']],
     logs:['Combat: each attack is an FSM state, with input buffering','Crystal Eaters: ten-state FSM, three detection ranges','Steam demo out'] },
