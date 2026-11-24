@@ -122,8 +122,8 @@ const st = p => p.evaluate(() => ({
   check('Back: the first part again (no Overview part)', s.key === 'Launch week' && s.head === 'Launch week' && s.part === '1 / 2', s);
   await p.click('.ckeys .key[data-g="1"]'); await p.waitForTimeout(400); s = await st(p);
   check('bar click jumps to that part', s.key === 'How it works', s.key);
-  const lis = await p.evaluate(() => document.querySelectorAll('#case-bubble .t ul li').length);
-  check('bullets reach the bubble (How it works: 1)', lis === 1, lis);
+  const tb = await p.evaluate(() => { const t = document.querySelector('#case-bubble .t'); return { p: t.querySelectorAll('p').length, li: t.querySelectorAll('li').length }; });
+  check('Over the Hill is prose, no bullets (How it works: 1 paragraph)', tb.p === 1 && tb.li === 0, tb);
   await p.keyboard.press('ArrowRight'); await p.waitForTimeout(400); s = await st(p);
   check('arrow key on the bar moves to the next part, focus follows', s.key === 'After 1.0' && s.active.indexOf('After 1.0') === 0, s);
   const tag = await p.evaluate(() => [...document.querySelectorAll('.ctags a')].map(a => a.getAttribute('href')));
@@ -194,7 +194,7 @@ const st = p => p.evaluate(() => ({
     check('case: a clip overlay is never visible before its video has a frame', !u.n, u);
     await ctx.close();
   }
-  // a div.part is one bubble (Fishing: three paragraphs), the next <p> its own; Over the Hill's bullets reach the bubble
+  // a div.part is one bubble (Fishing: three paragraphs), the next <p> its own
   const bt = () => p.evaluate(() => { const t = document.querySelector('#case-bubble .t'); return { part: document.querySelector('#case-bubble .bp').textContent, p: t.querySelectorAll('p').length, li: t.querySelectorAll('ul li').length }; });
   const b1 = await bt(); await p.click('#case-bubble [data-step="1"]'); await p.waitForTimeout(500); const b2 = await bt();
   check('a div.part is one bubble (Fishing: 3 paragraphs, then 1)', b1.part === '1 / 2' && b1.p === 3 && b2.part === '2 / 2' && b2.p === 1, { b1, b2 });
