@@ -420,7 +420,7 @@ function buildDolly(start){
       if (!mon.visible) return;
       var u = mon.userData, x = mon.position.x, y = mon.position.y, z = mon.position.z + .072, hw = u.w/2, hh = u.h/2;
       mcn[0].set(x - hw, y - hh, z); mcn[1].set(x + hw, y - hh, z); mcn[2].set(x - hw, y + hh, z); mcn[3].set(x + hw, y + hh, z);
-      var ps = mcn.map(function(v){ return proj(v); }), r = GB.quad(wl, [ps[2], ps[3], ps[1], ps[0]]), fw = r.w, fh = r.h;
+      var ps = mcn.map(function(v){ return proj(v); }), r = GB.quad(wl, [ps[2], ps[3], ps[1], ps[0]], true), fw = r.w, fh = r.h;
       /* the text scales by k (as the other pins), and further down only if it would not fit the face */
       var inn = wl.firstChild, key = W.v + '|' + Math.round(fw) + '|' + Math.round(fh);
       if (wfit.key !== key){

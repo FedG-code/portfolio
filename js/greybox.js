@@ -49,12 +49,20 @@ function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 /* HTML onto a projected rectangle (2026-11-24): e is laid out at the corners' bounding box and warped onto them with a
    matrix3d (a homography), so a clip or the monitor's face follows the screen's perspective instead of spilling past its
    bezel. q = the four projected corners [top left, top right, bottom right, bottom left] (stage px); e needs
-   transform-origin 0 0 (.pin). Returns the bounding box */
-function quad(e, q){
+   transform-origin 0 0 (.pin). Returns the bounding box. flat: an affine fit (tl, tr, bl) as a 2D matrix() instead: text
+   under a matrix3d is drawn once as a layer and stretched (blurry, garbled mid-animation); the monitor's face uses it */
+function quad(e, q, flat){
   var xs = q.map(function(p){ return p[0]; }), ys = q.map(function(p){ return p[1]; });
   var lx = Math.min.apply(null, xs), ty = Math.min.apply(null, ys), W = Math.max.apply(null, xs) - lx, H = Math.max.apply(null, ys) - ty;
   if (W < 1 || H < 1) return {x:lx, y:ty, w:W, h:H};
   var x0 = q[0][0], y0 = q[0][1], x1 = q[1][0], y1 = q[1][1], x2 = q[2][0], y2 = q[2][1], x3 = q[3][0], y3 = q[3][1];   /* absolute: a translation added after the divide would be wrong */
+  if (flat){
+    /* laid out at its own size (mean edges), so the matrix is only a skew: the text is drawn at 1:1 */
+    var bw = ((x1 - x0) + (x2 - x3))/2, bh = ((y3 - y0) + (y2 - y1))/2;
+    e.style.width = bw.toFixed(1) + 'px'; e.style.height = bh.toFixed(1) + 'px';
+    e.style.transform = 'matrix(1,' + (((y1 - y0) + (y2 - y3))/2/bw).toFixed(5) + ',' + (((x3 - x0) + (x2 - x1))/2/bh).toFixed(5) + ',1,' + x0.toFixed(1) + ',' + y0.toFixed(1) + ')';
+    return {x:lx, y:ty, w:bw, h:bh};
+  }
   var dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3, g = 0, h = 0, dn = dx1*dy2 - dx2*dy1;
   if (Math.abs(dx3) + Math.abs(dy3) > 1e-6 && Math.abs(dn) > 1e-9){ g = (dx3*dy2 - dx2*dy3)/dn; h = (dx1*dy3 - dx3*dy1)/dn; }
   var a = x1 - x0 + g*x1, b = x3 - x0 + h*x3, d = y1 - y0 + g*y1, f = y3 - y0 + h*y3;
