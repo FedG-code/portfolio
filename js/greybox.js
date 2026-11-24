@@ -46,6 +46,23 @@ Clock.prototype.run = function(){
 function eio(p){ return p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2; }
 function lerp(a, b, t){ return a + (b - a) * t; }
 function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+/* HTML onto a projected rectangle (2026-11-24): e is laid out at the corners' bounding box and warped onto them with a
+   matrix3d (a homography), so a clip or the monitor's face follows the screen's perspective instead of spilling past its
+   bezel. q = the four projected corners [top left, top right, bottom right, bottom left] (stage px); e needs
+   transform-origin 0 0 (.pin). Returns the bounding box */
+function quad(e, q){
+  var xs = q.map(function(p){ return p[0]; }), ys = q.map(function(p){ return p[1]; });
+  var lx = Math.min.apply(null, xs), ty = Math.min.apply(null, ys), W = Math.max.apply(null, xs) - lx, H = Math.max.apply(null, ys) - ty;
+  if (W < 1 || H < 1) return {x:lx, y:ty, w:W, h:H};
+  var x0 = q[0][0], y0 = q[0][1], x1 = q[1][0], y1 = q[1][1], x2 = q[2][0], y2 = q[2][1], x3 = q[3][0], y3 = q[3][1];   /* absolute: a translation added after the divide would be wrong */
+  var dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3, g = 0, h = 0, dn = dx1*dy2 - dx2*dy1;
+  if (Math.abs(dx3) + Math.abs(dy3) > 1e-6 && Math.abs(dn) > 1e-9){ g = (dx3*dy2 - dx2*dy3)/dn; h = (dx1*dy3 - dx3*dy1)/dn; }
+  var a = x1 - x0 + g*x1, b = x3 - x0 + h*x3, d = y1 - y0 + g*y1, f = y3 - y0 + h*y3;
+  var m = [a/W, d/W, 0, g/W, b/H, f/H, 0, h/H, 0, 0, 1, 0, x0, y0, 0, 1];
+  e.style.width = W.toFixed(1) + 'px'; e.style.height = H.toFixed(1) + 'px';
+  e.style.transform = 'matrix3d(' + m.map(function(v){ return +v.toFixed(6); }).join(',') + ')';
+  return {x:lx, y:ty, w:W, h:H};
+}
 /* headings: the short way round, so the guide never spins the long way or snaps 180 */
 function wrapA(a){ return Math.atan2(Math.sin(a), Math.cos(a)); }
 function lerpA(a, b, t){ return a + wrapA(b - a) * t; }
@@ -87,7 +104,7 @@ function Stage(host, w, h, o){
   S.add(new T.HemisphereLight(0xffffff, 0x7d837f, .75));
   var sun = new T.DirectionalLight(0xffffff, .62); sun.position.set(o.sun[0], o.sun[1], o.sun[2]);
   sun.castShadow = true; sun.shadow.mapSize.set(o.sm || 1024, o.sm || 1024);
-  var sc = sun.shadow.camera; sc.near = .5; sc.far = 60; sun.shadow.bias = -.0008;
+  var sc = sun.shadow.camera; sc.near = .5; sc.far = 60; sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
   S.add(sun); S.add(sun.target);
   /* the sun's shadow box covers the wall from a to b (with 3 to spare), so the far bays get shadows too; the floor is
      centred on the wall too (on a whole metre, an even width: the grid lines stay on whole metres) and widened to run 40 past both ends: centred
@@ -126,7 +143,7 @@ function Stage(host, w, h, o){
   R.shadowMap.autoUpdate = false;
   var shK = NaN;
   function draw(){
-    S.updateMatrixWorld(); var k = 0, n = 0;
+    placeSofts(); S.updateMatrixWorld(); var k = 0, n = 0;
     S.traverseVisible(function(o){ if (!o.castShadow) return; var e = o.matrixWorld.elements; n++; k += n*(e[0] + 2*e[1] + 3*e[2] + 5*e[5] + 7*e[10]) + e[12]*1.31 + e[13]*1.73 + e[14]*2.07; });
     if (k !== shK){ shK = k; R.shadowMap.needsUpdate = true; }
     R.render(S, cam);
@@ -147,10 +164,33 @@ function Stage(host, w, h, o){
     t.__wait = [later]; t.minFilter = T.LinearFilter; t.generateMipmaps = false; if (px) t.magFilter = T.NearestFilter;
     texC[key] = t; return t;
   }
+  /* a soft shadow on the wall for a flat thing hung on it (2026-11-24): screens, signs and the monitor stand only 2-16 cm off
+     the wall, so their real shadow was a strip one or two texels of the wall-wide shadow map tall and drew as dashed lines.
+     They don't cast any more; this plane (a blurred rectangle, its own small canvas) lies on the wall behind g, offset along
+     the sun by how far g's front stands off the wall. draw() keeps it on the wall as g moves or scales (softs) */
+  var softs = [], SB = .14;
+  function soft(g, w, h, front){
+    var pm = 72, cw = Math.round((w + 2*SB)*pm), ch = Math.round((h + 2*SB)*pm), cv = document.createElement('canvas');
+    cv.width = Math.min(1024, cw); cv.height = Math.min(1024, ch);
+    var x = cv.getContext('2d'), sx = cv.width/cw, sy = cv.height/ch;
+    x.fillStyle = '#000'; x.fillRect(0, 0, cv.width, cv.height);   /* alphaMap reads green: white = shadow */
+    x.shadowColor = '#fff'; x.shadowBlur = SB*pm*.55*Math.min(sx, sy); x.shadowOffsetX = 4000; x.fillStyle = '#fff';
+    x.fillRect(SB*pm*sx - 4000, SB*pm*sy, w*pm*sx, h*pm*sy);
+    var t = new T.CanvasTexture(cv), mt = new T.MeshBasicMaterial({color:0x000000, alphaMap:t, transparent:true, opacity:.3, depthWrite:false});
+    own.push(t, mt);
+    var pl = new T.Mesh(new T.PlaneGeometry(w + 2*SB, h + 2*SB), mt); pl.renderOrder = -1; g.add(pl);
+    softs.push({g:g, pl:pl, f:front, sx:o.sun[0]/o.sun[2], sy:o.sun[1]/o.sun[2]});
+  }
+  function placeSofts(){
+    softs.forEach(function(o){
+      var g = o.g, k = g.scale.x || 1, d = Math.max(0, g.position.z + o.f*k);
+      o.pl.position.set(-d*o.sx/k, -d*o.sy/k, (.004 - g.position.z)/k);
+    });
+  }
   /* capture on a dark frame: shaped like the clip when fit (desktop, 2026-11-23), else a 16:9 box it sits inside at its own ratio */
   function screen(p, sw, parent, fit){
     var sh = sw / (fit ? p.ar : 16/9), ba = sw/sh, g = new T.Group(); (parent || S).add(g);
-    box(sw + .16, sh + .16, .1, M.dark, 0, 0, -.06, g);
+    box(sw + .16, sh + .16, .1, M.dark, 0, 0, -.06, g).castShadow = false; soft(g, sw + .16, sh + .16, -.01);
     var iw = p.ar >= ba ? sw : sh * p.ar, ih = p.ar >= ba ? sw / p.ar : sh;
     var pl = new T.Mesh(new T.PlaneGeometry(iw, ih), new T.MeshBasicMaterial({map:tex(p.img, p.px)})); pl.position.z = .002; g.add(pl);
     /* selection: a bright green line with a dark line just outside it, so it holds on the grey stage */
@@ -159,11 +199,11 @@ function Stage(host, w, h, o){
     sel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(sw + .40, sh + .40, .16)), new T.LineBasicMaterial({color:0x15181B})));
     g.userData = {w:sw, h:sh, iw:iw, ih:ih, iw0:iw, ih0:ih, pl:pl, src:p.img, px:!!p.px, sel:sel}; return g;
   }
-  /* a small monitor (the wall label, 2026-11-23): dark bezel (shadows like the screens), a face plane the HTML sits on, a chin
+  /* a small monitor (the wall label, 2026-11-23): dark bezel (a soft wall shadow like the screens), a face plane the HTML sits on, a chin
      with a green LED, and two thin lines up out of shot (fixed children, 12 m, no shadow: thinner than a shadow texel) */
   function monitor(w, h){
     var g = new T.Group(); S.add(g);
-    box(w + .14, h + .14, .14, M.dark, 0, 0, 0, g);
+    box(w + .14, h + .14, .14, M.dark, 0, 0, 0, g).castShadow = false; soft(g, w + .14, h + .14, .07);
     var face = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({color:0x101315})); face.position.z = .071; g.add(face);
     box(.34, .06, .03, M.dark, 0, -h/2 - .1, .02, g).castShadow = false;
     var led = new T.Mesh(new T.BoxGeometry(.05, .03, .01), new T.MeshBasicMaterial({color:0x2BD957})); led.position.set(.1, -h/2 - .1, .04); g.add(led);
@@ -171,7 +211,7 @@ function Stage(host, w, h, o){
     g.userData = {w:w, h:h, W:w + .14, H:h + .14, face:face}; return g;
   }
   /* a lit sign (the section title, 2026-11-23): a thin card whose front is a canvas (draw(ctx, W, H) paints it; at least 1400
-     px wide), sides like the props, two small dark bolts; casts and receives shadows. Its texture and material are disposed
+     px wide), sides like the props, two small dark bolts; receives shadows, and a soft() shadow on the wall. Its texture and material are disposed
      with the stage (dispose() keeps mapped materials, which are the shared capture textures) */
   var own = [];
   function sign(w, h, draw){
@@ -179,8 +219,8 @@ function Stage(host, w, h, o){
     var cv = document.createElement('canvas'); cv.width = Math.max(1400, Math.round(w*480)); cv.height = Math.round(cv.width*h/w);
     var t = new T.CanvasTexture(cv); t.minFilter = T.LinearMipmapLinearFilter; t.generateMipmaps = true;   /* seen small: mipmaps keep the sub line clean */ t.anisotropy = R.capabilities.getMaxAnisotropy ? Math.min(8, R.capabilities.getMaxAnisotropy()) : 1;
     var front = new T.MeshLambertMaterial({map:t}); own.push(t, front);
-    var card = new T.Mesh(new T.BoxGeometry(w, h, .05), [M.prop, M.prop, M.prop, M.prop, front, M.prop]); card.castShadow = true; card.receiveShadow = true; g.add(card);
-    [-1, 1].forEach(function(sd){ var bt = new T.Mesh(new T.CylinderGeometry(.03, .03, .03, 12), M.dark); bt.rotation.x = Math.PI/2; bt.position.set(sd*(w/2 - .1), h/2 - .1, .035); bt.castShadow = true; g.add(bt); });
+    var card = new T.Mesh(new T.BoxGeometry(w, h, .05), [M.prop, M.prop, M.prop, M.prop, front, M.prop]); card.receiveShadow = true; g.add(card); soft(g, w, h, .025);
+    [-1, 1].forEach(function(sd){ var bt = new T.Mesh(new T.CylinderGeometry(.03, .03, .03, 12), M.dark); bt.rotation.x = Math.PI/2; bt.position.set(sd*(w/2 - .1), h/2 - .1, .035); g.add(bt); });
     function paint(){ if (dead) return; var x = cv.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); draw(x, cv.width, cv.height); t.needsUpdate = true; later(); }
     paint();
     g.userData = {w:w, h:h, paint:paint, card:card}; return g;
@@ -302,5 +342,5 @@ function clipGate(o, v){
 
 window.Greybox = {RM:RM, Clock:Clock, eio:eio, lerp:lerp, clamp:clamp, lerpA:lerpA, steer:steer, el:el, restart:restart, phURL:phURL,
   renderer:renderer, glOK:function(){ return glOK; }, gridTex:gridTex, Stage:Stage, capsule:capsule, stand:stand, STAND_H:STAND_H, dragX:dragX,
-  START:START, clip:clip, clipPut:clipPut, clipGate:clipGate};
+  START:START, quad:quad, clip:clip, clipPut:clipPut, clipGate:clipGate};
 })();

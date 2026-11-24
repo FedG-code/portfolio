@@ -95,9 +95,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
 .st.over{cursor:pointer}
 .pv-view.go{cursor:pointer}
 .pin{position:absolute !important; left:0; top:0; z-index:2; transform-origin:0 0}
-.sign{width:330px; background:var(--p2); border:1.5px solid var(--ink); padding:14px 16px 15px; display:grid; gap:7px; box-shadow:0 2px 0 rgba(21,24,27,.22)}
-.sign .ab-lead{font-size:19px; line-height:1.28}
-.sign .ab-txt{font-size:13px; line-height:1.5}
 .k{font:500 10.5px/1 var(--fm); color:var(--mut)}
 .tl{font:500 10.5px/1 var(--fm); background:rgba(248,249,246,.93); padding:3px 6px 4px; white-space:nowrap; color:var(--ink)}
 
@@ -238,8 +235,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
   .tb > :nth-child(n+3){border-top:1px solid var(--ink)}
   .tb > :nth-child(3){border-left:0}
   .tb > :nth-child(4){border-left:1px solid var(--ink)}
-  /* narrow desktop stages: pinned HTML stops shrinking at k 0.72, so the sign narrows to leave the guide room beside it */
-  .sign{width:285px}
 }
 
 /* ---- phone (the gallery switches to its phone shot below 640px) ---- */
@@ -265,8 +260,6 @@ html.g3d-wait #gallery::before{content:""; position:absolute; left:0; right:0; t
   .row.lead .rt{font-size:28px}
   .rs{font-size:12px; margin-top:5px}
   .pv-cap{font-size:12px}
-  .sign{width:300px; padding:10px 12px 11px; gap:5px}
-  .sign .ab-lead{font-size:15px}
   .bub, .bub.sm{width:205px}
   .bub ul{font-size:11.5px; padding:7px 10px 3px 22px}
   .bub .sum{font-size:12px; padding:8px 10px 9px}

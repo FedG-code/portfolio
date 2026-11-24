@@ -121,13 +121,20 @@ window.CaseMode = function(X){
     var ps = cn.map(proj), xs = ps.map(function(q){ return q[0]; }), ys = ps.map(function(q){ return q[1]; });
     return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys), w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys)};
   }
-  function fit(e, r){ e.style.transform = 'translate(' + r.x.toFixed(1) + 'px,' + r.y.toFixed(1) + 'px)'; e.style.width = r.w.toFixed(1) + 'px'; e.style.height = r.h.toFixed(1) + 'px'; }
+  /* the four projected corners of a screen's picture (or, with full, of the whole screen), from x0 to x1 of its width
+     (0..1: a split's half) [top left, top right, bottom right, bottom left]: GB.quad warps an overlay onto them */
+  function quadOf(g, proj, full, a0, a1){
+    var u = g.userData, k = g.scale.x, x = g.position.x, y = g.position.y, iw = (full ? u.w : u.iw)*k, ih = (full ? u.h : u.ih)*k, l = x - iw/2;
+    a0 = a0 || 0; a1 = a1 == null ? 1 : a1;
+    cn[0].set(l + a0*iw, y + ih/2, .04); cn[1].set(l + a1*iw, y + ih/2, .04); cn[2].set(l + a1*iw, y - ih/2, .04); cn[3].set(l + a0*iw, y - ih/2, .04);
+    return cn.map(proj);
+  }
   ovs.forEach(function(o, k){ st.pin(o, null, 0, 0, {rect:function(proj){
     if (!mainScr) return;
-    if (!split){ if (!k) fit(o, rectOf(mainScr, proj)); return; }
-    var r = rectOf(mainScr, proj, true), hw = r.w/2; fit(o, {x:r.x + k*hw, y:r.y, w:hw, h:r.h});
+    if (!split){ if (!k) GB.quad(o, quadOf(mainScr, proj)); return; }
+    GB.quad(o, quadOf(mainScr, proj, true, k/2, (k + 1)/2));
   }}); });
-  st.pin(yt, null, 0, 0, {rect:function(proj){ if (mainScr) fit(yt, rectOf(mainScr, proj)); }});
+  st.pin(yt, null, 0, 0, {rect:function(proj){ if (mainScr) GB.quad(yt, quadOf(mainScr, proj)); }});
   st.pin(play, null, 0, 0, {rect:function(proj){ if (!mainScr) return; var r = rectOf(mainScr, proj); play.style.transform = 'translate(' + (r.x + r.w/2 - play.offsetWidth/2).toFixed(1) + 'px,' + (r.y + r.h/2 - play.offsetHeight/2).toFixed(1) + 'px)'; }});
   st.pin(close, null, 0, 0, {rect:function(){ close.style.transform = 'translate(' + (X.c.w - close.offsetWidth - 10) + 'px,10px)'; }});
   st.pin(tags, null, 0, 0, {rect:function(proj){

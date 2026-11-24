@@ -233,6 +233,35 @@ function buildDolly(start){
       x.fillStyle = tok('--sig'); x.fillRect(W/2 - H*.3, H*.84, H*.6, Math.max(4, H*.03));
     };
   }
+  /* the About sign's face: a mono "ABOUT" label, the lead line in Archivo 800, a short green rule, the body (desktop) in Archivo, wrapped.
+     draw(null, W) = the height the text needs as a share of W (the sign is sized from it); painting fits the type to the card
+     (the fonts that loaded since run shorter or longer) */
+  function aboutDraw(ph){
+    function wrap(x, t, mw){ var ws = t.split(' '), ls = [], ln = ''; ws.forEach(function(w){ var tt = ln ? ln + ' ' + w : w; if (ln && x.measureText(tt).width > mw){ ls.push(ln); ln = w; } else ln = tt; }); if (ln) ls.push(ln); return ls; }
+    function lay(x, W, f){
+      var pd = W*.055, mw = W - 2*pd, y = pd + W*.012, out = [], ls = W*.034*f, lz = W*(ph ? .07 : .06)*f, bz = W*.04*f;
+      x.font = '500 ' + ls + 'px "IBM Plex Mono"'; y += ls; out.push({f:x.font, c:'--mut', t:'ABOUT', y:y}); y += ls*.75;
+      x.font = '800 ' + lz + 'px Archivo'; wrap(x, H.lead, mw).forEach(function(t){ y += lz*1.2; out.push({f:x.font, c:'--ink', t:t, y:y - lz*.22}); });
+      y += lz*.3; out.push({rule:true, y:y}); y += Math.max(4, W*.006);
+      if (!ph){ y += bz*.6; x.font = '400 ' + bz + 'px Archivo'; wrap(x, H.about, mw).forEach(function(t){ y += bz*1.5; out.push({f:x.font, c:'--ink', t:t, y:y - bz*.4}); }); }
+      return {out:out, h:y + pd, pd:pd};
+    }
+    return function(x, W, Hh){
+      if (!x) x = document.createElement('canvas').getContext('2d');
+      var f = 1, L = lay(x, W, f);
+      if (!Hh) return L.h/W;
+      /* the largest type that fits the card (it was sized with whatever font was in), up to 30% bigger; what is left over
+         is split above and below */
+      var lo = .5, hi = 1.3;
+      if (L.h > Hh || lay(x, W, hi).h > Hh){ for (var n = 0; n < 12; n++){ var md = (lo + hi)/2; if (lay(x, W, md).h <= Hh) lo = md; else hi = md; } f = lo; } else f = hi;
+      L = lay(x, W, f); var dy = Math.max(0, (Hh - L.h)/2);
+      x.fillStyle = tok('--p2'); x.fillRect(0, 0, W, Hh); x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+      L.out.forEach(function(o){
+        if (o.rule){ x.fillStyle = tok('--sig'); x.fillRect(L.pd, o.y + dy, W*.12, Math.max(4, W*.006)); return; }
+        x.font = o.f; x.fillStyle = tok(o.c); x.fillText(o.t, L.pd, o.y + dy);
+      });
+    };
+  }
   /* every bay has a stand (the player-start pad). On desktop it sits left of the screen, where the guide stands on the
      project page's low shot, so the two line up; the guide talks from its spot on the right. It steps onto the stand
      only when it walks in from off screen (coming back from a project page), then walks over to its spot */
@@ -242,9 +271,12 @@ function buildDolly(start){
     var zone = {x:s ? l + bw - ZONE/2 + .3 : l + bw - .5, z:1.6};   /* where the guide stands on desktop: the zone's centre + .3 (About: clear of the sign) */
     if (m) zone = {x:s ? cx - 1.35 : cx - .95, z:s ? 3.6 : 4.9}; /* phone: front left, in from the edge */
     if (s === 0){
-      var sign = el('div', 'pin sign', '<span class="k">About</span><p class="ab-lead">' + H.lead + '</p>' + (m ? '' : '<p class="ab-txt">' + H.about + '</p>')); host.appendChild(sign);
-      st.pin(sign, new T.Vector3(m ? cx : l + .28, m ? 3.5 : 3.3, .05), m ? .5 : 0, 0, {clamp:false});
-      return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, 0)};
+      /* the About sign is a 3D sign too (2026-11-24; was an HTML card): its text stays in the page for screen readers */
+      host.appendChild(el('section', 'sr', '<h2>About</h2><p>' + H.lead + '</p>' + (m ? '' : '<p>' + H.about + '</p>')));
+      var aw = m ? 5.0 : 3.3, ad = aboutDraw(m), ah = aw*ad(null, 1000, 0);
+      var asg = st.sign(aw, ah, ad); asg.position.set(m ? cx : l + .28 + aw/2, (m ? 3.7 : 3.3) - ah/2, .05);
+      asg.userData.hit = {s:0, sign:true}; hits.push(asg); signs.push(asg);
+      return {cx:cx, l:l, bw:bw, zone:zone, pad:standAt(zone, l, 0), sign:asg};
     }
     var i = s - 1, p = P[i], scr3 = [], sc, sw, sy, scx;
     if (p.items){
@@ -294,8 +326,7 @@ function buildDolly(start){
   st.pin(ov, null, 0, 0, {rect:function(proj){
     var o = secs[ovS]; if (!o) return; var tg = o.scr[ovK], u = tg.sc.userData, k = tg.sc.scale.x, a0 = tg.scx - u.iw*k/2, a1 = tg.scx + u.iw*k/2, y0 = tg.sy - u.ih*k/2, y1 = tg.sy + u.ih*k/2;
     cn[0].set(a0, y0, .035); cn[1].set(a1, y0, .035); cn[2].set(a0, y1, .035); cn[3].set(a1, y1, .035);
-    var ps = cn.map(proj), lx = Math.min.apply(null, ps.map(function(q){ return q[0]; })), rx = Math.max.apply(null, ps.map(function(q){ return q[0]; })), ty = Math.min.apply(null, ps.map(function(q){ return q[1]; })), by = Math.max.apply(null, ps.map(function(q){ return q[1]; }));
-    ov.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'; ov.style.width = (rx - lx).toFixed(1) + 'px'; ov.style.height = (by - ty).toFixed(1) + 'px';
+    var ps = cn.map(proj); GB.quad(ov, [ps[2], ps[3], ps[1], ps[0]]);
   }});
   /* section s's clip and the frame it plays in (an items bay: the game that is big; the case may have swapped them) */
   function clipOf(s){
@@ -389,9 +420,7 @@ function buildDolly(start){
       if (!mon.visible) return;
       var u = mon.userData, x = mon.position.x, y = mon.position.y, z = mon.position.z + .072, hw = u.w/2, hh = u.h/2;
       mcn[0].set(x - hw, y - hh, z); mcn[1].set(x + hw, y - hh, z); mcn[2].set(x - hw, y + hh, z); mcn[3].set(x + hw, y + hh, z);
-      var ps = mcn.map(function(v){ return proj(v); }), xs = ps.map(function(q){ return q[0]; }), ys = ps.map(function(q){ return q[1]; });
-      var lx = Math.min.apply(null, xs), ty = Math.min.apply(null, ys), fw = Math.max.apply(null, xs) - lx, fh = Math.max.apply(null, ys) - ty;
-      wl.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'; wl.style.width = fw.toFixed(1) + 'px'; wl.style.height = fh.toFixed(1) + 'px';
+      var ps = mcn.map(function(v){ return proj(v); }), r = GB.quad(wl, [ps[2], ps[3], ps[1], ps[0]]), fw = r.w, fh = r.h;
       /* the text scales by k (as the other pins), and further down only if it would not fit the face */
       var inn = wl.firstChild, key = W.v + '|' + Math.round(fw) + '|' + Math.round(fh);
       if (wfit.key !== key){
@@ -653,7 +682,7 @@ function buildDolly(start){
   window.__dolly = {rects:function(){
     var hd = st.proj(rv.set(plr.position.x, plr.position.y + 1.42, plr.position.z));
     return {stage:{w:c.w, h:c.h}, head:{x:hd[0], y:hd[1]}, mon:G.mon ? G.mon() : null,
-      bays:secs.map(function(o, s){ if (!o.scr) return {s:s}; var bk = bigK(s);
+      bays:secs.map(function(o, s){ if (!o.scr) return {s:s, sign:o.sign ? objRect(o.sign) : null}; var bk = bigK(s);
         return {s:s, sel:o.sc.userData.sel.visible, main:picRect(o.scr[bk].sc), pics:o.scr.map(function(q){ return picRect(q.sc); }), sign:o.sign ? objRect(o.sign) : null}; })};
   }, objRect:objRect};
 

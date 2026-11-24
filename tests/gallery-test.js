@@ -168,6 +168,8 @@ const state = p => p.evaluate(() => ({
   await p.goto('about:blank'); await p.goto(BASE + 'index.html'); await p.waitForTimeout(1500);
   const signAt = async i => { const r = await p.evaluate(i => window.__dolly.rects().bays[i].sign, i), sb = await p.locator('.st').boundingBox(); return { x: sb.x + r.x + r.w / 2, y: sb.y + r.y + r.h / 2 }; };
   check('no HTML title plates on the stage', !(await p.$('.st .tp')));
+  const ab = await p.evaluate(() => ({ html: !!document.querySelector('.st .pin.sign'), sr: (document.querySelector('.st .sr') || {}).textContent || '', sign: window.__dolly.rects().bays[0].sign }));
+  check('About is a 3D sign too (no HTML card; its text stays in the page for screen readers)', !ab.html && /technical designer/.test(ab.sr) && ab.sign && ab.sign.w > 100, ab);
   let sp = await signAt(1); await p.mouse.click(sp.x, sp.y); await p.waitForTimeout(1800);
   await p.waitForFunction(() => { const b = document.querySelector('#guide-bubble'); return b && !b.hidden; }, null, { timeout: 5000 }).catch(() => {}); await p.waitForTimeout(300);
   const sel1 = await p.evaluate(() => window.__dolly.rects().bays.map(b => !!b.sel));

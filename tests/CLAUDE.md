@@ -17,7 +17,7 @@ Playwright (Chromium). `playwright` is the only dependency in `package.json`; ru
 | Over the Hill | Learn more opens `#over-the-hill/case` |
 | Other Games | bubble = the summary + one Learn more (#stealth) |
 | Stage input | Over the Hill's button reads "Learn more"; no dolly-track label; a drag scrubs and snaps; a click on Other Games' big frame opens `#other-games/case/stealth` |
-| Signs | no `.tp` on the stage; a click on Over the Hill's 3D sign selects it (the outline shows on its screen only, `rects().bays[].sel`), a second click opens its case |
+| Signs | no `.tp` on the stage; About is a 3D sign (`rects().bays[0].sign`), no `.pin.sign`, its text in `.st .sr`; a click on Over the Hill's 3D sign selects it (the outline shows on its screen only, `rects().bays[].sel`), a second click opens its case |
 | No flash | with Three.js slowed to 1.5s, the plain list is never visible before the gallery appears |
 | Clip overlays | on a throttled network (150 ms, 6 Mbit/s), selecting Eve, Casino, University, Other Games, ...: a `.vov` is never visible (not hidden, opacity > 0) while its video has readyState < 2; Eve pre-warms Casino's clip and University pre-warms Casino's and Other Games' (paused, `preload=auto`, in `.vhold`); Climbing's first shown frame is at 15 s (its poster's moment) |
 | Fallbacks | `?flat` and `--disable-webgl`: plain list, no canvas, 5 rows |
