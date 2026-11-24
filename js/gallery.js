@@ -41,7 +41,7 @@ var P = [
     href:'eve_of_destruction.html', cap:'Combat: the ultimate ability in a boss fight.',
     blurb:'A 2D action-platformer built around combo combat, unlockable abilities, and branching progression. As Technical Designer on a small team, I designed and implemented the player\'s combat and movement systems along with mob and boss enemy logic, all in GDScript. <a href="https://store.steampowered.com/app/2839460/Eve_of_Destruction/" target="_blank" rel="noopener">Steam demo available</a>.',
     spec:[['Studio','Lost Satellite Studios'],['Role','Technical Designer'],['Stack','Godot, GDScript'],['Year','2024']],
-    logs:['Combat: each attack is an FSM state, with input buffering','Crystal Eaters: ten-state FSM, three detection ranges','Steam demo out'] },
+    logs:['Player: 32-state FSM with input buffering and hit-stop','Component based architecture','Steam demo out'] },
   { id:'casino-games', t:'Casino Games', sub:'Game developer at Logifuture, 2023 to 2026', subM:'Game developer at Logifuture, 2023 to 2026',
     img:'assets/spin+img.png', clip:'assets/spin+.mp4', ar:16/9, alt:'Spin and Win free spins round', marks:[{x:26,y:1,w:40,h:97,l:'Spin and Win wheel'}],
     href:'casino_games.html', cap:'Three years at Logifuture shipping live casino games in PixiJS and Unity WebGL.',

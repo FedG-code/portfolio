@@ -82,10 +82,10 @@
       <div class="project-text">
         <p>
           I wanted combos to feel like the player was committing to attacks rather than
-          mashing through them. Each attack is a state in a finite state machine, and I
+          mashing through them. Every attack lives in a finite state machine, and I
           used input buffering so the next hit only fires when the current attack's
           window closes. This helps lock players into combos, making spamming more punishing
-          and comitting to a string of attacks an important consideration.
+          and committing to a string of attacks an important consideration.
         </p>
       </div>
     </div>
@@ -146,16 +146,13 @@
       <div class="project-text">
         <h4>Boss: Sword-and-Shield Knight</h4>
         <p>
-          I wanted the knight to feel unpredictable on any given attack
-          but learnable over time. It picks between thrusts, overhead
-          strikes, and a branching multi-hit combo using weighted
-          randomization, so the player can't just memorize a fixed
-          pattern. After every three committed attacks it drops into a
-          recovery window, which gives the fight a rhythm the player can
-          exploit once they recognize it.
+            The knight needed to be a simple enough boss for a tutorial encounter,
+            but still manage to feel punchy, I built a prototype and worked closely with the animators
+            to ensure that his attacks would be as slow as possible, while still
+            hitting a spamming player.
         </p>
         <p>
-          The shield added an interesting positional layer. It checks the
+          The shield added an interesting positional layer and gave the fight more depth without adding much complexity. It checks the
           knight’s facing direction against the incoming hit in the shared
           damage component, so attacks on the shielded side bounce off
           with distinct VFX instead of dealing damage. The player has to
