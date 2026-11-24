@@ -89,16 +89,19 @@ function Stage(host, w, h, o){
   sun.castShadow = true; sun.shadow.mapSize.set(o.sm || 1024, o.sm || 1024);
   var sc = sun.shadow.camera; sc.near = .5; sc.far = 60; sun.shadow.bias = -.0008;
   S.add(sun); S.add(sun.target);
-  /* the sun's shadow box covers the wall from a to b (with 3 to spare), so the far bays get shadows too */
+  /* the sun's shadow box covers the wall from a to b (with 3 to spare), so the far bays get shadows too; the floor is
+     centred on the wall too (on a whole metre, an even width: the grid lines stay on whole metres) and widened to run 40 past both ends: centred
+     on x = 0 it stopped short of the last bay once the wall grew past 55 m */
   function sunSpan(a, b){
     var cx = (a + b)/2, r = (b - a)/2 + 3;
     sun.position.set(cx + o.sun[0], o.sun[1], o.sun[2]); sun.target.position.set(cx, 0, 0); sun.target.updateMatrixWorld();
     sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.updateProjectionMatrix(); shK = NaN;
+    if (floor){ var fw = Math.max(fs, 2*Math.ceil((b - a)/2) + 80); floor.position.x = Math.round(cx); floor.scale.x = fw/fs; ft.repeat.x = fw; }
   }
-  sunSpan(-o.sb + 3, o.sb - 3);   /* until the caller knows its wall: ±sb round x = 0 */
   var fs = o.fs, ft = gridTex(T, '#9AA09B', 'rgba(40,46,42,.18)', 'rgba(40,46,42,.32)'); ft.repeat.set(fs, fs);
   var floor = new T.Mesh(new T.PlaneGeometry(fs, fs), new T.MeshLambertMaterial({map:ft}));
   floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; S.add(floor);
+  sunSpan(-o.sb + 3, o.sb - 3);   /* until the caller knows its wall: ±sb round x = 0 */
   var M = {
     wall:new T.MeshLambertMaterial({color:0xB9BEB9}), prop:new T.MeshLambertMaterial({color:0xDCDFDA}), lead:new T.MeshLambertMaterial({color:0xE4E6E1}),
     white:new T.MeshLambertMaterial({color:0xF3F4F0}), dark:new T.MeshLambertMaterial({color:0x2A2E31})
